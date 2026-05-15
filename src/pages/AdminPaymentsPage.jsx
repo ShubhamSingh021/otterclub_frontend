@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import toast, { Toaster } from "react-hot-toast";
 import { getAllPayments } from "../api/paymentApi";
+import AdminNavbar from "../components/layout/AdminNavbar";
 import Container from "../components/layout/Container";
 
 const AdminPaymentsPage = () => {
@@ -48,18 +49,7 @@ const AdminPaymentsPage = () => {
   return (
     <div className="min-h-screen bg-[#060b16] text-white pb-20">
       <Toaster position="top-center" />
-      
-      {/* Header */}
-      <nav className="border-b border-white/10 bg-[#081429]/50 backdrop-blur-md sticky top-0 z-50">
-        <Container className="flex h-20 items-center justify-between">
-          <h1 className="font-display text-xl font-bold tracking-tight">Payments Manager</h1>
-          <div className="flex gap-6 items-center">
-            <button onClick={() => navigate("/admin/events")} className="text-sm font-medium text-slate-400 hover:text-white">Events</button>
-            <button onClick={() => navigate("/admin/registrations")} className="text-sm font-medium text-slate-400 hover:text-white">Registrations</button>
-            <button onClick={() => navigate("/admin/cms")} className="text-sm font-medium text-slate-400 hover:text-white">CMS</button>
-          </div>
-        </Container>
-      </nav>
+      <AdminNavbar />
 
       <main className="py-10">
         <Container>

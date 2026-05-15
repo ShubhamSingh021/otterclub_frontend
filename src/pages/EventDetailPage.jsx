@@ -55,11 +55,24 @@ const EventDetailPage = () => {
           <div className="grid gap-10 lg:grid-cols-2">
             <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02]">
               <img src={event.eventImage} alt={event.title} className="aspect-square w-full object-cover" />
-              {event.galleryImages?.length > 0 && (
-                <div className="grid grid-cols-4 gap-2 p-2">
+              {event.galleryImages && Array.isArray(event.galleryImages) && event.galleryImages.length > 0 && (
+                <div className="grid grid-cols-5 gap-2 p-3 bg-black/20">
                   {event.galleryImages.map((img, i) => {
                     const imgSrc = typeof img === 'string' ? img : img.url;
-                    return <img key={i} src={imgSrc} alt="" className="aspect-square rounded-xl object-cover" />;
+                    if (!imgSrc) return null;
+                    return (
+                      <div key={i} className="group relative aspect-square overflow-hidden rounded-xl border border-white/10 transition hover:border-[#40e0d0]/50">
+                        <img 
+                          src={imgSrc} 
+                          alt={`Gallery ${i}`} 
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-110" 
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.parentElement.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    );
                   })}
                 </div>
               )}
@@ -79,7 +92,7 @@ const EventDetailPage = () => {
                 <InfoCard label="Time" value={`${event.startTime} - ${event.endTime}`} />
                 <InfoCard label="Venue" value={event.venue} />
                 <InfoCard label="Registration Deadline" value={format(new Date(event.registrationDeadline), "MMM dd, yyyy")} />
-                <InfoCard label="Fee" value={event.eventFee === 0 ? "Free" : `$${event.eventFee}`} />
+                <InfoCard label="Fee" value={event.eventFee === 0 ? "Free" : `₹${event.eventFee}`} />
                 <InfoCard label="Skill Level" value={event.skillLevel} />
               </div>
 

@@ -5,8 +5,8 @@ const defaultContent = {
   eyebrow: "Welcome to Otter Society",
   title: "Empowering Your Passion for Sports",
   subtitle: "Join a vibrant community of athletes and enthusiasts. Discover premium events, connect with peers, and elevate your game.",
-  primaryCta: { label: "Explore Events", href: "#events" },
-  secondaryCta: { label: "Learn More", href: "#about" },
+  primaryCta: { label: "Explore Events", href: "/#events" },
+  secondaryCta: { label: "Learn More", href: "/#about" },
   stats: [
     { label: "Members", value: "2.5K+" },
     { label: "Events", value: "150+" },

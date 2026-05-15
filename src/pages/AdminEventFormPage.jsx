@@ -80,10 +80,30 @@ const AdminEventFormPage = () => {
       }
     } else {
       const files = Array.from(e.target.files);
-      setGalleryImages(files);
-      if (files.length > 0) {
-        setPreviewGallery(files.map(file => URL.createObjectURL(file)));
-      }
+      // We'll append new files to the existing selection
+      setGalleryImages(prev => [...prev, ...files]);
+      const newPreviews = files.map(file => ({
+        url: URL.createObjectURL(file),
+        isNew: true,
+        file: file
+      }));
+      setPreviewGallery(prev => [...prev, ...newPreviews]);
+    }
+  };
+
+  const removeGalleryImage = (index) => {
+    const itemToRemove = previewGallery[index];
+    
+    // Revoke object URL if it's a new preview
+    if (itemToRemove.isNew && itemToRemove.url.startsWith('blob:')) {
+      URL.revokeObjectURL(itemToRemove.url);
+    }
+
+    setPreviewGallery(prev => prev.filter((_, i) => i !== index));
+    
+    // If it was a new file, remove it from galleryImages array too
+    if (itemToRemove.isNew) {
+      setGalleryImages(prev => prev.filter(file => file !== itemToRemove.file));
     }
   };
 
@@ -222,7 +242,7 @@ const AdminEventFormPage = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Fee ($)</label>
+                    <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Fee (₹)</label>
                     <input type="number" name="eventFee" value={formData.eventFee} onChange={handleChange} className="mt-2 w-full rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-white focus:border-[#40e0d0]" />
                   </div>
                   <div>
@@ -256,17 +276,34 @@ const AdminEventFormPage = () => {
                 <div>
                   <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Gallery (Multiple)</label>
                   {previewGallery && previewGallery.length > 0 && (
-                    <div className="mt-2 mb-4 grid grid-cols-4 gap-2">
-                      {previewGallery.map((url, idx) => (
-                        <div key={idx} className="relative aspect-square overflow-hidden rounded-lg border border-white/10 bg-white/5">
-                          <img 
-                            src={url} 
-                            alt={`Gallery ${idx}`} 
-                            className="h-full w-full object-cover"
-                            onError={(e) => e.target.closest('.relative').style.display = 'none'} 
-                          />
-                        </div>
-                      ))}
+                    <div className="mt-2 mb-4 grid grid-cols-5 gap-2">
+                      {previewGallery.map((item, idx) => {
+                        const url = typeof item === 'string' ? item : item.url;
+                        return (
+                          <div key={idx} className="group relative aspect-square overflow-hidden rounded-lg border border-white/10 bg-white/5">
+                            <img 
+                              src={url} 
+                              alt={`Gallery ${idx}`} 
+                              className="h-full w-full object-cover transition group-hover:scale-110"
+                              onError={(e) => {
+                                // Instead of hiding, show an error placeholder
+                                e.target.src = "https://via.placeholder.com/150?text=Error";
+                                e.target.classList.add('opacity-50');
+                              }} 
+                            />
+                            <button 
+                              type="button"
+                              onClick={() => removeGalleryImage(idx)}
+                              className="absolute top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white opacity-0 transition hover:bg-red-600 group-hover:opacity-100"
+                            >
+                              <span className="text-xs font-bold">×</span>
+                            </button>
+                            {(!item.isNew && typeof item !== 'string') === false && item.isNew && (
+                              <div className="absolute bottom-1 left-1 rounded bg-[#40e0d0]/80 px-1 py-0.5 text-[8px] font-bold text-black uppercase">New</div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                   <input type="file" multiple name="galleryImages" accept="image/*" onChange={handleFileChange} className="mt-2 w-full text-sm text-slate-400 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-white/20" />

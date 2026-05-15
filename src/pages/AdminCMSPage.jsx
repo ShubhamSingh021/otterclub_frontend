@@ -13,6 +13,7 @@ import {
   updateTestimonial,
   deleteTestimonial 
 } from "../api/cmsApi";
+import AdminNavbar from "../components/layout/AdminNavbar";
 import Container from "../components/layout/Container";
 
 const AdminCMSPage = () => {
@@ -40,26 +41,7 @@ const AdminCMSPage = () => {
   return (
     <div className="min-h-screen bg-[#060b16] text-white pb-20">
       <Toaster position="top-center" />
-      
-      {/* Header */}
-      <nav className="border-b border-white/10 bg-[#081429]/50 backdrop-blur-md sticky top-0 z-50">
-        <Container className="flex h-20 items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="font-display text-xl font-bold tracking-tight">Homepage CMS</h1>
-          </div>
-          <div className="flex gap-6 items-center">
-            <button onClick={() => navigate("/admin/registrations")} className="text-sm font-medium text-slate-400 hover:text-white">Registrations</button>
-            <button onClick={() => navigate("/admin/events")} className="text-sm font-medium text-slate-400 hover:text-white">Manage Events</button>
-            <button onClick={() => navigate("/admin/cms")} className="text-sm font-medium text-slate-400 hover:text-white">Manage CMS</button>
-            <button onClick={() => navigate("/")} className="text-sm font-medium text-slate-400 hover:text-white">View Site</button>
-            <button onClick={() => {
-              localStorage.removeItem("adminToken");
-              localStorage.removeItem("adminUser");
-              navigate("/admin/login");
-            }} className="text-sm font-medium text-red-400 hover:text-red-300">Logout</button>
-          </div>
-        </Container>
-      </nav>
+      <AdminNavbar />
 
       <main className="py-10">
         <Container>

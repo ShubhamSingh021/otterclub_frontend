@@ -122,7 +122,7 @@ const EventsPreviewSection = ({ section: cmsSection, featuredEvents }) => {
                   <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
                     <dt className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Fee</dt>
                     <dd className="mt-1 break-words text-xs font-semibold text-slate-200 sm:text-sm">
-                      {event.eventFee === 0 ? "Free" : `$${event.eventFee}`}
+                      {event.eventFee === 0 ? "Free" : `₹${event.eventFee}`}
                     </dd>
                   </div>
                 </dl>

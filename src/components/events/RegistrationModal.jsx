@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { createRegistration } from "../../api/registrationApi.js";
 import { createOrder, verifyPayment } from "../../api/paymentApi.js";
@@ -16,6 +16,32 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
     additionalNotes: "",
   });
   const [loading, setLoading] = useState(false);
+  const [discountInfo, setDiscountInfo] = useState({ discount: 0, finalFee: event.eventFee });
+
+  // Prefill user data if logged in
+  useEffect(() => {
+    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    if (userInfo && isOpen) {
+      setFormData(prev => ({
+        ...prev,
+        fullName: userInfo.name || "",
+        email: userInfo.email || "",
+        phone: userInfo.phone || "",
+      }));
+
+      // Calculate discount for UI display
+      let discount = 0;
+      if (userInfo.activeMembership) {
+        if (userInfo.activeMembership.membershipType === "ELITE") discount = 0.1;
+        if (userInfo.activeMembership.membershipType === "PRO") discount = 0.2;
+      }
+      
+      const finalFee = event.eventFee * (1 - discount);
+      setDiscountInfo({ discount: discount * 100, finalFee });
+    } else {
+      setDiscountInfo({ discount: 0, finalFee: event.eventFee });
+    }
+  }, [isOpen, event.eventFee]);
 
   if (!isOpen) return null;
 
@@ -39,21 +65,26 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
         description: `Registration for ${eventTitle}`,
         order_id: order.id,
         handler: async (response) => {
+          console.log("PAYMENT_DEBUG: Razorpay success callback triggered", response);
           try {
             setLoading(true);
+            toast.loading("Verifying payment...", { id: "verify-toast" });
             const verifyRes = await verifyPayment({
               ...response
-              // Registration is created inside verifyPayment on backend now
             });
 
+            console.log("PAYMENT_DEBUG: Verification response:", verifyRes.data);
+
             if (verifyRes.data.success) {
-              toast.success("Payment successful! Registration confirmed.");
+              toast.success("Payment successful! Registration confirmed.", { id: "verify-toast" });
               onShowSuccess();
               onClose();
+            } else {
+              throw new Error(verifyRes.data.message || "Verification failed");
             }
           } catch (err) {
-            console.error("Verification failed:", err);
-            toast.error(err.response?.data?.message || "Payment verification failed. Please contact support.");
+            console.error("PAYMENT_DEBUG: Verification failed:", err);
+            toast.error(err.response?.data?.message || err.message || "Payment verification failed. Please contact support.", { id: "verify-toast" });
           } finally {
             setLoading(false);
           }
@@ -62,6 +93,12 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
           name: formData.fullName,
           email: formData.email,
           contact: formData.phone,
+        },
+        method: {
+          upi: true,
+          card: true,
+          netbanking: true,
+          wallet: true,
         },
         theme: {
           color: "#40e0d0",
@@ -74,10 +111,15 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
         }
       };
 
+      console.log("PAYMENT_DEBUG: Opening Razorpay popup...");
       const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response){
+          console.error("PAYMENT_DEBUG: Payment failed popup event", response.error);
+          toast.error(`Payment failed: ${response.error.description}`);
+      });
       rzp.open();
     } catch (error) {
-      console.error("Payment initialization failed:", error);
+      console.error("PAYMENT_DEBUG: Payment initialization failed:", error);
       toast.error("Failed to initialize payment. Please try again.");
       setLoading(false);
     }
@@ -88,14 +130,15 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
     setLoading(true);
 
     try {
+      const token = localStorage.getItem("userToken");
+      
       if (event.eventFee > 0) {
-        // NEW DECOUPLED FLOW: Create Order first with registration data
         toast.loading("Initiating payment...", { duration: 2000 });
         
         const orderRes = await createOrder({
           eventId: event._id,
           registrationData: formData
-        });
+        }, token); // Pass token for membership check
 
         if (orderRes.data.success) {
           await handlePayment(orderRes.data, event.title);
@@ -107,15 +150,16 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
           eventId: event._id,
         });
 
-        if (res.data.success) {
+        if (res.success) {
           toast.success("Registration successful!");
           onShowSuccess();
           onClose();
+        } else {
+          throw new Error(res.message || "Registration failed");
         }
       }
     } catch (error) {
       console.error("Registration/Order Error:", error);
-      alert(`DEBUG: ${error.message}\nURL: ${error.config?.url}\nStatus: ${error.response?.status}`);
       const errorMsg = error.response?.data?.message || "Action failed. Please try again.";
       toast.error(errorMsg);
     } finally {
@@ -188,12 +232,20 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
             </div>
 
             <div className="mt-10">
+              {discountInfo.discount > 0 && (
+                <div className="mb-4 rounded-xl bg-[#40e0d0]/10 p-4 border border-[#40e0d0]/20">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-[#40e0d0] font-medium">Member Discount Applied ({discountInfo.discount}%)</span>
+                    <span className="text-xs text-slate-400 line-through">₹{event.eventFee}</span>
+                  </div>
+                </div>
+              )}
               <button
                 type="submit"
                 disabled={loading}
                 className="w-full rounded-xl bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] py-4 text-lg font-bold text-[#061323] transition hover:scale-[1.01] active:scale-95 disabled:opacity-50"
               >
-                {loading ? "Processing..." : event.eventFee > 0 ? `Pay ₹${event.eventFee} & Register` : "Confirm Registration"}
+                {loading ? "Processing..." : event.eventFee > 0 ? `Pay ₹${discountInfo.finalFee} & Register` : "Confirm Registration"}
               </button>
               <p className="mt-4 text-center text-[11px] text-slate-500 uppercase tracking-widest">
                 By registering, you agree to our terms and safety guidelines.
