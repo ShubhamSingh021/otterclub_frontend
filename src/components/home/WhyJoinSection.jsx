@@ -7,10 +7,31 @@ const palette = [
   "from-[#8f65ff]/25 to-[#2b2f7f]/25",
 ];
 
-const WhyJoinSection = ({ section }) => {
-  if (!section) {
-    return null;
-  }
+const defaultSection = {
+  sectionLabel: "Why Join Us",
+  title: "A Platform Built for Your Growth",
+  subtitle: "Experience sports like never before with our community-driven approach.",
+  cards: [
+    {
+      title: "Premium Events",
+      description: "Access to high-caliber tournaments and friendly matches organized with professional standards.",
+      meta: "Competitive",
+    },
+    {
+      title: "Strong Community",
+      description: "Join a network of like-minded individuals who support and challenge each other.",
+      meta: "Inclusive",
+    },
+    {
+      title: "Skill Elevation",
+      description: "Improve your game through consistent play and interactions with experienced athletes.",
+      meta: "Development",
+    },
+  ],
+};
+
+const WhyJoinSection = ({ section: cmsSection }) => {
+  const section = cmsSection || defaultSection;
 
   return (
     <SectionWrapper id="why-join" className="relative">

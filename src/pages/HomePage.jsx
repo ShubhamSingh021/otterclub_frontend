@@ -21,25 +21,25 @@ const HomePage = () => {
   const aboutContent = data?.aboutContent || null;
   const testimonials = data?.testimonials || [];
   const homepageSections = data?.homepageSections || {};
+  const featuredEvents = data?.featuredEvents || [];
 
-  const hasRenderableContent =
-    Boolean(heroContent) ||
-    Boolean(aboutContent) ||
-    Boolean(homepageSections.whyJoinUs) ||
-    Boolean(homepageSections.eventsPreview) ||
-    Boolean(homepageSections.contactCta) ||
-    testimonials.length > 0;
+  console.log("FRONTEND_HOMEPAGE_DEBUG: featuredEvents count:", featuredEvents.length);
+  if (featuredEvents.length > 0) {
+    console.log("FRONTEND_HOMEPAGE_DEBUG: First event:", featuredEvents[0].title);
+  }
 
   return (
     <AppShell siteSettings={siteSettings}>
-      {!hasRenderableContent ? <EmptyHomepageState /> : null}
       <HeroSection content={heroContent} />
       <AboutSection
         content={aboutContent}
         fallbackImageUrl={heroContent?.backgroundImageUrl || siteSettings?.logoUrl || ""}
       />
       <WhyJoinSection section={homepageSections.whyJoinUs} />
-      <EventsPreviewSection section={homepageSections.eventsPreview} />
+      <EventsPreviewSection 
+        section={homepageSections.eventsPreview} 
+        featuredEvents={featuredEvents}
+      />
       <TestimonialsSection section={homepageSections.testimonials} testimonials={testimonials} />
       <ContactCTASection section={homepageSections.contactCta} siteSettings={siteSettings} />
     </AppShell>

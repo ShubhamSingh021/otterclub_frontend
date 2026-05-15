@@ -1,11 +1,23 @@
 import SectionWrapper from "../layout/SectionWrapper.jsx";
 
-const ContactCTASection = ({ section, siteSettings }) => {
-  if (!section && !siteSettings?.contact) {
-    return null;
-  }
+const defaultSection = {
+  sectionLabel: "Get In Touch",
+  title: "Ready to Elevate Your Game?",
+  subtitle: "Join our community today or reach out for any inquiries. We're here to help you get started.",
+  ctaLabel: "Join Otter Society",
+  ctaHref: "/auth/register",
+};
 
-  const contact = siteSettings?.contact || {};
+const defaultContact = {
+  email: "hello@ottersociety.com",
+  phone: "+1 (555) 000-0000",
+  whatsapp: "+15550000000",
+  address: "City Sports Complex, Downtown",
+};
+
+const ContactCTASection = ({ section: cmsSection, siteSettings }) => {
+  const section = cmsSection || defaultSection;
+  const contact = siteSettings?.contact || defaultContact;
   const contactCards = [
     { label: "Email", value: contact.email, href: contact.email ? `mailto:${contact.email}` : "" },
     { label: "Phone", value: contact.phone, href: contact.phone ? `tel:${contact.phone}` : "" },

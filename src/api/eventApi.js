@@ -20,6 +20,11 @@ export const getEventBySlug = async (slug) => {
   return response.data;
 };
 
+export const getEventById = async (id) => {
+  const response = await apiClient.get(`/events/id/${id}`);
+  return response.data;
+};
+
 // Admin actions
 export const createEvent = async (eventData) => {
   const response = await apiClient.post("/events", eventData, {

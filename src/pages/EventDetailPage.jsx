@@ -5,23 +5,37 @@ import Navbar from "../components/home/Navbar.jsx";
 import Footer from "../components/home/Footer.jsx";
 import Container from "../components/layout/Container.jsx";
 import { format } from "date-fns";
+import RegistrationModal from "../components/events/RegistrationModal.jsx";
+import toast, { Toaster } from "react-hot-toast";
 
 const EventDetailPage = () => {
   const { slug } = useParams();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeadlinePassed, setIsDeadlinePassed] = useState(false);
+
+  const checkDeadline = (deadlineDate) => {
+    const now = new Date();
+    const deadline = new Date(deadlineDate);
+    // Set deadline to the end of the day (23:59:59) for better user experience
+    deadline.setHours(23, 59, 59, 999);
+    return now > deadline;
+  };
+
+  const fetchEvent = async () => {
+    try {
+      const res = await getEventBySlug(slug);
+      setEvent(res.data);
+      setIsDeadlinePassed(checkDeadline(res.data.registrationDeadline));
+    } catch (error) {
+      console.error("Failed to fetch event:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchEvent = async () => {
-      try {
-        const res = await getEventBySlug(slug);
-        setEvent(res.data);
-      } catch (error) {
-        console.error("Failed to fetch event:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchEvent();
   }, [slug]);
 
@@ -77,13 +91,31 @@ const EventDetailPage = () => {
                 </div>
               </div>
 
-              <button className="w-full rounded-full bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] py-4 text-lg font-bold text-[#061323] transition hover:scale-[1.02] active:scale-95 disabled:opacity-50" disabled={event.status !== "upcoming"}>
-                {event.status === "upcoming" ? "Register Now" : `Event is ${event.status}`}
+              <button 
+                onClick={() => setIsModalOpen(true)}
+                className="w-full rounded-full bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] py-4 text-lg font-bold text-[#061323] transition hover:scale-[1.02] active:scale-95 disabled:opacity-50" 
+                disabled={event.status !== "upcoming" || event.currentParticipants >= event.maxParticipants || isDeadlinePassed}
+              >
+                {event.status !== "upcoming" 
+                  ? `Event is ${event.status}` 
+                  : event.currentParticipants >= event.maxParticipants 
+                    ? "Full Capacity" 
+                    : isDeadlinePassed 
+                      ? "Deadline Passed"
+                      : "Register Now"
+                }
               </button>
             </div>
           </div>
         </Container>
       </main>
+      <RegistrationModal 
+        event={event} 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onShowSuccess={fetchEvent}
+      />
+      <Toaster position="top-center" />
       <Footer />
     </div>
   );

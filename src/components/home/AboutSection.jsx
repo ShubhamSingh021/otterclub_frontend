@@ -2,10 +2,22 @@ import CMSImage from "../common/CMSImage.jsx";
 import SectionHeader from "../common/SectionHeader.jsx";
 import SectionWrapper from "../layout/SectionWrapper.jsx";
 
-const AboutSection = ({ content, fallbackImageUrl }) => {
-  if (!content) {
-    return null;
-  }
+const defaultContent = {
+  sectionLabel: "About Us",
+  heading: "Driven by Sports, United by Community",
+  description: "Otter Society is more than just a club; it's a movement. We bring together individuals who share a passion for athleticism, competition, and mutual growth.",
+  mission: "To create an inclusive ecosystem where every member can thrive through high-quality sporting events and meaningful connections.",
+  vision: "To become the premier destination for sports enthusiasts seeking both competitive excellence and a supportive community.",
+  keyPoints: [
+    "Professional Event Management",
+    "Diverse Sporting Categories",
+    "Exclusive Member Benefits",
+    "Vibrant Networking Opportunities",
+  ],
+};
+
+const AboutSection = ({ content: cmsContent, fallbackImageUrl }) => {
+  const content = cmsContent || defaultContent;
 
   const primaryImage = content.imageUrl || fallbackImageUrl || "";
 

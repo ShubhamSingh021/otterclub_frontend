@@ -5,10 +5,26 @@ import Container from "../layout/Container.jsx";
 const sortLinks = (links = []) =>
   [...links].sort((a, b) => Number(a.order || 0) - Number(b.order || 0));
 
-const Navbar = ({ settings }) => {
+const defaultLinks = [
+  { label: "Home", href: "#home", order: 1 },
+  { label: "About", href: "#about", order: 2 },
+  { label: "Why Join", href: "#why-join", order: 3 },
+  { label: "Events", href: "#events", order: 4 },
+  { label: "Testimonials", href: "#testimonials", order: 5 },
+  { label: "Contact", href: "#contact", order: 6 },
+];
+
+const defaultSettings = {
+  siteName: "Otter Society",
+  siteTagline: "Premium Sports Community",
+  globalCta: { label: "Get Started", href: "/auth/register" },
+};
+
+const Navbar = ({ settings: cmsSettings }) => {
+  const settings = cmsSettings || defaultSettings;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const navLinks = useMemo(() => sortLinks(settings?.navigationLinks), [settings]);
-  const globalCta = settings?.globalCta;
+  const navLinks = useMemo(() => sortLinks(settings?.navigationLinks?.length ? settings.navigationLinks : defaultLinks), [settings]);
+  const globalCta = settings?.globalCta || defaultSettings.globalCta;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#050b16]/80 backdrop-blur-xl">

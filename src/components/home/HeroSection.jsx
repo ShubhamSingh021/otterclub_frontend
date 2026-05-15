@@ -1,12 +1,23 @@
 import { motion } from "framer-motion";
 import Container from "../layout/Container.jsx";
 
-const HeroSection = ({ content }) => {
-  if (!content) {
-    return null;
-  }
+const defaultContent = {
+  eyebrow: "Welcome to Otter Society",
+  title: "Empowering Your Passion for Sports",
+  subtitle: "Join a vibrant community of athletes and enthusiasts. Discover premium events, connect with peers, and elevate your game.",
+  primaryCta: { label: "Explore Events", href: "#events" },
+  secondaryCta: { label: "Learn More", href: "#about" },
+  stats: [
+    { label: "Members", value: "2.5K+" },
+    { label: "Events", value: "150+" },
+    { label: "Clubs", value: "25+" },
+    { label: "States", value: "12" },
+  ],
+};
 
-  const stats = content.stats || [];
+const HeroSection = ({ content: cmsContent }) => {
+  const content = cmsContent || defaultContent;
+  const stats = content.stats || defaultContent.stats;
 
   return (
     <section id="home" className="relative pb-10 pt-2 sm:pt-4 lg:pb-16">

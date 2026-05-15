@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { createEvent, updateEvent, getEventBySlug, getEvents } from "../api/eventApi.js";
+import { createEvent, updateEvent, getEventBySlug, getEvents, getEventById } from "../api/eventApi.js";
 import Container from "../components/layout/Container.jsx";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -31,19 +31,27 @@ const AdminEventFormPage = () => {
 
   const [eventImage, setEventImage] = useState(null);
   const [galleryImages, setGalleryImages] = useState([]);
+  const [previewEventImage, setPreviewEventImage] = useState("");
+  const [previewGallery, setPreviewGallery] = useState([]);
 
   useEffect(() => {
     if (id) {
       const fetchEvent = async () => {
         try {
-          const res = await getEvents(); // We need to find by ID, let's use getEvents and filter for now or add getById
-          const event = res.data.find(e => e._id === id);
+          const res = await getEventById(id);
+          const event = res.data;
           if (event) {
             setFormData({
               ...event,
-              eventDate: event.eventDate.split("T")[0],
-              registrationDeadline: event.registrationDeadline.split("T")[0],
+              eventDate: event.eventDate?.split("T")[0] || "",
+              registrationDeadline: event.registrationDeadline?.split("T")[0] || "",
             });
+            // Set existing image URLs for preview
+            if (event.eventImage) setPreviewEventImage(event.eventImage);
+            if (event.galleryImages && Array.isArray(event.galleryImages)) {
+              const validImages = event.galleryImages.filter(img => img && typeof img === 'string');
+              setPreviewGallery(validImages);
+            }
           }
         } catch (error) {
           toast.error("Failed to load event");
@@ -65,9 +73,17 @@ const AdminEventFormPage = () => {
 
   const handleFileChange = (e) => {
     if (e.target.name === "eventImage") {
-      setEventImage(e.target.files[0]);
+      const file = e.target.files[0];
+      setEventImage(file);
+      if (file) {
+        setPreviewEventImage(URL.createObjectURL(file));
+      }
     } else {
-      setGalleryImages(Array.from(e.target.files));
+      const files = Array.from(e.target.files);
+      setGalleryImages(files);
+      if (files.length > 0) {
+        setPreviewGallery(files.map(file => URL.createObjectURL(file)));
+      }
     }
   };
 
@@ -101,15 +117,30 @@ const AdminEventFormPage = () => {
   if (initialLoading) return <div className="flex min-h-screen items-center justify-center bg-[#060b16] text-white">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-[#060b16] py-20 text-white">
+    <div className="min-h-screen bg-[#060b16] text-white">
       <Toaster position="top-center" />
-      <Container className="max-w-4xl">
-        <div className="mb-10 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">{id ? "Edit Event" : "Create Event"}</h1>
-            <p className="mt-1 text-slate-400">Fill in the details below to {id ? "update" : "list"} the event.</p>
+      <nav className="border-b border-white/10 bg-[#081429]/50 backdrop-blur-md sticky top-0 z-50">
+        <Container className="flex h-20 items-center justify-between">
+          <h1 className="font-display text-xl font-bold tracking-tight">Admin Dashboard</h1>
+          <div className="flex gap-6 items-center">
+            <button onClick={() => navigate("/admin/registrations")} className="text-sm font-medium text-slate-400 hover:text-white">Registrations</button>
+            <button onClick={() => navigate("/admin/events")} className="text-sm font-medium text-slate-400 hover:text-white">Manage Events</button>
+            <button onClick={() => navigate("/admin/cms")} className="text-sm font-medium text-slate-400 hover:text-white">Manage CMS</button>
+            <button onClick={() => navigate("/")} className="text-sm font-medium text-slate-400 hover:text-white">View Site</button>
+            <button onClick={() => {
+              localStorage.removeItem("adminToken");
+              localStorage.removeItem("adminUser");
+              navigate("/admin/login");
+            }} className="text-sm font-medium text-red-400 hover:text-red-300">Logout</button>
           </div>
-          <button onClick={() => navigate("/admin/events")} className="text-sm font-medium text-slate-400 hover:text-white">← Back to List</button>
+        </Container>
+      </nav>
+
+      <main className="py-20">
+      <Container className="max-w-4xl">
+        <div className="mb-10">
+          <h1 className="text-3xl font-bold">{id ? "Edit Event" : "Create Event"}</h1>
+          <p className="mt-1 text-slate-400">Fill in the details below to {id ? "update" : "list"} the event.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="grid gap-8 lg:grid-cols-2">
@@ -161,8 +192,26 @@ const AdminEventFormPage = () => {
             </div>
           </div>
 
-          {/* Logistics & Images */}
+          {/* Logistics & Rules */}
           <div className="space-y-6">
+            <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-8">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-[#40e0d0]">Rules & Requirements</h3>
+              <div className="mt-6 space-y-4">
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Skill Level</label>
+                  <input name="skillLevel" value={formData.skillLevel} onChange={handleChange} className="mt-2 w-full rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-white focus:border-[#40e0d0]" placeholder="e.g. Beginners, Pro, All Levels" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Age Restriction</label>
+                  <input name="ageRestriction" value={formData.ageRestriction} onChange={handleChange} className="mt-2 w-full rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-white focus:border-[#40e0d0]" placeholder="e.g. 18+, Open for all" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Health Disclaimer</label>
+                  <textarea name="healthDisclaimer" value={formData.healthDisclaimer} onChange={handleChange} rows="2" className="mt-2 w-full rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-white focus:border-[#40e0d0]" placeholder="Health related rules..." />
+                </div>
+              </div>
+            </div>
+
             <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-8">
               <h3 className="text-sm font-bold uppercase tracking-widest text-[#40e0d0]">Logistics & Pricing</h3>
               <div className="mt-6 space-y-4">
@@ -196,10 +245,30 @@ const AdminEventFormPage = () => {
               <div className="mt-6 space-y-4">
                 <div>
                   <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Cover Image</label>
+                  {previewEventImage && (
+                    <div className="mt-2 mb-4 relative aspect-video w-full overflow-hidden rounded-xl border border-white/10">
+                      <img src={previewEventImage} alt="Preview" className="h-full w-full object-cover" />
+                      <div className="absolute top-2 left-2 rounded-md bg-black/50 px-2 py-1 text-[10px] font-bold uppercase text-white backdrop-blur-sm">Current Image</div>
+                    </div>
+                  )}
                   <input type="file" name="eventImage" accept="image/*" onChange={handleFileChange} className="mt-2 w-full text-sm text-slate-400 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-white/20" />
                 </div>
                 <div>
                   <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Gallery (Multiple)</label>
+                  {previewGallery && previewGallery.length > 0 && (
+                    <div className="mt-2 mb-4 grid grid-cols-4 gap-2">
+                      {previewGallery.map((url, idx) => (
+                        <div key={idx} className="relative aspect-square overflow-hidden rounded-lg border border-white/10 bg-white/5">
+                          <img 
+                            src={url} 
+                            alt={`Gallery ${idx}`} 
+                            className="h-full w-full object-cover"
+                            onError={(e) => e.target.closest('.relative').style.display = 'none'} 
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <input type="file" multiple name="galleryImages" accept="image/*" onChange={handleFileChange} className="mt-2 w-full text-sm text-slate-400 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-white/20" />
                 </div>
               </div>
@@ -215,6 +284,7 @@ const AdminEventFormPage = () => {
           </div>
         </form>
       </Container>
+      </main>
     </div>
   );
 };

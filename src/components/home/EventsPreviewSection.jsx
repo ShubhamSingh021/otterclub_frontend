@@ -12,36 +12,64 @@ const fieldList = [
   { key: "slots", label: "Slots" },
 ];
 
-const EventsPreviewSection = ({ section }) => {
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
+const defaultSection = {
+  sectionLabel: "Featured Events",
+  title: "Join the Upcoming Action",
+  subtitle: "Don't miss out on our latest sporting events. Register now and be part of the community.",
+};
+
+const EventsPreviewSection = ({ section: cmsSection, featuredEvents }) => {
+  const [events, setEvents] = useState(featuredEvents || []);
+  const [loading, setLoading] = useState(!featuredEvents);
+  const [error, setError] = useState(null);
+  const section = cmsSection || defaultSection;
+
+  const fetchEvents = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await getUpcomingEvents();
+      setEvents(res.data);
+    } catch (err) {
+      console.error("Failed to fetch upcoming events:", err);
+      setError("Unable to load events. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const res = await getUpcomingEvents();
-        setEvents(res.data);
-      } catch (error) {
-        console.error("Failed to fetch upcoming events:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Only use the provided featuredEvents if the array is not empty.
+    if (featuredEvents && featuredEvents.length > 0) {
+      setEvents(featuredEvents);
+      setLoading(false);
+      return;
+    }
     fetchEvents();
-  }, []);
-
-  if (!section) {
-    return null;
-  }
+  }, [featuredEvents]);
 
   return (
     <SectionWrapper id="events">
       <SectionHeader label={section.sectionLabel} title={section.title} subtitle={section.subtitle || section.body} />
       
       {loading ? (
-        <div className="flex h-40 items-center justify-center text-slate-400">Loading events...</div>
+        <div className="flex h-40 items-center justify-center text-slate-400 italic">
+          <div className="animate-pulse">Loading featured events...</div>
+        </div>
+      ) : error ? (
+        <div className="flex h-40 flex-col items-center justify-center gap-4 text-slate-400">
+          <p>{error}</p>
+          <button 
+            onClick={fetchEvents}
+            className="rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-xs font-bold text-white transition hover:bg-white/10"
+          >
+            Retry
+          </button>
+        </div>
       ) : events.length === 0 ? (
-        <div className="flex h-40 items-center justify-center text-slate-400">No upcoming events at the moment.</div>
+        <div className="flex h-40 items-center justify-center text-slate-400 italic">
+          No upcoming events at the moment.
+        </div>
       ) : (
         <div className="grid gap-5 lg:grid-cols-3">
           {events.map((event) => (

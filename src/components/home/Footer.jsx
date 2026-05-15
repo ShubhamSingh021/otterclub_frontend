@@ -1,8 +1,28 @@
 import Container from "../layout/Container.jsx";
 
-const Footer = ({ settings }) => {
-  const socialLinks = settings?.socialLinks || [];
-  const navLinks = settings?.navigationLinks || [];
+const defaultLinks = [
+  { label: "Home", href: "#home" },
+  { label: "About", href: "#about" },
+  { label: "Events", href: "#events" },
+  { label: "Contact", href: "#contact" },
+];
+
+const defaultSocials = [
+  { label: "Instagram", href: "https://instagram.com" },
+  { label: "X / Twitter", href: "https://twitter.com" },
+  { label: "LinkedIn", href: "https://linkedin.com" },
+];
+
+const defaultSettings = {
+  siteName: "Otter Society",
+  siteTagline: "Building the future of community sports and athlete engagement.",
+  contact: { address: "Global Presence | Premium Sports Club" },
+};
+
+const Footer = ({ settings: cmsSettings }) => {
+  const settings = cmsSettings || defaultSettings;
+  const socialLinks = settings?.socialLinks?.length ? settings.socialLinks : defaultSocials;
+  const navLinks = settings?.navigationLinks?.length ? settings.navigationLinks : defaultLinks;
 
   return (
     <footer className="border-t border-white/10 bg-[#060b15] py-12">

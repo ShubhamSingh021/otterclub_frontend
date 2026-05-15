@@ -5,10 +5,36 @@ import SectionWrapper from "../layout/SectionWrapper.jsx";
 
 const windowSize = 3;
 
-const TestimonialsSection = ({ testimonials, section }) => {
-  if (!testimonials?.length) {
-    return null;
-  }
+const defaultSection = {
+  sectionLabel: "Testimonials",
+  title: "What Our Members Say",
+  subtitle: "Real stories from athletes and community members who have found their home with us.",
+};
+
+const defaultTestimonials = [
+  {
+    _id: "default-1",
+    quote: "Otter Society has completely changed how I approach my sport. The community is supportive and the events are top-notch.",
+    personName: "Alex Rivera",
+    personRole: "Member since 2024",
+  },
+  {
+    _id: "default-2",
+    quote: "I've made lifelong friends here. The atmosphere is always positive and energetic. Highly recommend joining!",
+    personName: "Sarah Jenkins",
+    personRole: "Community Lead",
+  },
+  {
+    _id: "default-3",
+    quote: "The best platform for competitive sports in the region. The organization is seamless and the level of play is excellent.",
+    personName: "Michael Chen",
+    personRole: "Professional Athlete",
+  },
+];
+
+const TestimonialsSection = ({ testimonials: cmsTestimonials, section: cmsSection }) => {
+  const testimonials = (cmsTestimonials?.length ? cmsTestimonials : defaultTestimonials);
+  const section = cmsSection || defaultSection;
 
   const [startIndex, setStartIndex] = useState(0);
   const canSlide = testimonials.length > windowSize;
