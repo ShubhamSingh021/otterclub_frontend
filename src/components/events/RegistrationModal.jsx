@@ -27,11 +27,9 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
     }));
   };
 
-  const handlePayment = async (registrationId, amount, eventTitle) => {
+  const handlePayment = async (orderData, eventTitle) => {
     try {
-      const orderRes = await createOrder(registrationId);
-      // createOrder returns the full axios response, which has .data
-      const { order } = orderRes.data;
+      const { order } = orderData;
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY,
@@ -44,8 +42,8 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
           try {
             setLoading(true);
             const verifyRes = await verifyPayment({
-              ...response,
-              registrationId
+              ...response
+              // Registration is created inside verifyPayment on backend now
             });
 
             if (verifyRes.data.success) {
@@ -55,7 +53,7 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
             }
           } catch (err) {
             console.error("Verification failed:", err);
-            toast.error("Payment verification failed. Please contact support.");
+            toast.error(err.response?.data?.message || "Payment verification failed. Please contact support.");
           } finally {
             setLoading(false);
           }
@@ -71,7 +69,7 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
         modal: {
           ondismiss: () => {
             setLoading(false);
-            toast.error("Payment cancelled. Registration is pending.");
+            toast.error("Payment cancelled. Registration not complete.");
           }
         }
       };
@@ -90,29 +88,35 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
     setLoading(true);
 
     try {
-      const res = await createRegistration({
-        ...formData,
-        eventId: event._id,
-      });
-
-      // The backend returns { success: true, data: { _id: ... } }
-      const registrationId = res.data.data?._id;
-      
-      if (!registrationId) {
-        throw new Error("Invalid registration ID received from server");
-      }
-
       if (event.eventFee > 0) {
+        // NEW DECOUPLED FLOW: Create Order first with registration data
         toast.loading("Initiating payment...", { duration: 2000 });
-        await handlePayment(registrationId, event.eventFee, event.title);
+        
+        const orderRes = await createOrder({
+          eventId: event._id,
+          registrationData: formData
+        });
+
+        if (orderRes.data.success) {
+          await handlePayment(orderRes.data, event.title);
+        }
       } else {
-        toast.success("Registration successful!");
-        onShowSuccess();
-        onClose();
+        // FREE EVENT: Use direct registration
+        const res = await createRegistration({
+          ...formData,
+          eventId: event._id,
+        });
+
+        if (res.data.success) {
+          toast.success("Registration successful!");
+          onShowSuccess();
+          onClose();
+        }
       }
     } catch (error) {
-      console.error("Registration Error:", error);
-      const errorMsg = error.response?.data?.message || "Registration failed. Please try again.";
+      console.error("Registration/Order Error:", error);
+      alert(`DEBUG: ${error.message}\nURL: ${error.config?.url}\nStatus: ${error.response?.status}`);
+      const errorMsg = error.response?.data?.message || "Action failed. Please try again.";
       toast.error(errorMsg);
     } finally {
       setLoading(false);
