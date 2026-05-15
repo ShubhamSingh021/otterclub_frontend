@@ -57,9 +57,10 @@ const EventDetailPage = () => {
               <img src={event.eventImage} alt={event.title} className="aspect-square w-full object-cover" />
               {event.galleryImages?.length > 0 && (
                 <div className="grid grid-cols-4 gap-2 p-2">
-                  {event.galleryImages.map((img, i) => (
-                    <img key={i} src={img} alt="" className="aspect-square rounded-xl object-cover" />
-                  ))}
+                  {event.galleryImages.map((img, i) => {
+                    const imgSrc = typeof img === 'string' ? img : img.url;
+                    return <img key={i} src={imgSrc} alt="" className="aspect-square rounded-xl object-cover" />;
+                  })}
                 </div>
               )}
             </div>

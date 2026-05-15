@@ -1,6 +1,7 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { createRegistration } from "../../api/registrationApi.js";
+import { createOrder, verifyPayment } from "../../api/paymentApi.js";
 
 const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
   const [formData, setFormData] = useState({
@@ -26,21 +27,93 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
     }));
   };
 
+  const handlePayment = async (registrationId, amount, eventTitle) => {
+    try {
+      const orderRes = await createOrder(registrationId);
+      // createOrder returns the full axios response, which has .data
+      const { order } = orderRes.data;
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY,
+        amount: order.amount,
+        currency: order.currency,
+        name: "Otter Society",
+        description: `Registration for ${eventTitle}`,
+        order_id: order.id,
+        handler: async (response) => {
+          try {
+            setLoading(true);
+            const verifyRes = await verifyPayment({
+              ...response,
+              registrationId
+            });
+
+            if (verifyRes.data.success) {
+              toast.success("Payment successful! Registration confirmed.");
+              onShowSuccess();
+              onClose();
+            }
+          } catch (err) {
+            console.error("Verification failed:", err);
+            toast.error("Payment verification failed. Please contact support.");
+          } finally {
+            setLoading(false);
+          }
+        },
+        prefill: {
+          name: formData.fullName,
+          email: formData.email,
+          contact: formData.phone,
+        },
+        theme: {
+          color: "#40e0d0",
+        },
+        modal: {
+          ondismiss: () => {
+            setLoading(false);
+            toast.error("Payment cancelled. Registration is pending.");
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error("Payment initialization failed:", error);
+      toast.error("Failed to initialize payment. Please try again.");
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      await createRegistration({
+      const res = await createRegistration({
         ...formData,
         eventId: event._id,
       });
-      toast.success("Registration successful!");
-      onShowSuccess();
-      onClose();
+
+      // The backend returns { success: true, data: { _id: ... } }
+      const registrationId = res.data.data?._id;
+      
+      if (!registrationId) {
+        throw new Error("Invalid registration ID received from server");
+      }
+
+      if (event.eventFee > 0) {
+        toast.loading("Initiating payment...", { duration: 2000 });
+        await handlePayment(registrationId, event.eventFee, event.title);
+      } else {
+        toast.success("Registration successful!");
+        onShowSuccess();
+        onClose();
+      }
     } catch (error) {
-      console.error("Registration failed:", error);
-      toast.error(error.response?.data?.message || "Registration failed. Please try again.");
+      console.error("Registration Error:", error);
+      const errorMsg = error.response?.data?.message || "Registration failed. Please try again.";
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -49,7 +122,7 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-[#060b16]/90 backdrop-blur-md" onClick={onClose} />
-      
+
       <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-[#0a1222] shadow-2xl">
         <div className="max-h-[90vh] overflow-y-auto">
           <div className="border-b border-white/10 bg-white/[0.03] p-6">
@@ -72,12 +145,12 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
               <FormField label="Email Address" name="email" type="email" value={formData.email} onChange={handleChange} required placeholder="john@example.com" />
               <FormField label="Phone Number" name="phone" value={formData.phone} onChange={handleChange} required placeholder="+1 234 567 890" />
               <FormField label="Age" name="age" type="number" value={formData.age} onChange={handleChange} required placeholder="Min 18+" />
-              
+
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Gender</label>
-                <select 
-                  name="gender" 
-                  value={formData.gender} 
+                <select
+                  name="gender"
+                  value={formData.gender}
                   onChange={handleChange}
                   className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white focus:border-[#40e0d0] focus:outline-none focus:ring-1 focus:ring-[#40e0d0]"
                 >
@@ -93,11 +166,11 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
 
             <div className="mt-6 space-y-6">
               <div className="flex items-center gap-3">
-                <input 
-                  type="checkbox" 
-                  id="previousParticipation" 
-                  name="previousParticipation" 
-                  checked={formData.previousParticipation} 
+                <input
+                  type="checkbox"
+                  id="previousParticipation"
+                  name="previousParticipation"
+                  checked={formData.previousParticipation}
                   onChange={handleChange}
                   className="h-5 w-5 rounded border-white/10 bg-white/5 text-[#40e0d0] focus:ring-[#40e0d0]"
                 />
@@ -111,12 +184,12 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
             </div>
 
             <div className="mt-10">
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={loading}
                 className="w-full rounded-xl bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] py-4 text-lg font-bold text-[#061323] transition hover:scale-[1.01] active:scale-95 disabled:opacity-50"
               >
-                {loading ? "Processing..." : "Confirm Registration"}
+                {loading ? "Processing..." : event.eventFee > 0 ? `Pay ₹${event.eventFee} & Register` : "Confirm Registration"}
               </button>
               <p className="mt-4 text-center text-[11px] text-slate-500 uppercase tracking-widest">
                 By registering, you agree to our terms and safety guidelines.
