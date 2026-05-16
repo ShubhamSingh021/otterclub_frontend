@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import toast from "react-hot-toast";
@@ -9,6 +9,7 @@ const AdminScannerPage = () => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [lastScannedId, setLastScannedId] = useState(null);
   const navigate = useNavigate();
+  const scannerRef = useRef(null);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
 
@@ -19,45 +20,62 @@ const AdminScannerPage = () => {
       return;
     }
 
-    const scanner = new Html5QrcodeScanner("reader", {
-      qrbox: {
-        width: 250,
-        height: 250,
-      },
-      fps: 5,
-    });
+    // Delay initialization slightly to prevent React 18 double-mount issues
+    const timer = setTimeout(() => {
+      if (!scannerRef.current) {
+        const scanner = new Html5QrcodeScanner(
+          "reader",
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0,
+          },
+          false
+        );
 
-    scanner.render(onScanSuccess, onScanError);
-
-    async function onScanSuccess(result) {
-      try {
-        const data = JSON.parse(result);
-        if (data.type === "event_ticket" && data.registrationId) {
-          if (data.registrationId !== lastScannedId) {
-            scanner.pause();
-            setScanResult(data);
-            setLastScannedId(data.registrationId);
-            await verifyTicket(data.registrationId, scanner);
-          }
-        } else {
-          toast.error("Invalid QR Code: Not an Otter Club ticket");
-        }
-      } catch (err) {
-        // Not a JSON or invalid ticket
-        console.error("Scan error:", err);
+        scanner.render(onScanSuccess, onScanError);
+        scannerRef.current = scanner;
       }
-    }
-
-    function onScanError(err) {
-      // console.warn(err);
-    }
+    }, 300);
 
     return () => {
-      scanner.clear();
+      clearTimeout(timer);
+      if (scannerRef.current) {
+        scannerRef.current.clear().catch(err => {
+          console.error("Scanner cleanup error:", err);
+        });
+        scannerRef.current = null;
+      }
     };
-  }, [navigate, lastScannedId]);
+  }, []);
 
-  const verifyTicket = async (registrationId, scanner) => {
+  async function onScanSuccess(result) {
+    try {
+      const data = JSON.parse(result);
+      if (data.type === "event_ticket" && data.registrationId) {
+        if (data.registrationId !== lastScannedId) {
+          if (scannerRef.current) {
+            try {
+              scannerRef.current.pause();
+            } catch (e) {}
+          }
+          setScanResult(data);
+          setLastScannedId(data.registrationId);
+          await verifyTicket(data.registrationId);
+        }
+      } else {
+        toast.error("Invalid QR Code: Not an Otter Club ticket");
+      }
+    } catch (err) {
+      console.error("Scan error:", err);
+    }
+  }
+
+  function onScanError(err) {
+    // Ignore frequent scan errors from the library
+  }
+
+  const verifyTicket = async (registrationId) => {
     setIsVerifying(true);
     const token = localStorage.getItem("adminToken");
     
@@ -71,8 +89,7 @@ const AdminScannerPage = () => {
       );
 
       if (response.data.success) {
-        toast.success(response.data.message, { duration: 5000 });
-        // Play success sound if possible
+        toast.success(response.data.message || "Attendance marked successfully!", { duration: 5000 });
       }
     } catch (error) {
       const msg = error.response?.data?.message || "Verification failed";
@@ -83,7 +100,11 @@ const AdminScannerPage = () => {
       setTimeout(() => {
         setScanResult(null);
         setLastScannedId(null);
-        scanner.resume();
+        if (scannerRef.current) {
+          try {
+            scannerRef.current.resume();
+          } catch (e) {}
+        }
       }, 3000);
     }
   };
@@ -104,21 +125,23 @@ const AdminScannerPage = () => {
             </div>
           )}
 
-          <div id="reader" className="overflow-hidden rounded-3xl border border-white/5"></div>
+          <div id="reader" className="overflow-hidden rounded-3xl border border-white/5 bg-[#0a1222]"></div>
 
           {scanResult && !isVerifying && (
-            <div className="mt-6 p-4 rounded-2xl bg-[#40e0d0]/10 border border-[#40e0d0]/20 animate-pulse">
-              <p className="text-[10px] text-[#40e0d0] font-black uppercase tracking-widest mb-1">Last Scanned</p>
-              <p className="font-bold text-white">{scanResult.userName}</p>
-              <p className="text-xs text-slate-400">{scanResult.eventTitle}</p>
+            <div className="mt-6 p-4 rounded-2xl bg-[#40e0d0]/10 border border-[#40e0d0]/20">
+              <p className="text-[10px] text-[#40e0d0] font-black uppercase tracking-widest mb-1">Checking Record...</p>
+              <p className="font-bold text-white">Please wait while we verify the ticket</p>
             </div>
           )}
         </div>
 
         <button 
           onClick={() => navigate("/admin/events")}
-          className="mt-8 w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-slate-400 font-bold hover:bg-white/10 transition"
+          className="mt-8 w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-slate-400 font-bold hover:bg-white/10 transition flex items-center justify-center gap-2"
         >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
           Back to Events
         </button>
       </div>
@@ -131,15 +154,24 @@ const AdminScannerPage = () => {
           background-color: #40e0d0 !important;
           color: #060b16 !important;
           border: none !important;
-          padding: 8px 20px !important;
+          padding: 10px 24px !important;
           border-radius: 12px !important;
           font-weight: 800 !important;
           text-transform: uppercase !important;
           font-size: 12px !important;
           cursor: pointer !important;
+          transition: all 0.2s !important;
+        }
+        #reader__dashboard_section_csr button:hover {
+          transform: scale(1.05) !important;
+          opacity: 0.9 !important;
         }
         #reader__scan_region video {
           border-radius: 20px !important;
+          object-fit: cover !important;
+        }
+        #reader img[alt="Info icon"], #reader img[alt="Camera icon"] {
+          display: none !important;
         }
       `}</style>
     </div>

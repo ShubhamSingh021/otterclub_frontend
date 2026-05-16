@@ -50,9 +50,20 @@ const AdminAnalyticsPage = () => {
   return (
     <div className="min-h-screen bg-[#060b16] text-white p-8">
       <div className="container mx-auto">
-        <header className="mb-12">
-          <h1 className="text-4xl font-black mb-2 tracking-tight uppercase">Platform Analytics</h1>
-          <p className="text-slate-400 font-medium">Real-time performance metrics and trends</p>
+        <header className="mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <h1 className="text-4xl font-black mb-2 tracking-tight uppercase">Platform Analytics</h1>
+            <p className="text-slate-400 font-medium">Real-time performance metrics and trends</p>
+          </div>
+          <button 
+            onClick={() => navigate("/admin/events")}
+            className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-6 py-3 font-bold text-slate-300 transition hover:bg-white/10 hover:text-[#40e0d0] self-start md:self-center"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Dashboard
+          </button>
         </header>
 
         {/* Stats Grid */}
