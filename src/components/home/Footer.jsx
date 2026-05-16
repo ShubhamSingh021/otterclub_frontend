@@ -29,7 +29,10 @@ const Footer = ({ settings: cmsSettings }) => {
       <Container>
         <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr_1fr]">
           <div className="space-y-4">
-            <p className="font-display text-2xl font-semibold text-white">{settings?.siteName || "Club Platform"}</p>
+            <div className="flex items-center gap-3">
+              <img src="/logo.jpg" alt="Logo" className="h-10 w-10 rounded-xl object-cover shadow-lg shadow-[#40e0d0]/10" />
+              <p className="font-display text-2xl font-semibold text-white">{settings?.siteName || "Club Platform"}</p>
+            </div>
             {settings?.siteTagline ? <p className="max-w-xs text-sm leading-relaxed text-slate-400">{settings.siteTagline}</p> : null}
             {settings?.contact?.address ? (
               <p className="max-w-xs text-sm leading-relaxed text-slate-500">{settings.contact.address}</p>
