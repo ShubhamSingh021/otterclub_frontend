@@ -19,3 +19,8 @@ export const deleteRegistration = async (id) => {
   const { data } = await API.delete(`/registrations/admin/${id}`);
   return data;
 };
+
+export const getMyRegistrations = async () => {
+  const { data } = await API.get("/registrations/my");
+  return data;
+};

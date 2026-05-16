@@ -11,6 +11,7 @@ import MembershipPage from "../pages/MembershipPage.jsx";
 import LoginPage from "../pages/LoginPage.jsx";
 import RegisterPage from "../pages/RegisterPage.jsx";
 import UserDashboard from "../pages/UserDashboard.jsx";
+import UpgradeMembership from "../pages/UpgradeMembership.jsx";
 import AdminMembershipsPage from "../pages/AdminMembershipsPage.jsx";
 import NotFoundPage from "../pages/NotFoundPage.jsx";
 
@@ -23,6 +24,8 @@ const AppRouter = () => (
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/dashboard" element={<UserDashboard />} />
+      <Route path="/member/dashboard" element={<UserDashboard />} />
+      <Route path="/member/upgrade" element={<UpgradeMembership />} />
       
       {/* Admin Routes */}
       <Route path="/admin/login" element={<AdminLoginPage />} />

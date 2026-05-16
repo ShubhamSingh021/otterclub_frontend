@@ -7,7 +7,9 @@ import {
   getAllMemberships, 
   updateMembershipStatus, 
   extendMembership, 
-  deleteMembership 
+  deleteMembership,
+  refundMembership,
+  resendConfirmationEmail
 } from "../api/membershipApi";
 
 const AdminMembershipsPage = () => {
@@ -58,6 +60,26 @@ const AdminMembershipsPage = () => {
       fetchMemberships();
     } catch (error) {
       toast.error("Failed to extend membership");
+    }
+  };
+
+  const handleRefund = async (id) => {
+    if (!window.confirm("Are you sure you want to refund and cancel this membership?")) return;
+    try {
+      await refundMembership(id, token);
+      toast.success("Membership refunded and cancelled");
+      fetchMemberships();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to refund membership");
+    }
+  };
+
+  const handleResendEmail = async (id) => {
+    try {
+      await resendConfirmationEmail(id, token);
+      toast.success("Confirmation email resent");
+    } catch (error) {
+      toast.error("Failed to resend email");
     }
   };
 
@@ -174,15 +196,21 @@ const AdminMembershipsPage = () => {
                         {format(new Date(m.expiryDate), 'MMM dd, yyyy')}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex gap-2">
+                        <div className="flex gap-3">
                           {m.membershipStatus === 'active' ? (
-                            <button onClick={() => handleStatusUpdate(m._id, 'cancelled')} className="text-red-400 hover:underline">Cancel</button>
+                            <button onClick={() => handleStatusUpdate(m._id, 'cancelled')} className="text-red-400 hover:underline text-xs font-bold uppercase">Cancel</button>
                           ) : (
-                            <button onClick={() => handleStatusUpdate(m._id, 'active')} className="text-green-400 hover:underline">Activate</button>
+                            <button onClick={() => handleStatusUpdate(m._id, 'active')} className="text-green-400 hover:underline text-xs font-bold uppercase">Activate</button>
                           )}
-                          <button onClick={() => handleExtend(m._id)} className="text-[#40e0d0] hover:underline">Extend</button>
-                          <button onClick={() => handleDelete(m._id)} className="text-slate-500 hover:text-red-500 transition text-right flex justify-end items-center">
-                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <button onClick={() => handleExtend(m._id)} className="text-[#40e0d0] hover:underline text-xs font-bold uppercase">Extend</button>
+                          <button onClick={() => handleRefund(m._id)} className="text-orange-400 hover:underline text-xs font-bold uppercase">Refund</button>
+                          <button onClick={() => handleResendEmail(m._id)} className="text-blue-400 hover:underline text-xs font-bold uppercase" title="Resend Email">
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                          </button>
+                          <button onClick={() => handleDelete(m._id)} className="text-slate-500 hover:text-red-500 transition">
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
                           </button>

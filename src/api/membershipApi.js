@@ -15,10 +15,17 @@ export const getMyMembership = async (token) => {
   return response.data;
 };
 
-export const createMembershipOrder = async (planType, token) => {
+export const getMembershipHistory = async (token) => {
+  const response = await axios.get(`${API_URL}/history`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const createMembershipOrder = async (planType, token, extra = {}) => {
   const response = await axios.post(
     `${API_URL}/create-order`,
-    { planType },
+    { planType, ...extra },
     { headers: { Authorization: `Bearer ${token}` } }
   );
   return response.data;
@@ -62,5 +69,23 @@ export const deleteMembership = async (id, token) => {
   const response = await axios.delete(`${ADMIN_API_URL}/${id}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+  return response.data;
+};
+
+export const refundMembership = async (id, token) => {
+  const response = await axios.patch(
+    `${ADMIN_API_URL}/${id}/refund`,
+    {},
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
+};
+
+export const resendConfirmationEmail = async (id, token) => {
+  const response = await axios.post(
+    `${ADMIN_API_URL}/${id}/resend-email`,
+    {},
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
   return response.data;
 };

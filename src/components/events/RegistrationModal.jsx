@@ -20,7 +20,7 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
 
   // Prefill user data if logged in
   useEffect(() => {
-    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    const userInfo = JSON.parse(localStorage.getItem("user") || "null");
     if (userInfo && isOpen) {
       setFormData(prev => ({
         ...prev,
@@ -31,10 +31,9 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
 
       // Calculate discount for UI display
       let discount = 0;
-      if (userInfo.activeMembership) {
-        if (userInfo.activeMembership.membershipType === "ELITE") discount = 0.1;
-        if (userInfo.activeMembership.membershipType === "PRO") discount = 0.2;
-      }
+      const membership = userInfo.activeMembership?.membershipType;
+      if (membership === "ELITE") discount = 0.1;
+      else if (membership === "PRO") discount = 0.2;
       
       const finalFee = event.eventFee * (1 - discount);
       setDiscountInfo({ discount: discount * 100, finalFee });
@@ -130,7 +129,7 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem("userToken");
+      const token = localStorage.getItem("token");
       
       if (event.eventFee > 0) {
         toast.loading("Initiating payment...", { duration: 2000 });

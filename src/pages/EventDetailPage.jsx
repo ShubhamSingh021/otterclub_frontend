@@ -92,7 +92,36 @@ const EventDetailPage = () => {
                 <InfoCard label="Time" value={`${event.startTime} - ${event.endTime}`} />
                 <InfoCard label="Venue" value={event.venue} />
                 <InfoCard label="Registration Deadline" value={format(new Date(event.registrationDeadline), "MMM dd, yyyy")} />
-                <InfoCard label="Fee" value={event.eventFee === 0 ? "Free" : `₹${event.eventFee}`} />
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Fee</p>
+                  <div className="flex items-center gap-3">
+                    {event.eventFee === 0 ? (
+                      <p className="mt-1 text-sm font-semibold text-white">Free</p>
+                    ) : (
+                      <>
+                        {(() => {
+                          const user = JSON.parse(localStorage.getItem("user") || "{}");
+                          const membership = user.activeMembership?.membershipType;
+                          let discount = 0;
+                          if (membership === 'PRO') discount = 0.2;
+                          else if (membership === 'ELITE') discount = 0.1;
+                          
+                          if (discount > 0) {
+                            const discountedPrice = event.eventFee * (1 - discount);
+                            return (
+                              <div className="mt-1 flex items-center gap-2">
+                                <span className="text-sm font-semibold text-[#40e0d0]">₹{discountedPrice}</span>
+                                <span className="text-xs text-slate-500 line-through">₹{event.eventFee}</span>
+                                <span className="text-[10px] font-black text-green-500 uppercase tracking-tighter">Member Perk</span>
+                              </div>
+                            );
+                          }
+                          return <p className="mt-1 text-sm font-semibold text-white">₹{event.eventFee}</p>;
+                        })()}
+                      </>
+                    )}
+                  </div>
+                </div>
                 <InfoCard label="Skill Level" value={event.skillLevel} />
               </div>
 
