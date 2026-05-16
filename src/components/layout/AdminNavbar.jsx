@@ -15,6 +15,8 @@ const AdminNavbar = () => {
       <Container className="flex h-20 items-center justify-between">
         <h1 className="font-display text-xl font-bold tracking-tight">Admin Dashboard</h1>
         <div className="flex gap-6 items-center">
+          <button onClick={() => navigate("/admin/analytics")} className="text-sm font-medium text-slate-400 hover:text-white">Analytics</button>
+          <button onClick={() => navigate("/admin/scanner")} className="text-sm font-medium text-slate-400 hover:text-white">Scanner</button>
           <button onClick={() => navigate("/admin/memberships")} className="text-sm font-medium text-slate-400 hover:text-white">Memberships</button>
           <button onClick={() => navigate("/admin/registrations")} className="text-sm font-medium text-slate-400 hover:text-white">Registrations</button>
           <button onClick={() => navigate("/admin/events")} className="text-sm font-medium text-slate-400 hover:text-white">Manage Events</button>

@@ -78,6 +78,11 @@ const LoginPage = () => {
                   placeholder="••••••••"
                 />
               </div>
+              <div className="flex justify-end">
+                <Link to="/forgot-password" size="sm" className="text-sm font-medium text-[#40e0d0] hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
             </div>
 
             <button

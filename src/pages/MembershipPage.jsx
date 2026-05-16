@@ -38,8 +38,10 @@ const MembershipPage = () => {
 
     try {
       setPurchasingPlan(planType);
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      console.log("MEMBERSHIP_PURCHASE_USER_DATA:", user);
+
       const orderRes = await createMembershipOrder(planType);
-      console.log("ORDER_RESPONSE:", orderRes);
       
       if (orderRes && orderRes.success) {
         const options = {
@@ -70,9 +72,9 @@ const MembershipPage = () => {
             }
           },
           prefill: {
-            name: user.name,
-            email: user.email,
-            contact: user.phone,
+            name: user.name || "",
+            email: user.email || "",
+            contact: user.phone || "",
           },
           theme: {
             color: "#40e0d0",

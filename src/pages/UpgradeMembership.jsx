@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import { getPlans, getMyMembership, createMembershipOrder, verifyMembershipPayment } from "../api/membershipApi";
@@ -35,7 +34,8 @@ const UpgradeMembership = () => {
       setPlans(plansRes.data);
       setMembership(memberRes.data);
     } catch (error) {
-      toast.error("Failed to load data");
+      console.error("FETCH_DATA_ERROR:", error);
+      toast.error("Failed to load membership data");
     } finally {
       setLoading(false);
     }
@@ -48,45 +48,54 @@ const UpgradeMembership = () => {
         isUpgrade: !isRenewal,
         isRenewal: isRenewal
       });
-      
-      if (orderRes.success) {
-        const options = {
-          key: import.meta.env.VITE_RAZORPAY_KEY,
-          amount: orderRes.order.amount,
-          currency: orderRes.order.currency,
-          name: "Otter Society",
-          description: isRenewal ? `Renew ${planType} Membership` : `Upgrade to ${planType} Membership`,
-          order_id: orderRes.order.id,
-          handler: async (response) => {
-            try {
-              toast.loading("Processing...", { id: "verify-toast" });
-              const verifyRes = await verifyMembershipPayment({
-                ...response,
-                planType,
-                isUpgrade: !isRenewal,
-                isRenewal: isRenewal
-              });
 
-              if (verifyRes.success) {
-                toast.success(isRenewal ? "Membership renewed successfully!" : "Membership upgraded! Enjoy your new perks.", { id: "verify-toast" });
-                navigate("/dashboard");
-              }
-            } catch (err) {
-              toast.error(err.response?.data?.message || "Verification failed.", { id: "verify-toast" });
-            }
-          },
-          prefill: {
-            name: user.name || membership?.userName,
-            email: user.email || membership?.email,
-            contact: user.phone || membership?.phone,
-          },
-          theme: { color: "#40e0d0" },
-        };
-        const rzp = new window.Razorpay(options);
-        rzp.open();
+      if (!orderRes.success) {
+        throw new Error(orderRes.message || "Failed to create order");
       }
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY,
+        amount: orderRes.order.amount,
+        currency: orderRes.order.currency,
+        name: "Otter Society",
+        description: isRenewal ? `Renew ${planType} Membership` : `Upgrade to ${planType} Membership`,
+        order_id: orderRes.order.id,
+        handler: async (response) => {
+          try {
+            toast.loading("Verifying payment...", { id: "verify-payment" });
+            const verifyRes = await verifyMembershipPayment({
+              ...response,
+              planType,
+              isUpgrade: !isRenewal,
+              isRenewal: isRenewal,
+            });
+
+            if (verifyRes.success) {
+              toast.success("Membership updated successfully!", { id: "verify-payment" });
+              navigate("/dashboard");
+            }
+          } catch (error) {
+            console.error("VERIFY_ERROR:", error);
+            toast.error(error.response?.data?.message || "Payment verification failed", { id: "verify-payment" });
+          }
+        },
+        prefill: {
+          name: user.name || membership?.userName || "",
+          email: user.email || membership?.email || "",
+          contact: user.phone || membership?.phone || "",
+        },
+        theme: {
+          color: "#40e0d0",
+        },
+      };
+
+      console.log("RAZORPAY_PREFILL_DATA:", options.prefill);
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to initiate payment");
+      console.error("PAYMENT_ACTION_ERROR:", error);
+      toast.error(error.response?.data?.message || error.message || "Payment initialization failed");
     } finally {
       setPurchasingPlan(null);
     }
@@ -100,8 +109,10 @@ const UpgradeMembership = () => {
     );
   }
 
+  // Safety checks for membership and plans
+  const currentPlan = plans?.find(p => p.name === membership?.membershipType);
   const currentPlanIndex = plans ? plans.findIndex(p => p.name === membership?.membershipType) : -1;
-  const currentPlan = plans ? plans.find(p => p.name === membership?.membershipType) : null;
+  
   const availablePlans = plans ? plans.filter((plan, idx) => {
     if (isRenewal) return plan.name === membership?.membershipType;
     return idx > currentPlanIndex;
@@ -111,17 +122,24 @@ const UpgradeMembership = () => {
     <div className="min-h-screen bg-[#060b16] text-white font-sans">
       <Navbar />
       
-      <main className="container mx-auto px-4 py-20">
+      <main className="container mx-auto px-4 py-20 pt-32">
         <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold mb-4">
-            {isRenewal ? "Renew Your Membership" : "Upgrade Your Status"}
+          <h1 className="text-5xl font-bold mb-4 italic tracking-tight">
+            {isRenewal ? "RENEW YOUR STATUS" : "UPGRADE YOUR STATUS"}
           </h1>
           <p className="text-slate-400 max-w-xl mx-auto">
             {isRenewal 
-              ? `Extend your ${membership?.membershipType} membership for another ${currentPlan?.validityDays || 30} days.` 
-              : "Step into a higher tier and unlock more exclusive benefits."}
+              ? `Extend your ${membership?.membershipType || "current"} membership for another period.` 
+              : "Step into a higher tier and unlock more exclusive club benefits."}
           </p>
         </div>
+
+        {!membership && !loading && (
+          <div className="max-w-2xl mx-auto mb-12 p-6 rounded-3xl bg-red-500/10 border border-red-500/20 text-center">
+            <p className="text-red-400 font-medium">No active membership found to {isRenewal ? "renew" : "upgrade"}.</p>
+            <button onClick={() => navigate("/membership")} className="mt-4 text-white font-bold underline">View All Plans</button>
+          </div>
+        )}
 
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 justify-center max-w-6xl mx-auto">
           {availablePlans.length > 0 ? availablePlans.map((plan) => (
@@ -131,15 +149,14 @@ const UpgradeMembership = () => {
               <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
               <div className="text-4xl font-bold mb-6">
                 ₹{plan.price}
-                <span className="text-sm text-slate-500 font-normal"> / {plan.validityDays || 30} days</span>
+                <span className="text-sm text-slate-500 font-normal"> / {plan.validityDays || 365} days</span>
               </div>
 
               {!isRenewal && membership && (
-                <div className="mb-6 p-4 rounded-2xl bg-white/5 border border-white/5">
-                  <p className="text-xs text-slate-500 uppercase font-bold mb-1">Upgrade Price</p>
+                <div className="mb-6 p-4 rounded-2xl bg-[#40e0d0]/5 border border-[#40e0d0]/10">
+                  <p className="text-xs text-slate-500 uppercase font-bold mb-1">Upgrade Difference</p>
                   <p className="text-xl font-bold text-[#40e0d0]">
-                    ₹{Math.max(0, plan.price - (plans.find(p => p.name === membership.membershipType)?.price || 0))}
-                    <span className="text-xs text-slate-400 font-normal ml-2">(Difference)</span>
+                    ₹{Math.max(0, plan.price - (currentPlan?.price || 0))}
                   </p>
                 </div>
               )}
@@ -157,7 +174,7 @@ const UpgradeMembership = () => {
 
               <button
                 onClick={() => handleAction(plan.name)}
-                disabled={purchasingPlan}
+                disabled={purchasingPlan || !membership}
                 className="w-full py-4 rounded-xl bg-[#40e0d0] text-[#061323] font-bold hover:scale-[1.02] transition disabled:opacity-50"
               >
                 {purchasingPlan === plan.name ? "Processing..." : isRenewal ? "Renew Now" : "Pay Difference & Upgrade"}

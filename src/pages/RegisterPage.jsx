@@ -25,7 +25,7 @@ const RegisterPage = () => {
     try {
       const res = await register(formData);
       if (res.success) {
-        localStorage.setItem("token", res.data.token);
+        localStorage.setItem("token", res.token);
         localStorage.setItem("user", JSON.stringify(res.data));
         toast.success("Account created successfully!");
         navigate("/dashboard");

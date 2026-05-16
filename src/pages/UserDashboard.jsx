@@ -24,6 +24,7 @@ const UserDashboard = () => {
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
 
   useEffect(() => {
     if (!token) {
@@ -330,9 +331,30 @@ const UserDashboard = () => {
                           </svg>
                           {format(new Date(reg.event?.eventDate || Date.now()), 'MMMM dd, yyyy')}
                         </div>
-                        <div className="pt-4 border-t border-white/5 flex items-center justify-between">
-                          <span className="text-xs text-slate-500">Amount Paid</span>
-                          <span className="font-black text-[#40e0d0]">₹{reg.discountedPrice}</span>
+                        <div className="pt-4 border-t border-white/5 flex items-center justify-between gap-4">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Amount Paid</span>
+                            <span className="font-black text-[#40e0d0]">₹{reg.discountedPrice}</span>
+                          </div>
+                          <div className="flex gap-2">
+                            {reg.attendanceStatus === 'attended' ? (
+                              <a 
+                                href={`${API_URL}/registrations/certificate/${reg._id}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="px-3 py-2 rounded-xl bg-[#40e0d0]/10 border border-[#40e0d0]/20 text-[#40e0d0] text-[10px] font-black uppercase tracking-widest hover:bg-[#40e0d0]/20 transition"
+                              >
+                                Certificate
+                              </a>
+                            ) : (
+                              <button 
+                                onClick={() => navigate(`/ticket/${reg._id}`)}
+                                className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition"
+                              >
+                                View Ticket
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
