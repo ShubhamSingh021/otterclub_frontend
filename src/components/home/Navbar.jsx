@@ -46,9 +46,7 @@ const Navbar = ({ settings: cmsSettings }) => {
         <div className="flex items-center justify-between gap-4">
           <a className="flex-shrink-0" href="/">
             <div className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-2 py-1.5 sm:rounded-2xl sm:px-2.5">
-              <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-[#40e0d0] to-[#2859ff] text-[10px] font-bold text-[#031221] sm:h-8 sm:w-8 sm:text-xs">
-                SC
-              </span>
+              <img src="/logo.jpg" alt="Otter Society" className="h-7 w-7 rounded-lg object-cover sm:h-8 sm:w-8" />
               <div className="min-w-0">
                 <p className="max-w-[120px] truncate font-display text-sm font-semibold text-white sm:max-w-none sm:text-base">
                   {settings?.siteName || "Club Platform"}
