@@ -73,28 +73,42 @@ const UserDashboard = () => {
   };
 
   const handleProfileUpdate = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setUpdating(true);
     try {
       const formData = new FormData();
       formData.append("name", profileForm.name);
       formData.append("phone", profileForm.phone);
+      
       if (avatarFile) {
         formData.append("avatar", avatarFile);
       }
 
+      console.log("Updating profile...", { 
+        name: profileForm.name, 
+        phone: profileForm.phone,
+        hasNewAvatar: !!avatarFile 
+      });
+
       const res = await updateProfile(formData);
+      
       if (res.success) {
-        setUser(res.data);
-        // Update local storage user info if needed
-        localStorage.setItem("user", JSON.stringify(res.data));
+        toast.success("Profile updated successfully!");
         setIsEditingProfile(false);
+        
+        // The res.data contains the updated user object from the server
+        const updatedUserInfo = res.data;
+        
+        // Update both the local state and localStorage
+        setUser(updatedUserInfo);
+        localStorage.setItem("user", JSON.stringify(updatedUserInfo));
         setAvatarFile(null);
-        setAvatarPreview(null);
-        toast.success("Profile updated successfully");
+      } else {
+        toast.error(res.message || "Failed to update profile");
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Update failed");
+      console.error("Profile update error:", error);
+      toast.error(error.response?.data?.message || "Failed to update profile");
     } finally {
       setUpdating(false);
     }
