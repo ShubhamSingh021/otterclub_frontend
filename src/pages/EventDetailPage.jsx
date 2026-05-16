@@ -6,7 +6,7 @@ import Footer from "../components/home/Footer.jsx";
 import Container from "../components/layout/Container.jsx";
 import { format } from "date-fns";
 import RegistrationModal from "../components/events/RegistrationModal.jsx";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 const EventDetailPage = () => {
   const { slug } = useParams();
@@ -158,7 +158,7 @@ const EventDetailPage = () => {
         onClose={() => setIsModalOpen(false)} 
         onShowSuccess={fetchEvent}
       />
-      <Toaster position="top-center" />
+
       <Footer />
     </div>
   );

@@ -43,8 +43,8 @@ const UserDashboard = () => {
       ]);
       setUser(profileRes.data);
       setMembership(membershipRes.data);
-      setRegistrations(registrationsRes.data);
-      setHistory(historyRes.data);
+      setRegistrations(registrationsRes.data || []);
+      setHistory(historyRes.data || []);
       
       // Initialize form
       setProfileForm({
@@ -95,22 +95,39 @@ const UserDashboard = () => {
       if (res.success) {
         toast.success(res.message || "Profile updated successfully!");
         
-        // The res.data contains the updated user object from the server
-        const updatedUserInfo = res.data;
+        // The res.data contains the updated user object, res.token contains new token
+        const updatedUser = res.data;
+        const newToken = res.token;
         
         // Update local state
-        setUser(updatedUserInfo);
+        setUser(updatedUser);
         
-        // Update localStorage for both user and token (if returned)
-        localStorage.setItem("user", JSON.stringify(updatedUserInfo));
-        if (updatedUserInfo.token) {
-          localStorage.setItem("token", updatedUserInfo.token);
+        // Update localStorage (use consistent keys)
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        
+        // Only update admin keys if the user actually has an admin role
+        if (updatedUser.role === "admin" || updatedUser.role === "superadmin") {
+          localStorage.setItem("adminUser", JSON.stringify(updatedUser));
+        } else {
+          // If a non-admin updated their profile, make sure no stale admin data remains
+          localStorage.removeItem("adminUser");
+          localStorage.removeItem("adminToken");
         }
+        
+        if (newToken) {
+          localStorage.setItem("token", newToken);
+          if (updatedUser.role === "admin" || updatedUser.role === "superadmin") {
+            localStorage.setItem("adminToken", newToken);
+          }
+        }
+
+        // Trigger a custom event to sync other components (like Navbar)
+        window.dispatchEvent(new Event("auth-change"));
 
         // Sync form and reset avatar states
         setProfileForm({
-          name: updatedUserInfo.name,
-          phone: updatedUserInfo.phone || "",
+          name: updatedUser.name,
+          phone: updatedUser.phone || "",
         });
         setAvatarFile(null);
         setAvatarPreview(null);
@@ -144,7 +161,7 @@ const UserDashboard = () => {
     );
   }
 
-  const daysRemaining = membership ? differenceInDays(new Date(membership.expiryDate), new Date()) : 0;
+  const daysRemaining = (membership && membership.expiryDate) ? differenceInDays(new Date(membership.expiryDate), new Date()) : 0;
 
   return (
     <div className="min-h-screen bg-[#060b16] text-white font-sans selection:bg-[#40e0d0]/30">
@@ -216,9 +233,9 @@ const UserDashboard = () => {
                     <div className="text-right">
                       <p className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-1">Status</p>
                       <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest ${
-                        membership.status === 'active' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                        membership.membershipStatus === 'active' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'
                       }`}>
-                        {membership.status}
+                        {membership.membershipStatus}
                       </span>
                     </div>
                   )}
@@ -229,11 +246,11 @@ const UserDashboard = () => {
                     <div className="grid sm:grid-cols-3 gap-8 mb-10 py-10 border-y border-white/5">
                       <div>
                         <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1">Active Since</p>
-                        <p className="text-xl font-bold">{format(new Date(membership.startDate), 'MMM dd, yyyy')}</p>
+                        <p className="text-xl font-bold">{membership.startDate ? format(new Date(membership.startDate), 'MMM dd, yyyy') : 'N/A'}</p>
                       </div>
                       <div>
                         <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1">Expiry Date</p>
-                        <p className="text-xl font-bold">{format(new Date(membership.expiryDate), 'MMM dd, yyyy')}</p>
+                        <p className="text-xl font-bold">{membership.expiryDate ? format(new Date(membership.expiryDate), 'MMM dd, yyyy') : 'N/A'}</p>
                       </div>
                       <div>
                         <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1">Days Remaining</p>
@@ -246,7 +263,7 @@ const UserDashboard = () => {
                     <div className="mb-10">
                       <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500 mb-6">Your Exclusive Benefits</h3>
                       <div className="grid sm:grid-cols-2 gap-4">
-                        {membership.benefits.map((benefit, i) => (
+                        {membership.benefits?.map((benefit, i) => (
                           <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 group hover:bg-white/[0.05] transition">
                             <div className="h-8 w-8 rounded-lg bg-[#40e0d0]/10 flex items-center justify-center text-[#40e0d0]">
                               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -292,8 +309,8 @@ const UserDashboard = () => {
                     <div key={reg._id} className="group overflow-hidden rounded-3xl border border-white/5 bg-white/[0.03] hover:border-[#40e0d0]/30 transition-all duration-500">
                       <div className="relative aspect-video overflow-hidden">
                         <img 
-                          src={reg.eventId?.image} 
-                          alt={reg.eventId?.title}
+                          src={reg.event?.eventImage} 
+                          alt={reg.event?.title}
                           className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#060b16] via-transparent to-transparent opacity-60" />
@@ -306,12 +323,12 @@ const UserDashboard = () => {
                         </div>
                       </div>
                       <div className="p-6">
-                        <h3 className="font-bold text-lg mb-2 line-clamp-1">{reg.eventId?.title}</h3>
+                        <h3 className="font-bold text-lg mb-2 line-clamp-1">{reg.event?.title}</h3>
                         <div className="flex items-center gap-2 text-slate-400 text-xs font-medium mb-4">
                           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
-                          {format(new Date(reg.eventId?.date || Date.now()), 'MMMM dd, yyyy')}
+                          {format(new Date(reg.event?.eventDate || Date.now()), 'MMMM dd, yyyy')}
                         </div>
                         <div className="pt-4 border-t border-white/5 flex items-center justify-between">
                           <span className="text-xs text-slate-500">Amount Paid</span>
@@ -449,13 +466,13 @@ const UserDashboard = () => {
                   <div key={i} className="p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] transition-colors">
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <p className="text-sm font-bold">{log.planType} Plan</p>
+                        <p className="text-sm font-bold">{log.membershipType} Plan</p>
                         <p className="text-[10px] text-slate-500 font-medium">ID: {log.razorpayPaymentId?.slice(-12) || 'N/A'}</p>
                       </div>
-                      <span className="text-sm font-black text-[#40e0d0]">₹{log.amount}</span>
+                      <span className="text-sm font-black text-[#40e0d0]">₹{log.price}</span>
                     </div>
                     <div className="flex justify-between items-center mt-4">
-                      <span className="text-[10px] text-slate-500 font-bold uppercase">{format(new Date(log.date), 'MMM dd, yyyy')}</span>
+                      <span className="text-[10px] text-slate-500 font-bold uppercase">{log.createdAt ? format(new Date(log.createdAt), 'MMM dd, yyyy') : 'N/A'}</span>
                       <span className="px-2 py-0.5 rounded-md bg-green-500/10 text-green-500 text-[8px] font-black uppercase tracking-wider border border-green-500/20">
                         SUCCESS
                       </span>

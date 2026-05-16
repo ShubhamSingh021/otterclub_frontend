@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import toast, { Toaster } from "react-hot-toast";
 import { getAllPayments } from "../api/paymentApi";
 import AdminNavbar from "../components/layout/AdminNavbar";
 import Container from "../components/layout/Container";
@@ -48,7 +47,7 @@ const AdminPaymentsPage = () => {
 
   return (
     <div className="min-h-screen bg-[#060b16] text-white pb-20">
-      <Toaster position="top-center" />
+
       <AdminNavbar />
 
       <main className="py-10">

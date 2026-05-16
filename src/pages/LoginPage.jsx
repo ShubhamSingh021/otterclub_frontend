@@ -22,13 +22,21 @@ const LoginPage = () => {
     try {
       const res = await login(formData);
       if (res.success) {
-        localStorage.setItem("token", res.data.token);
+        // Clear ALL old session data to prevent state mix
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("adminToken");
+        localStorage.removeItem("adminUser");
+
+        localStorage.setItem("token", res.token);
         localStorage.setItem("user", JSON.stringify(res.data));
         toast.success(`Welcome back, ${res.data.name}!`);
         navigate(from);
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Login failed");
+      console.error("LOGIN_ERROR:", error);
+      const errorMsg = error.response?.data?.message || error.message || "Login failed";
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

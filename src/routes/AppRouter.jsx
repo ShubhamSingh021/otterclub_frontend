@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import HomePage from "../pages/HomePage.jsx";
 import EventDetailPage from "../pages/EventDetailPage.jsx";
 import AdminLoginPage from "../pages/AdminLoginPage.jsx";
@@ -17,6 +18,7 @@ import NotFoundPage from "../pages/NotFoundPage.jsx";
 
 const AppRouter = () => (
   <BrowserRouter>
+    <Toaster position="top-center" reverseOrder={false} />
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/events/:slug" element={<EventDetailPage />} />

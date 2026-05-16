@@ -9,7 +9,7 @@ import Footer from "../components/home/Footer";
 const MembershipPage = () => {
   const [plans, setPlans] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [purchasing, setPurchasing] = useState(false);
+  const [purchasingPlan, setPurchasingPlan] = useState(null);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -37,36 +37,36 @@ const MembershipPage = () => {
     }
 
     try {
-      setPurchasing(true);
+      setPurchasingPlan(planType);
       const orderRes = await createMembershipOrder(planType);
+      console.log("ORDER_RESPONSE:", orderRes);
       
-      if (orderRes.success) {
+      if (orderRes && orderRes.success) {
         const options = {
           key: import.meta.env.VITE_RAZORPAY_KEY,
           amount: orderRes.order.amount,
           currency: orderRes.order.currency,
           name: "Otter Society",
-          description: `${planType} Membership Plan`,
+          description: `${planType} Membership`,
           order_id: orderRes.order.id,
           handler: async (response) => {
             try {
-              toast.loading("Activating membership...", { id: "verify-toast" });
+              setPurchasingPlan(planType);
               const verifyRes = await verifyMembershipPayment({
                 ...response,
                 planType,
                 isUpgrade: false,
                 isRenewal: false
               });
-
               if (verifyRes.success) {
-                toast.success("Welcome to the club! Membership activated.", { id: "verify-toast" });
-                // Update local user data with membership
-                const updatedUser = { ...user, role: "member", activeMembership: verifyRes.data };
-                localStorage.setItem("user", JSON.stringify(updatedUser));
-                navigate("/dashboard");
+                toast.success(verifyRes.message || "Membership activated!");
+                setTimeout(() => navigate("/dashboard"), 2000);
               }
             } catch (err) {
-              toast.error("Verification failed. Please contact support.", { id: "verify-toast" });
+              console.error("Verification error:", err);
+              toast.error(err.response?.data?.message || "Payment verification failed");
+            } finally {
+              setPurchasingPlan(null);
             }
           },
           prefill: {
@@ -74,15 +74,31 @@ const MembershipPage = () => {
             email: user.email,
             contact: user.phone,
           },
-          theme: { color: "#40e0d0" },
+          theme: {
+            color: "#40e0d0",
+          },
         };
+
         const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function (response) {
+          toast.error("Payment failed: " + response.error.description);
+          setPurchasingPlan(null);
+        });
         rzp.open();
+      } else {
+        toast.error(orderRes?.message || "Failed to create order");
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to initiate purchase");
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        toast.error("Session expired. Please login again.");
+        setTimeout(() => navigate("/login"), 1500);
+      } else {
+        toast.error(error.response?.data?.message || "Failed to initiate purchase. Please try again.");
+      }
     } finally {
-      setPurchasing(false);
+      setPurchasingPlan(null);
     }
   };
 
@@ -145,7 +161,7 @@ const MembershipPage = () => {
                   <h3 className="text-xl font-bold tracking-widest text-slate-400 uppercase">{plan.name}</h3>
                   <div className="mt-4 flex items-baseline gap-1">
                     <span className="text-5xl font-bold tracking-tight">₹{plan.price}</span>
-                    <span className="text-slate-500">/month</span>
+                    <span className="text-slate-500">/ {plan.validityDays || 30} days</span>
                   </div>
                 </div>
 
@@ -160,17 +176,21 @@ const MembershipPage = () => {
                   ))}
                 </ul>
 
-                <button
-                  onClick={() => handlePurchase(plan.name)}
-                  disabled={purchasing || (user.activeMembership?.membershipType === plan.name)}
-                  className={`w-full py-4 rounded-xl font-bold transition flex items-center justify-center gap-2 ${
-                    plan.name === "ELITE" 
-                      ? "bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] text-[#061323] hover:scale-[1.02]" 
-                      : "bg-white/10 text-white hover:bg-white/20"
-                  } disabled:opacity-50 disabled:hover:scale-100`}
-                >
-                  {user.activeMembership?.membershipType === plan.name ? "Current Plan" : purchasing ? "Processing..." : "Select Plan"}
-                </button>
+                  <button
+                    onClick={() => handlePurchase(plan.name)}
+                    disabled={user?.role === 'admin' || user.activeMembership?.membershipType === plan.name || purchasingPlan === plan.name}
+                    className={`w-full py-4 rounded-xl font-bold transition-all duration-300 ${
+                      user?.role === 'admin' 
+                        ? 'bg-slate-700 text-slate-400 cursor-not-allowed opacity-50'
+                        : user.activeMembership?.membershipType === plan.name
+                          ? 'bg-white/5 text-slate-400 cursor-default'
+                          : plan.name === 'ELITE'
+                            ? 'bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] text-[#061323] hover:scale-[1.02]'
+                            : 'bg-white/10 hover:bg-white/20 text-white shadow-lg'
+                    }`}
+                  >
+                    {user?.role === 'admin' ? 'Admin Account' : user.activeMembership?.membershipType === plan.name ? "Current Plan" : purchasingPlan === plan.name ? "Processing..." : "Select Plan"}
+                  </button>
               </motion.div>
             ))}
           </div>
@@ -186,17 +206,38 @@ const MembershipPage = () => {
               <thead>
                 <tr className="border-b border-white/10">
                   <th className="py-6 text-slate-400 font-medium">Features</th>
-                  <th className="py-6 text-center font-bold">Basic</th>
-                  <th className="py-6 text-center font-bold text-[#40e0d0]">Elite</th>
-                  <th className="py-6 text-center font-bold text-[#2d61ff]">Pro</th>
+                  {plans && plans.map(plan => (
+                    <th key={plan.name} className={`py-6 text-center font-bold ${plan.name === "ELITE" ? "text-[#40e0d0]" : plan.name === "PRO" ? "text-[#2d61ff]" : ""}`}>
+                      {plan.name}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="text-sm">
-                <ComparisonRow label="Event Discounts" basic="None" elite="10%" pro="20%" />
-                <ComparisonRow label="Event Priority" basic="Standard" elite="High" pro="VIP" />
-                <ComparisonRow label="Support" basic="Standard" elite="Premium" pro="24/7 VIP" />
-                <ComparisonRow label="Member Badge" basic="No" elite="Elite" pro="Pro" />
-                <ComparisonRow label="Exclusive Events" basic="No" elite="No" pro="Yes" />
+                <tr className="border-b border-white/5 hover:bg-white/[0.02] transition">
+                  <td className="py-6 text-slate-300 font-medium">Price / Duration</td>
+                  {plans && plans.map(plan => (
+                    <td key={plan.name} className="py-6 text-center font-bold text-lg">₹{plan.price} <span className="text-xs font-normal text-slate-500">({plan.validityDays || 30} days)</span></td>
+                  ))}
+                </tr>
+                <tr className="border-b border-white/5 hover:bg-white/[0.02] transition">
+                  <td className="py-6 text-slate-300 font-medium">Benefits Count</td>
+                  {plans && plans.map(plan => (
+                    <td key={plan.name} className="py-6 text-center text-slate-400">{plan.benefits.length} Perks</td>
+                  ))}
+                </tr>
+                <tr className="border-b border-white/5 hover:bg-white/[0.02] transition">
+                  <td className="py-6 text-slate-300 font-medium">Key Features</td>
+                  {plans && plans.map(plan => (
+                    <td key={plan.name} className="py-6 text-center text-xs text-slate-400">
+                      <ul className="inline-block text-left">
+                        {plan.benefits.slice(0, 3).map((b, i) => (
+                          <li key={i}>• {b}</li>
+                        ))}
+                      </ul>
+                    </td>
+                  ))}
+                </tr>
               </tbody>
             </table>
           </div>

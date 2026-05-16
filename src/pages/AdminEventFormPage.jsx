@@ -138,7 +138,6 @@ const AdminEventFormPage = () => {
 
   return (
     <div className="min-h-screen bg-[#060b16] text-white">
-      <Toaster position="top-center" />
       <nav className="border-b border-white/10 bg-[#081429]/50 backdrop-blur-md sticky top-0 z-50">
         <Container className="flex h-20 items-center justify-between">
           <h1 className="font-display text-xl font-bold tracking-tight">Admin Dashboard</h1>

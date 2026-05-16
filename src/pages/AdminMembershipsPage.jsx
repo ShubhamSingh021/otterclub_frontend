@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { format } from "date-fns";
 import AdminNavbar from "../components/layout/AdminNavbar";
 import Container from "../components/layout/Container";
@@ -97,7 +97,7 @@ const AdminMembershipsPage = () => {
 
   return (
     <div className="min-h-screen bg-[#060b16] text-white">
-      <Toaster position="top-center" />
+
       <AdminNavbar />
 
       <main className="py-10">

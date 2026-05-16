@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { useHomepage } from "../hooks/useHomepage";
 import { 
   updateHero, 
@@ -47,7 +47,7 @@ const AdminCMSPage = () => {
 
   return (
     <div className="min-h-screen bg-[#060b16] text-white pb-20">
-      <Toaster position="top-center" />
+
       <AdminNavbar />
 
       <main className="py-10">
@@ -917,7 +917,8 @@ const PlansManager = () => {
     benefits: "",
     discountPercent: 0,
     displayOrder: 1,
-    active: true
+    active: true,
+    validityDays: 30
   });
 
   useEffect(() => {
@@ -943,7 +944,8 @@ const PlansManager = () => {
       benefits: plan.benefits.join("\n"),
       discountPercent: plan.discountPercent,
       displayOrder: plan.displayOrder,
-      active: plan.active
+      active: plan.active,
+      validityDays: plan.validityDays || 30
     });
   };
 
@@ -955,7 +957,8 @@ const PlansManager = () => {
       benefits: "",
       discountPercent: 0,
       displayOrder: 1,
-      active: true
+      active: true,
+      validityDays: 30
     });
   };
 
@@ -964,15 +967,19 @@ const PlansManager = () => {
     try {
       const dataToSubmit = {
         ...formData,
+        price: Number(formData.price),
+        discountPercent: Number(formData.discountPercent),
+        displayOrder: Number(formData.displayOrder),
+        validityDays: Number(formData.validityDays),
         benefits: formData.benefits.split("\n").filter(b => b.trim() !== "")
       };
 
       if (editingId) {
         await updatePlan(editingId, dataToSubmit);
-        toast.success("Plan updated");
+        toast.success("Plan updated successfully");
       } else {
         await createPlan(dataToSubmit);
-        toast.success("Plan created");
+        toast.success("Plan created successfully");
       }
       resetForm();
       fetchPlans();
@@ -1046,6 +1053,16 @@ const PlansManager = () => {
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-[#40e0d0]"
             />
           </div>
+          <div>
+            <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Validity (Days)</label>
+            <input 
+              type="number" 
+              required
+              value={formData.validityDays || 30}
+              onChange={(e) => setFormData({...formData, validityDays: e.target.value})}
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-[#40e0d0]"
+            />
+          </div>
           <div className="flex items-center gap-2">
             <input 
               type="checkbox" 
@@ -1082,6 +1099,7 @@ const PlansManager = () => {
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest text-slate-500">{plan.name}</p>
                 <h4 className="text-2xl font-bold mt-1">₹{plan.price}</h4>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter mt-1">{plan.validityDays || 30} Days Validity</p>
               </div>
               <span className={`px-2 py-1 rounded text-[10px] font-bold ${plan.active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                 {plan.active ? 'ACTIVE' : 'INACTIVE'}

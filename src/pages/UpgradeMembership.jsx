@@ -10,10 +10,11 @@ const UpgradeMembership = () => {
   const [plans, setPlans] = useState(null);
   const [membership, setMembership] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [purchasing, setPurchasing] = useState(false);
+  const [purchasingPlan, setPurchasingPlan] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
   
   const isRenewal = location.search.includes("type=renewal");
 
@@ -42,10 +43,10 @@ const UpgradeMembership = () => {
 
   const handleAction = async (planType) => {
     try {
-      setPurchasing(true);
+      setPurchasingPlan(planType);
       const orderRes = await createMembershipOrder(planType, {
-        upgrade: !isRenewal,
-        renew: isRenewal
+        isUpgrade: !isRenewal,
+        isRenewal: isRenewal
       });
       
       if (orderRes.success) {
@@ -75,8 +76,9 @@ const UpgradeMembership = () => {
             }
           },
           prefill: {
-            name: membership?.userId?.name,
-            email: membership?.userId?.email,
+            name: user.name || membership?.userName,
+            email: user.email || membership?.email,
+            contact: user.phone || membership?.phone,
           },
           theme: { color: "#40e0d0" },
         };
@@ -86,7 +88,7 @@ const UpgradeMembership = () => {
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to initiate payment");
     } finally {
-      setPurchasing(false);
+      setPurchasingPlan(null);
     }
   };
 
@@ -99,6 +101,7 @@ const UpgradeMembership = () => {
   }
 
   const currentPlanIndex = plans ? plans.findIndex(p => p.name === membership?.membershipType) : -1;
+  const currentPlan = plans ? plans.find(p => p.name === membership?.membershipType) : null;
   const availablePlans = plans ? plans.filter((plan, idx) => {
     if (isRenewal) return plan.name === membership?.membershipType;
     return idx > currentPlanIndex;
@@ -115,7 +118,7 @@ const UpgradeMembership = () => {
           </h1>
           <p className="text-slate-400 max-w-xl mx-auto">
             {isRenewal 
-              ? `Extend your ${membership?.membershipType} membership for another 30 days.` 
+              ? `Extend your ${membership?.membershipType} membership for another ${currentPlan?.validityDays || 30} days.` 
               : "Step into a higher tier and unlock more exclusive benefits."}
           </p>
         </div>
@@ -128,7 +131,7 @@ const UpgradeMembership = () => {
               <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
               <div className="text-4xl font-bold mb-6">
                 ₹{plan.price}
-                <span className="text-sm text-slate-500 font-normal"> / 30 days</span>
+                <span className="text-sm text-slate-500 font-normal"> / {plan.validityDays || 30} days</span>
               </div>
 
               {!isRenewal && membership && (
@@ -154,10 +157,10 @@ const UpgradeMembership = () => {
 
               <button
                 onClick={() => handleAction(plan.name)}
-                disabled={purchasing}
+                disabled={purchasingPlan}
                 className="w-full py-4 rounded-xl bg-[#40e0d0] text-[#061323] font-bold hover:scale-[1.02] transition disabled:opacity-50"
               >
-                {purchasing ? "Processing..." : isRenewal ? "Renew Now" : "Pay Difference & Upgrade"}
+                {purchasingPlan === plan.name ? "Processing..." : isRenewal ? "Renew Now" : "Pay Difference & Upgrade"}
               </button>
             </div>
           )) : (

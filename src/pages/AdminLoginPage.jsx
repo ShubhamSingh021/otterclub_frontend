@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import apiClient from "../api/client.js";
 import Container from "../components/layout/Container.jsx";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 const AdminLoginPage = () => {
   const [email, setEmail] = useState("");
@@ -16,6 +16,12 @@ const AdminLoginPage = () => {
     try {
       const res = await apiClient.post("/admin/login", { email, password });
       if (res.data.success) {
+        // Clear any old session data to prevent state mix
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("adminToken");
+        localStorage.removeItem("adminUser");
+
         localStorage.setItem("adminToken", res.data.data.token);
         localStorage.setItem("adminUser", JSON.stringify(res.data.data));
         toast.success("Login successful!");
@@ -30,7 +36,6 @@ const AdminLoginPage = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#060b16] text-white">
-      <Toaster position="top-center" />
       <Container className="max-w-md">
         <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-8 backdrop-blur-xl sm:p-10">
           <div className="text-center">

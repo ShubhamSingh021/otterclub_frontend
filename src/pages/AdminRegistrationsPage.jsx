@@ -4,7 +4,7 @@ import { getRegistrations, updateRegistrationStatus, deleteRegistration } from "
 import { getEvents } from "../api/eventApi.js";
 import Container from "../components/layout/Container.jsx";
 import AdminNavbar from "../components/layout/AdminNavbar.jsx";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { format } from "date-fns";
 
 const AdminRegistrationsPage = () => {
@@ -74,7 +74,7 @@ const AdminRegistrationsPage = () => {
 
   return (
     <div className="min-h-screen bg-[#060b16] text-white">
-      <Toaster position="top-center" />
+
       <AdminNavbar />
 
       <main className="py-10">
