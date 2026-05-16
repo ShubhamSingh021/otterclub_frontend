@@ -93,22 +93,37 @@ const UserDashboard = () => {
       const res = await updateProfile(formData);
       
       if (res.success) {
-        toast.success("Profile updated successfully!");
-        setIsEditingProfile(false);
+        toast.success(res.message || "Profile updated successfully!");
         
         // The res.data contains the updated user object from the server
         const updatedUserInfo = res.data;
         
-        // Update both the local state and localStorage
+        // Update local state
         setUser(updatedUserInfo);
+        
+        // Update localStorage for both user and token (if returned)
         localStorage.setItem("user", JSON.stringify(updatedUserInfo));
+        if (updatedUserInfo.token) {
+          localStorage.setItem("token", updatedUserInfo.token);
+        }
+
+        // Sync form and reset avatar states
+        setProfileForm({
+          name: updatedUserInfo.name,
+          phone: updatedUserInfo.phone || "",
+        });
         setAvatarFile(null);
+        setAvatarPreview(null);
+        
+        // Exit edit mode
+        setIsEditingProfile(false);
       } else {
         toast.error(res.message || "Failed to update profile");
       }
     } catch (error) {
       console.error("Profile update error:", error);
-      toast.error(error.response?.data?.message || "Failed to update profile");
+      const errorMessage = error.response?.data?.message || "Failed to update profile. Please try again.";
+      toast.error(errorMessage);
     } finally {
       setUpdating(false);
     }
