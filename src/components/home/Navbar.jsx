@@ -27,7 +27,7 @@ const Navbar = ({ settings: cmsSettings }) => {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
 
   useEffect(() => {
-    setIsUserLoggedIn(!!localStorage.getItem("userToken"));
+    setIsUserLoggedIn(!!localStorage.getItem("token"));
     setIsAdminLoggedIn(!!localStorage.getItem("adminToken"));
   }, []);
 
@@ -35,8 +35,8 @@ const Navbar = ({ settings: cmsSettings }) => {
   const globalCta = settings?.globalCta || defaultSettings.globalCta;
 
   const handleLogout = () => {
-    localStorage.removeItem("userToken");
-    localStorage.removeItem("userInfo");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     window.location.href = "/";
   };
 

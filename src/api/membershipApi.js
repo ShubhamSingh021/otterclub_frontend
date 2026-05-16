@@ -1,91 +1,57 @@
-import axios from "axios";
-
-const API_URL = `${import.meta.env.VITE_API_URL}/membership`;
-const ADMIN_API_URL = `${import.meta.env.VITE_API_URL}/admin/memberships`;
+import apiClient from "./client";
 
 export const getPlans = async () => {
-  const response = await axios.get(`${API_URL}/plans`);
+  const response = await apiClient.get("/membership/plans");
   return response.data;
 };
 
-export const getMyMembership = async (token) => {
-  const response = await axios.get(`${API_URL}/my`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export const getMyMembership = async () => {
+  const response = await apiClient.get("/membership/my");
   return response.data;
 };
 
-export const getMembershipHistory = async (token) => {
-  const response = await axios.get(`${API_URL}/history`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export const getMembershipHistory = async () => {
+  const response = await apiClient.get("/membership/history");
   return response.data;
 };
 
-export const createMembershipOrder = async (planType, token, extra = {}) => {
-  const response = await axios.post(
-    `${API_URL}/create-order`,
-    { planType, ...extra },
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
+export const createMembershipOrder = async (planType, extra = {}) => {
+  const response = await apiClient.post("/membership/create-order", { planType, ...extra });
   return response.data;
 };
 
-export const verifyMembershipPayment = async (paymentData, token) => {
-  const response = await axios.post(`${API_URL}/verify-payment`, paymentData, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export const verifyMembershipPayment = async (paymentData) => {
+  const response = await apiClient.post("/membership/verify-payment", paymentData);
   return response.data;
 };
 
 // Admin APIs
-export const getAllMemberships = async (token, params = {}) => {
-  const response = await axios.get(ADMIN_API_URL, {
-    headers: { Authorization: `Bearer ${token}` },
-    params,
-  });
+export const getAllMemberships = async (params = {}) => {
+  const response = await apiClient.get("/admin/memberships", { params });
   return response.data;
 };
 
-export const updateMembershipStatus = async (id, status, token) => {
-  const response = await axios.patch(
-    `${ADMIN_API_URL}/${id}/status`,
-    { status },
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
+export const updateMembershipStatus = async (id, status) => {
+  const response = await apiClient.patch(`/admin/memberships/${id}/status`, { status });
   return response.data;
 };
 
-export const extendMembership = async (id, days, token) => {
-  const response = await axios.patch(
-    `${ADMIN_API_URL}/${id}/extend`,
-    { days },
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
+export const extendMembership = async (id, days) => {
+  const response = await apiClient.patch(`/admin/memberships/${id}/extend`, { days });
   return response.data;
 };
 
-export const deleteMembership = async (id, token) => {
-  const response = await axios.delete(`${ADMIN_API_URL}/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export const deleteMembership = async (id) => {
+  const response = await apiClient.delete(`/admin/memberships/${id}`);
   return response.data;
 };
 
-export const refundMembership = async (id, token) => {
-  const response = await axios.patch(
-    `${ADMIN_API_URL}/${id}/refund`,
-    {},
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
+export const refundMembership = async (id) => {
+  const response = await apiClient.patch(`/admin/memberships/${id}/refund`, {});
   return response.data;
 };
 
-export const resendConfirmationEmail = async (id, token) => {
-  const response = await axios.post(
-    `${ADMIN_API_URL}/${id}/resend-email`,
-    {},
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
+export const resendConfirmationEmail = async (id) => {
+  const response = await apiClient.post(`/admin/memberships/${id}/resend-email`, {});
   return response.data;
 };

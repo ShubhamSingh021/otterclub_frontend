@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { format, differenceInDays } from "date-fns";
-import { getProfile } from "../api/authApi";
+import { getProfile, updateProfile } from "../api/authApi";
 import { getMyMembership, getMembershipHistory } from "../api/membershipApi";
 import { getMyRegistrations } from "../api/registrationApi";
 import Navbar from "../components/home/Navbar";
@@ -14,6 +14,14 @@ const UserDashboard = () => {
   const [registrations, setRegistrations] = useState([]);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Profile editing state
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({ name: "", phone: "" });
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [updating, setUpdating] = useState(false);
+
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
@@ -28,15 +36,21 @@ const UserDashboard = () => {
   const fetchData = async () => {
     try {
       const [profileRes, membershipRes, registrationsRes, historyRes] = await Promise.all([
-        getProfile(token),
-        getMyMembership(token),
+        getProfile(),
+        getMyMembership(),
         getMyRegistrations(),
-        getMembershipHistory(token)
+        getMembershipHistory()
       ]);
       setUser(profileRes.data);
       setMembership(membershipRes.data);
       setRegistrations(registrationsRes.data);
       setHistory(historyRes.data);
+      
+      // Initialize form
+      setProfileForm({
+        name: profileRes.data.name,
+        phone: profileRes.data.phone || "",
+      });
     } catch (error) {
       console.error(error);
       if (error.response?.status === 401) {
@@ -47,6 +61,42 @@ const UserDashboard = () => {
       toast.error("Failed to load dashboard data");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    setUpdating(true);
+    try {
+      const formData = new FormData();
+      formData.append("name", profileForm.name);
+      formData.append("phone", profileForm.phone);
+      if (avatarFile) {
+        formData.append("avatar", avatarFile);
+      }
+
+      const res = await updateProfile(formData);
+      if (res.success) {
+        setUser(res.data);
+        // Update local storage user info if needed
+        localStorage.setItem("user", JSON.stringify(res.data));
+        setIsEditingProfile(false);
+        setAvatarFile(null);
+        setAvatarPreview(null);
+        toast.success("Profile updated successfully");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Update failed");
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -75,8 +125,12 @@ const UserDashboard = () => {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-16 gap-8">
           <div className="flex items-center gap-6">
-            <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-[#40e0d0] to-[#2d61ff] flex items-center justify-center text-3xl font-black text-[#060b16] shadow-[0_0_30px_rgba(64,224,208,0.3)]">
-              {user?.name?.[0]?.toUpperCase()}
+            <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-[#40e0d0] to-[#2d61ff] overflow-hidden flex items-center justify-center text-3xl font-black text-[#060b16] shadow-[0_0_30px_rgba(64,224,208,0.3)]">
+              {user?.avatar ? (
+                <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
+              ) : (
+                user?.name?.[0]?.toUpperCase()
+              )}
             </div>
             <div>
               <div className="flex items-center gap-3">
@@ -251,29 +305,108 @@ const UserDashboard = () => {
           <div className="lg:col-span-4 space-y-8">
             {/* Quick Profile Info */}
             <div className="rounded-[2.5rem] border border-white/10 bg-white/[0.02] p-8">
-              <h3 className="text-lg font-bold mb-8 flex items-center gap-3">
-                <div className="h-2 w-2 rounded-full bg-[#40e0d0]" />
-                Profile Information
-              </h3>
-              <div className="space-y-6">
-                <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5">
-                  <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1">Phone Number</p>
-                  <p className="font-bold text-slate-200">{user?.phone || 'Not provided'}</p>
-                </div>
-                <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5">
-                  <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1">Member ID</p>
-                  <p className="font-bold text-slate-200">#{user?._id?.slice(-8).toUpperCase()}</p>
-                </div>
-                <div className="p-4 rounded-2xl bg-[#40e0d0]/5 border border-[#40e0d0]/10">
-                  <p className="text-[10px] text-[#40e0d0] uppercase tracking-widest font-black mb-1">Current Discount</p>
-                  <p className="text-3xl font-black text-[#40e0d0]">
-                    {membership?.membershipType === 'PRO' ? '20% OFF' : 
-                     membership?.membershipType === 'ELITE' ? '10% OFF' : 
-                     '0% OFF'}
-                  </p>
-                  <p className="text-[10px] text-[#40e0d0]/60 mt-1 uppercase font-bold">Auto-applied at checkout</p>
-                </div>
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-lg font-bold flex items-center gap-3">
+                  <div className="h-2 w-2 rounded-full bg-[#40e0d0]" />
+                  Profile Info
+                </h3>
+                <button 
+                  onClick={() => setIsEditingProfile(!isEditingProfile)}
+                  className="text-xs font-bold text-[#40e0d0] hover:underline"
+                >
+                  {isEditingProfile ? "Cancel" : "Edit"}
+                </button>
               </div>
+
+              {isEditingProfile ? (
+                <form onSubmit={handleProfileUpdate} className="space-y-6">
+                  {/* Avatar Upload */}
+                  <div className="flex flex-col items-center gap-4 mb-6">
+                    <div className="relative group">
+                      <div className="h-24 w-24 rounded-2xl overflow-hidden border-2 border-dashed border-white/20 flex items-center justify-center bg-white/5">
+                        {avatarPreview || user?.avatar ? (
+                          <img 
+                            src={avatarPreview || user?.avatar} 
+                            alt="Avatar Preview" 
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-3xl font-black text-white/20">
+                            {user?.name?.[0]?.toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                      <label className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition cursor-pointer rounded-2xl">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-white">Change</span>
+                        <input type="file" className="hidden" onChange={handleAvatarChange} accept="image/*" />
+                      </label>
+                    </div>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Click photo to upload</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1 block">Full Name</label>
+                      <input 
+                        type="text"
+                        value={profileForm.name}
+                        onChange={(e) => setProfileForm({...profileForm, name: e.target.value})}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[#40e0d0] outline-none"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1 block">Phone Number</label>
+                      <input 
+                        type="text"
+                        value={profileForm.phone}
+                        onChange={(e) => setProfileForm({...profileForm, phone: e.target.value})}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[#40e0d0] outline-none"
+                      />
+                    </div>
+                    <button 
+                      type="submit"
+                      disabled={updating}
+                      className="w-full py-4 rounded-xl bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] text-[#061323] font-black hover:scale-[1.02] transition disabled:opacity-50 shadow-[0_10px_30px_rgba(64,224,208,0.2)]"
+                    >
+                      {updating ? "Saving..." : "Save Changes"}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="space-y-6">
+                  {/* Avatar Display */}
+                  <div className="flex justify-center mb-8">
+                    <div className="h-24 w-24 rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-[#40e0d0] to-[#2d61ff] flex items-center justify-center shadow-[0_0_30px_rgba(64,224,208,0.2)]">
+                      {user?.avatar ? (
+                        <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-3xl font-black text-[#060b16]">
+                          {user?.name?.[0]?.toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5">
+                    <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1">Phone Number</p>
+                    <p className="font-bold text-slate-200">{user?.phone || 'Not provided'}</p>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5">
+                    <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1">Member ID</p>
+                    <p className="font-bold text-slate-200">#{user?._id?.slice(-8).toUpperCase()}</p>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-[#40e0d0]/5 border border-[#40e0d0]/10">
+                    <p className="text-[10px] text-[#40e0d0] uppercase tracking-widest font-black mb-1">Current Discount</p>
+                    <p className="text-3xl font-black text-[#40e0d0]">
+                      {membership?.membershipType === 'PRO' ? '20% OFF' : 
+                       membership?.membershipType === 'ELITE' ? '10% OFF' : 
+                       '0% OFF'}
+                    </p>
+                    <p className="text-[10px] text-[#40e0d0]/60 mt-1 uppercase font-bold">Auto-applied at checkout</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Payment History */}
