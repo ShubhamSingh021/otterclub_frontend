@@ -13,6 +13,12 @@ import {
   updateTestimonial,
   deleteTestimonial 
 } from "../api/cmsApi";
+import { 
+  getAdminPlans, 
+  createPlan, 
+  updatePlan, 
+  deletePlan 
+} from "../api/planApi";
 import AdminNavbar from "../components/layout/AdminNavbar";
 import Container from "../components/layout/Container";
 
@@ -28,6 +34,7 @@ const AdminCMSPage = () => {
     { id: "whyJoin", label: "Why Join" },
     { id: "testimonials", label: "Testimonials" },
     { id: "contact", label: "Contact & Socials" },
+    { id: "plans", label: "Membership Plans" },
   ];
 
   if (isLoading) {
@@ -77,6 +84,7 @@ const AdminCMSPage = () => {
                 {activeTab === "whyJoin" && <WhyJoinForm initialData={data?.homepageSections?.whyJoinUs} onUpdate={refetch} />}
                 {activeTab === "testimonials" && <TestimonialsManager initialData={data?.testimonials} onUpdate={refetch} />}
                 {activeTab === "contact" && <ContactSocialsForm initialData={data?.siteSettings} onUpdate={refetch} />}
+                {activeTab === "plans" && <PlansManager />}
               </motion.div>
             </AnimatePresence>
           </div>
@@ -896,6 +904,201 @@ const ContactSocialsForm = ({ initialData, onUpdate }) => {
         {loading ? "Updating..." : "Save Changes"}
       </button>
     </form>
+  );
+};
+
+const PlansManager = () => {
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    price: "",
+    benefits: "",
+    discountPercent: 0,
+    displayOrder: 1,
+    active: true
+  });
+
+  useEffect(() => {
+    fetchPlans();
+  }, []);
+
+  const fetchPlans = async () => {
+    try {
+      const res = await getAdminPlans();
+      setPlans(res.data);
+    } catch (error) {
+      toast.error("Failed to load plans");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = (plan) => {
+    setEditingId(plan._id);
+    setFormData({
+      name: plan.name,
+      price: plan.price,
+      benefits: plan.benefits.join("\n"),
+      discountPercent: plan.discountPercent,
+      displayOrder: plan.displayOrder,
+      active: plan.active
+    });
+  };
+
+  const resetForm = () => {
+    setEditingId(null);
+    setFormData({
+      name: "",
+      price: "",
+      benefits: "",
+      discountPercent: 0,
+      displayOrder: 1,
+      active: true
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const dataToSubmit = {
+        ...formData,
+        benefits: formData.benefits.split("\n").filter(b => b.trim() !== "")
+      };
+
+      if (editingId) {
+        await updatePlan(editingId, dataToSubmit);
+        toast.success("Plan updated");
+      } else {
+        await createPlan(dataToSubmit);
+        toast.success("Plan created");
+      }
+      resetForm();
+      fetchPlans();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to save plan");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure? This may affect existing memberships.")) return;
+    try {
+      await deletePlan(id);
+      toast.success("Plan deleted");
+      fetchPlans();
+    } catch (error) {
+      toast.error("Failed to delete plan");
+    }
+  };
+
+  return (
+    <div className="space-y-12">
+      <form onSubmit={handleSubmit} className="max-w-2xl rounded-2xl border border-white/10 bg-white/5 p-8 space-y-6">
+        <h3 className="text-lg font-bold">{editingId ? "Edit Membership Plan" : "Add New Membership Plan"}</h3>
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div>
+            <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Plan Name (e.g. BASIC, ELITE)</label>
+            <input 
+              type="text" 
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({...formData, name: e.target.value.toUpperCase()})}
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-[#40e0d0]"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Price (₹)</label>
+            <input 
+              type="number" 
+              required
+              value={formData.price}
+              onChange={(e) => setFormData({...formData, price: e.target.value})}
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-[#40e0d0]"
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Benefits (One per line)</label>
+            <textarea 
+              rows="5"
+              required
+              value={formData.benefits}
+              onChange={(e) => setFormData({...formData, benefits: e.target.value})}
+              placeholder="Benefit 1\nBenefit 2..."
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-[#40e0d0]"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Discount % (on events)</label>
+            <input 
+              type="number" 
+              value={formData.discountPercent}
+              onChange={(e) => setFormData({...formData, discountPercent: e.target.value})}
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-[#40e0d0]"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Display Order</label>
+            <input 
+              type="number" 
+              value={formData.displayOrder}
+              onChange={(e) => setFormData({...formData, displayOrder: e.target.value})}
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-[#40e0d0]"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <input 
+              type="checkbox" 
+              id="active"
+              checked={formData.active}
+              onChange={(e) => setFormData({...formData, active: e.target.checked})}
+              className="h-4 w-4 rounded border-white/10 bg-white/5 text-[#40e0d0] focus:ring-[#40e0d0]"
+            />
+            <label htmlFor="active" className="text-xs font-bold uppercase text-slate-500">Active / Visible</label>
+          </div>
+        </div>
+        <div className="flex gap-4">
+          <button className="rounded-xl bg-[#40e0d0] px-8 py-3 font-bold text-[#061323] transition hover:scale-[1.02]">
+            {editingId ? "Update Plan" : "Create Plan"}
+          </button>
+          {editingId && (
+            <button 
+              type="button"
+              onClick={resetForm}
+              className="rounded-xl bg-white/10 px-8 py-3 font-bold text-white transition hover:bg-white/20"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      </form>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {loading ? (
+          <p className="col-span-full text-center text-slate-500">Loading plans...</p>
+        ) : plans.map((plan) => (
+          <div key={plan._id} className={`rounded-2xl border ${plan.active ? 'border-white/10' : 'border-red-900/50 grayscale'} bg-white/5 p-6 space-y-4`}>
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-slate-500">{plan.name}</p>
+                <h4 className="text-2xl font-bold mt-1">₹{plan.price}</h4>
+              </div>
+              <span className={`px-2 py-1 rounded text-[10px] font-bold ${plan.active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                {plan.active ? 'ACTIVE' : 'INACTIVE'}
+              </span>
+            </div>
+            <ul className="text-xs text-slate-400 space-y-1">
+              {plan.benefits.slice(0, 3).map((b, i) => <li key={i}>• {b}</li>)}
+              {plan.benefits.length > 3 && <li>+ {plan.benefits.length - 3} more</li>}
+            </ul>
+            <div className="flex justify-end gap-3 border-t border-white/5 pt-4">
+              <button onClick={() => handleEdit(plan)} className="text-xs font-bold text-[#40e0d0] hover:underline uppercase">Edit</button>
+              <button onClick={() => handleDelete(plan._id)} className="text-xs font-bold text-red-400 hover:underline uppercase">Delete</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 

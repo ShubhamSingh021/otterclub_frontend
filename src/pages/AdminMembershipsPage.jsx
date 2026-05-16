@@ -27,7 +27,7 @@ const AdminMembershipsPage = () => {
   const fetchMemberships = async () => {
     try {
       setLoading(true);
-      const res = await getAllMemberships(token, {
+      const res = await getAllMemberships({
         type: filterType,
         status: filterStatus,
         search: searchTerm
@@ -42,7 +42,7 @@ const AdminMembershipsPage = () => {
 
   const handleStatusUpdate = async (id, status) => {
     try {
-      await updateMembershipStatus(id, status, token);
+      await updateMembershipStatus(id, status);
       toast.success(`Status updated to ${status}`);
       fetchMemberships();
     } catch (error) {
@@ -55,7 +55,7 @@ const AdminMembershipsPage = () => {
     if (!days) return;
 
     try {
-      await extendMembership(id, days, token);
+      await extendMembership(id, days);
       toast.success(`Extended by ${days} days`);
       fetchMemberships();
     } catch (error) {
@@ -66,7 +66,7 @@ const AdminMembershipsPage = () => {
   const handleRefund = async (id) => {
     if (!window.confirm("Are you sure you want to refund and cancel this membership?")) return;
     try {
-      await refundMembership(id, token);
+      await refundMembership(id);
       toast.success("Membership refunded and cancelled");
       fetchMemberships();
     } catch (error) {
@@ -76,7 +76,7 @@ const AdminMembershipsPage = () => {
 
   const handleResendEmail = async (id) => {
     try {
-      await resendConfirmationEmail(id, token);
+      await resendConfirmationEmail(id);
       toast.success("Confirmation email resent");
     } catch (error) {
       toast.error("Failed to resend email");
@@ -87,7 +87,7 @@ const AdminMembershipsPage = () => {
     if (!window.confirm("Are you sure you want to delete this membership?")) return;
 
     try {
-      await deleteMembership(id, token);
+      await deleteMembership(id);
       toast.success("Membership deleted");
       fetchMemberships();
     } catch (error) {

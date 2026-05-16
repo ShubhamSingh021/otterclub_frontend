@@ -38,7 +38,7 @@ const MembershipPage = () => {
 
     try {
       setPurchasing(true);
-      const orderRes = await createMembershipOrder(planType, token);
+      const orderRes = await createMembershipOrder(planType);
       
       if (orderRes.success) {
         const options = {
@@ -53,8 +53,10 @@ const MembershipPage = () => {
               toast.loading("Activating membership...", { id: "verify-toast" });
               const verifyRes = await verifyMembershipPayment({
                 ...response,
-                planType
-              }, token);
+                planType,
+                isUpgrade: false,
+                isRenewal: false
+              });
 
               if (verifyRes.success) {
                 toast.success("Welcome to the club! Membership activated.", { id: "verify-toast" });
@@ -123,7 +125,7 @@ const MembershipPage = () => {
       <section className="py-12 pb-32">
         <div className="container mx-auto px-4">
           <div className="grid gap-8 md:grid-cols-3 max-w-6xl mx-auto">
-            {Object.values(plans).map((plan, index) => (
+            {plans && plans.map((plan, index) => (
               <motion.div
                 key={plan.name}
                 initial={{ opacity: 0, y: 30 }}

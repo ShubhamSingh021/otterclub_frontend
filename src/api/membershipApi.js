@@ -20,8 +20,8 @@ export const createMembershipOrder = async (planType, extra = {}) => {
   return response.data;
 };
 
-export const verifyMembershipPayment = async (paymentData) => {
-  const response = await apiClient.post("/membership/verify-payment", paymentData);
+export const verifyMembershipPayment = async (data) => {
+  const response = await apiClient.post("/membership/verify-payment", data);
   return response.data;
 };
 

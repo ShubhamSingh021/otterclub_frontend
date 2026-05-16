@@ -15,7 +15,11 @@ export const getProfile = async () => {
   return response.data;
 };
 
-export const updateProfile = async (formData) => {
-  const response = await apiClient.put("/auth/profile", formData);
+export const updateProfile = async (data) => {
+  const response = await apiClient.put("/auth/profile", data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return response.data;
 };

@@ -29,7 +29,7 @@ const UpgradeMembership = () => {
     try {
       const [plansRes, memberRes] = await Promise.all([
         getPlans(),
-        getMyMembership(token)
+        getMyMembership()
       ]);
       setPlans(plansRes.data);
       setMembership(memberRes.data);
@@ -43,7 +43,7 @@ const UpgradeMembership = () => {
   const handleAction = async (planType) => {
     try {
       setPurchasing(true);
-      const orderRes = await createMembershipOrder(planType, token, {
+      const orderRes = await createMembershipOrder(planType, {
         upgrade: !isRenewal,
         renew: isRenewal
       });
@@ -61,8 +61,10 @@ const UpgradeMembership = () => {
               toast.loading("Processing...", { id: "verify-toast" });
               const verifyRes = await verifyMembershipPayment({
                 ...response,
-                planType
-              }, token);
+                planType,
+                isUpgrade: !isRenewal,
+                isRenewal: isRenewal
+              });
 
               if (verifyRes.success) {
                 toast.success(isRenewal ? "Membership renewed successfully!" : "Membership upgraded! Enjoy your new perks.", { id: "verify-toast" });
@@ -96,8 +98,8 @@ const UpgradeMembership = () => {
     );
   }
 
-  const currentPlanIndex = plans ? Object.keys(plans).indexOf(membership?.membershipType) : -1;
-  const availablePlans = plans ? Object.values(plans).filter((plan, idx) => {
+  const currentPlanIndex = plans ? plans.findIndex(p => p.name === membership?.membershipType) : -1;
+  const availablePlans = plans ? plans.filter((plan, idx) => {
     if (isRenewal) return plan.name === membership?.membershipType;
     return idx > currentPlanIndex;
   }) : [];
@@ -133,7 +135,7 @@ const UpgradeMembership = () => {
                 <div className="mb-6 p-4 rounded-2xl bg-white/5 border border-white/5">
                   <p className="text-xs text-slate-500 uppercase font-bold mb-1">Upgrade Price</p>
                   <p className="text-xl font-bold text-[#40e0d0]">
-                    ₹{Math.max(0, plan.price - plans[membership.membershipType].price)}
+                    ₹{Math.max(0, plan.price - (plans.find(p => p.name === membership.membershipType)?.price || 0))}
                     <span className="text-xs text-slate-400 font-normal ml-2">(Difference)</span>
                   </p>
                 </div>

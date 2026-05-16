@@ -15,10 +15,18 @@ apiClient.interceptors.request.use((config) => {
   const adminToken = localStorage.getItem("adminToken");
   const userToken = localStorage.getItem("token");
   
-  if (config.url.includes("/admin") && adminToken) {
+  // Use adminToken for routes that require admin privileges
+  // /admin/*, /plans (POST/PUT/DELETE), /plans/admin
+  const isAdminRoute = config.url.includes("/admin") || 
+                      (config.url.includes("/plans") && config.method !== "get");
+  
+  if (isAdminRoute && adminToken) {
     config.headers.Authorization = `Bearer ${adminToken}`;
   } else if (userToken) {
     config.headers.Authorization = `Bearer ${userToken}`;
+  } else if (adminToken) {
+    // Fallback to admin token if user token is not present
+    config.headers.Authorization = `Bearer ${adminToken}`;
   }
   return config;
 });
