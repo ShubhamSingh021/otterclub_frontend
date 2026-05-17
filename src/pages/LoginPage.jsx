@@ -3,6 +3,7 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import { login } from "../api/authApi";
 import Navbar from "../components/home/Navbar";
+import GoogleLoginButton from "../components/auth/GoogleLoginButton";
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -91,6 +92,8 @@ const LoginPage = () => {
               {loading ? "Logging in..." : "Sign In"}
             </button>
           </form>
+
+          <GoogleLoginButton />
 
           <p className="mt-8 text-center text-sm text-slate-400">
             Don't have an account?{" "}

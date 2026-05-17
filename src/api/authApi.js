@@ -33,3 +33,9 @@ export const resetPassword = async (token, password) => {
   const response = await apiClient.post(`/auth/reset-password/${token}`, { password });
   return response.data;
 };
+
+export const googleLogin = async (credential) => {
+  const response = await apiClient.post("/auth/google", { credential });
+  return response.data;
+};
+

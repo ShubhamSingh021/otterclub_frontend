@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { register } from "../api/authApi";
 import Navbar from "../components/home/Navbar";
+import GoogleLoginButton from "../components/auth/GoogleLoginButton";
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -106,6 +107,8 @@ const RegisterPage = () => {
               {loading ? "Creating Account..." : "Register Now"}
             </button>
           </form>
+
+          <GoogleLoginButton />
 
           <p className="mt-8 text-center text-sm text-slate-400">
             Already have an account?{" "}
