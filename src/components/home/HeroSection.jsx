@@ -33,7 +33,7 @@ const HeroSection = ({ content: cmsContent, stats: liveStats }) => {
     <section id="home" className="relative pb-10 pt-2 sm:pt-4 lg:pb-16">
       <Container>
         <div
-          className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-cover bg-center shadow-soft sm:rounded-[2.4rem]"
+          className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-cover bg-[position:82%_center] md:bg-center shadow-soft sm:rounded-[2.4rem]"
           style={{
             backgroundImage: content.backgroundImageUrl
               ? `linear-gradient(115deg, rgba(2, 8, 24, 0.94), rgba(5, 18, 42, 0.78) 55%, rgba(64, 224, 208, 0.2)), url(${content.backgroundImageUrl})`
@@ -43,7 +43,7 @@ const HeroSection = ({ content: cmsContent, stats: liveStats }) => {
           <div className="absolute -right-16 -top-16 h-60 w-60 rounded-full bg-[#40e0d0]/15 blur-3xl" />
           <div className="absolute -bottom-20 -left-10 h-72 w-72 rounded-full bg-[#2a5aff]/25 blur-3xl" />
 
-          <div className="relative px-6 py-12 sm:px-10 sm:py-20 lg:px-14 lg:py-24">
+          <div className="relative px-4 py-10 sm:px-10 sm:py-20 lg:px-14 lg:py-24">
             <motion.div
               animate={{ opacity: 1, y: 0 }}
               className="max-w-4xl"
@@ -56,7 +56,7 @@ const HeroSection = ({ content: cmsContent, stats: liveStats }) => {
                 </p>
               ) : null}
 
-              <h1 className="mt-6 break-words font-display text-4xl font-semibold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl">
+              <h1 className="mt-6 break-words font-display text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold leading-[1.1] tracking-tight text-white">
                 {content.title}
               </h1>
               {content.subtitle ? (
@@ -111,7 +111,7 @@ const HeroSection = ({ content: cmsContent, stats: liveStats }) => {
                     initial={{ opacity: 0, y: 16 }}
                     transition={{ delay: index * 0.06, duration: 0.3 }}
                   >
-                    <p className="break-words font-display text-2xl font-semibold text-white sm:text-3xl lg:text-4xl">{stat.value}</p>
+                    <p className="break-words font-display text-xl sm:text-3xl lg:text-4xl font-semibold text-white">{stat.value}</p>
                     <p className="mt-1 break-words text-xs font-medium uppercase tracking-wider text-slate-400 sm:text-sm">{stat.label}</p>
                   </motion.article>
                 ))}
