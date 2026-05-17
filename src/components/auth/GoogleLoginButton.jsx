@@ -60,10 +60,10 @@ const GoogleLoginButton = () => {
     document.body.appendChild(script);
 
     return () => {
-      // Clean up script on unmount
+      // Clean up script on unmount safely
       const scriptNode = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
-      if (scriptNode) {
-        document.body.removeChild(scriptNode);
+      if (scriptNode && scriptNode.parentNode) {
+        scriptNode.parentNode.removeChild(scriptNode);
       }
     };
   }, []);
