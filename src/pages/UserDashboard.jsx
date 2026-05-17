@@ -59,6 +59,21 @@ const UserDashboard = () => {
   const token = localStorage.getItem("token");
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
 
+  const fetchNotificationsOnly = async () => {
+    try {
+      const notifRes = await getNotifications();
+      if (notifRes.data && notifRes.data.success) {
+        const fetchedNotifs = (notifRes.data.data || []).map((n) => ({
+          ...n,
+          isRead: n.read ?? false,
+        }));
+        setNotifications(fetchedNotifs);
+      }
+    } catch (err) {
+      console.error("Failed to load notifications in dashboard", err);
+    }
+  };
+
   useEffect(() => {
     if (!token) {
       navigate("/login");
@@ -66,6 +81,17 @@ const UserDashboard = () => {
     }
     fetchData();
   }, [token, navigate]);
+
+  useEffect(() => {
+    const handleNotificationsUpdate = () => {
+      fetchNotificationsOnly();
+    };
+
+    window.addEventListener("notifications-updated", handleNotificationsUpdate);
+    return () => {
+      window.removeEventListener("notifications-updated", handleNotificationsUpdate);
+    };
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -102,14 +128,7 @@ const UserDashboard = () => {
 
       // Fetch user notifications
       try {
-        const notifRes = await getNotifications();
-        if (notifRes.data && notifRes.data.success) {
-          const fetchedNotifs = (notifRes.data.data || []).map((n) => ({
-            ...n,
-            isRead: n.read ?? false,
-          }));
-          setNotifications(fetchedNotifs);
-        }
+        await fetchNotificationsOnly();
       } catch (err) {
         console.error("Failed to load notifications in dashboard", err);
       } finally {
@@ -271,6 +290,7 @@ const UserDashboard = () => {
       if (res.data && res.data.success) {
         setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
         toast.success("Notification marked as read");
+        window.dispatchEvent(new Event("notifications-updated"));
       }
     } catch (err) {
       toast.error("Failed to update notification");
@@ -283,6 +303,7 @@ const UserDashboard = () => {
       if (res.data && res.data.success) {
         setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
         toast.success("All notifications marked as read");
+        window.dispatchEvent(new Event("notifications-updated"));
       }
     } catch (err) {
       toast.error("Failed to mark all as read");
@@ -295,6 +316,7 @@ const UserDashboard = () => {
       if (res.data && res.data.success) {
         setNotifications(prev => prev.filter(n => n._id !== id));
         toast.success("Notification deleted");
+        window.dispatchEvent(new Event("notifications-updated"));
       }
     } catch (err) {
       toast.error("Failed to delete notification");

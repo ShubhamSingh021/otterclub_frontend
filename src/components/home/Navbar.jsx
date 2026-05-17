@@ -95,7 +95,17 @@ const Navbar = ({ settings: cmsSettings }) => {
     if (isUserLoggedIn) {
       fetchNotifications();
       const interval = setInterval(fetchNotifications, 20000); // Every 20 seconds
-      return () => clearInterval(interval);
+
+      const handleNotificationsUpdate = () => {
+        fetchNotifications();
+      };
+
+      window.addEventListener("notifications-updated", handleNotificationsUpdate);
+
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener("notifications-updated", handleNotificationsUpdate);
+      };
     }
   }, [isUserLoggedIn]);
 
@@ -129,6 +139,7 @@ const Navbar = ({ settings: cmsSettings }) => {
         setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
         setUnreadCount(0);
         toast.success("All notifications marked as read");
+        window.dispatchEvent(new Event("notifications-updated"));
       }
     } catch (err) {
       toast.error("Failed to mark all as read");
@@ -141,6 +152,7 @@ const Navbar = ({ settings: cmsSettings }) => {
       if (res.data && res.data.success) {
         setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
         setUnreadCount(prev => Math.max(0, prev - 1));
+        window.dispatchEvent(new Event("notifications-updated"));
       }
     } catch (err) {
       console.error(err);
