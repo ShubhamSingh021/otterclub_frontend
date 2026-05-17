@@ -13,6 +13,11 @@ const ForgotPassword = () => {
     e.preventDefault();
     if (!email) return toast.error("Please enter your email");
     
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return toast.error("Please enter a valid email address (e.g., name@example.com)");
+    }
+    
     setLoading(true);
     try {
       const res = await forgotPassword(email);
