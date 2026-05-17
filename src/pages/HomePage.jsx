@@ -24,10 +24,6 @@ const HomePage = () => {
   const homepageSections = data?.homepageSections || {};
   const featuredEvents = data?.featuredEvents || [];
 
-  console.log("FRONTEND_HOMEPAGE_DEBUG: featuredEvents count:", featuredEvents.length);
-  if (featuredEvents.length > 0) {
-    console.log("FRONTEND_HOMEPAGE_DEBUG: First event:", featuredEvents[0].title);
-  }
 
   return (
     <AppShell siteSettings={siteSettings}>

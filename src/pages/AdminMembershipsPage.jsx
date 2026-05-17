@@ -147,7 +147,7 @@ const AdminMembershipsPage = () => {
             </button>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+          <div className="hidden md:block overflow-hidden rounded-2xl border border-white/10 bg-white/5">
             <table className="w-full text-left">
               <thead className="bg-white/5 text-xs font-bold uppercase tracking-widest text-slate-400">
                 <tr>
@@ -221,6 +221,76 @@ const AdminMembershipsPage = () => {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Cards Layout */}
+          <div className="mt-8 space-y-4 md:hidden">
+            {loading ? (
+              <div className="py-10 text-center text-slate-500">Loading memberships...</div>
+            ) : memberships.length === 0 ? (
+              <div className="py-10 text-center text-slate-500">No memberships found</div>
+            ) : (
+              memberships.map((m) => (
+                <div key={m._id} className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 space-y-4">
+                  <div className="flex justify-between items-start border-b border-white/5 pb-3">
+                    <div>
+                      <p className="font-bold text-white text-base">{m.userName}</p>
+                      <p className="text-xs text-slate-400">{m.email}</p>
+                    </div>
+                    <span className={`rounded-full px-2.5 py-0.5 text-[9px] font-bold ${
+                      m.membershipType === 'PRO' ? 'bg-[#2d61ff]/20 text-[#2d61ff]' : 
+                      m.membershipType === 'ELITE' ? 'bg-[#40e0d0]/20 text-[#40e0d0]' : 
+                      'bg-slate-700/50 text-slate-300'
+                    }`}>
+                      {m.membershipType}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-black">Status</p>
+                      <p className={`mt-1 font-bold capitalize ${
+                        m.membershipStatus === 'active' ? 'text-green-400' : 
+                        m.membershipStatus === 'expired' ? 'text-red-400' : 
+                        'text-slate-400'
+                      }`}>
+                        {m.membershipStatus}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-black">Expiry Date</p>
+                      <p className="mt-1 font-medium text-slate-300">
+                        {format(new Date(m.expiryDate), 'MMM dd, yyyy')}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-white/5 pt-3 flex flex-wrap gap-2.5 items-center justify-between">
+                    <div className="flex gap-2">
+                      {m.membershipStatus === 'active' ? (
+                        <button onClick={() => handleStatusUpdate(m._id, 'cancelled')} className="rounded px-2.5 py-1.5 text-xs font-bold uppercase bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition">Cancel</button>
+                      ) : (
+                        <button onClick={() => handleStatusUpdate(m._id, 'active')} className="rounded px-2.5 py-1.5 text-xs font-bold uppercase bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20 transition">Activate</button>
+                      )}
+                      <button onClick={() => handleExtend(m._id)} className="rounded px-2.5 py-1.5 text-xs font-bold uppercase bg-[#40e0d0]/10 text-[#40e0d0] border border-[#40e0d0]/20 hover:bg-[#40e0d0]/20 transition">Extend</button>
+                      <button onClick={() => handleRefund(m._id)} className="rounded px-2.5 py-1.5 text-xs font-bold uppercase bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:bg-orange-500/20 transition">Refund</button>
+                    </div>
+                    <div className="flex gap-2.5">
+                      <button onClick={() => handleResendEmail(m._id)} className="p-2 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition" title="Resend Email">
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                      </button>
+                      <button onClick={() => handleDelete(m._id)} className="p-2 rounded bg-slate-800 text-slate-400 hover:text-red-500 border border-white/5 hover:border-red-500/30 transition">
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </Container>
       </main>

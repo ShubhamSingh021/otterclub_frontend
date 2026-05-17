@@ -5,16 +5,40 @@
 @tailwind utilities;
 
 :root {
-  --surface: #070d18;
-  --panel: #0f1728;
-  --accent: #40e0d0;
+  --surface: #060b16;
+  --panel: #0d1527;
+  --accent: #8ce5db;
+  --accent-glow: rgba(140, 229, 219, 0.15);
   --text: #f8fafc;
-  --muted: #b8c4d6;
-  --border: #263449;
+  --muted: #94a3b8;
+  --border: rgba(255, 255, 255, 0.08);
+  --gradient-primary: linear-gradient(135deg, #2d61ff 0%, #8ce5db 100%);
 }
 
 * {
   box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+/* Customized Webkit Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #060b16;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  border: 2px solid #060b16;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(140, 229, 219, 0.3);
 }
 
 body {
@@ -23,11 +47,13 @@ body {
   font-family: "Manrope", "Segoe UI", sans-serif;
   color: var(--text);
   background:
-    radial-gradient(circle at 10% 0%, rgba(28, 94, 255, 0.35), transparent 36%),
-    radial-gradient(circle at 90% 0%, rgba(64, 224, 208, 0.25), transparent 30%),
-    linear-gradient(180deg, #040812 0%, #070d18 40%, #050a14 100%),
+    radial-gradient(circle at 10% 0%, rgba(45, 97, 255, 0.25), transparent 40%),
+    radial-gradient(circle at 90% 0%, rgba(140, 229, 219, 0.15), transparent 35%),
+    linear-gradient(180deg, #040812 0%, #060b16 45%, #050a14 100%),
     var(--surface);
   line-height: 1.5;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
 img {
@@ -42,11 +68,64 @@ a {
 
 ::selection {
   color: #04101f;
-  background: #40e0d0;
+  background: #8ce5db;
 }
 
+/* Font Display */
+.font-display {
+  font-family: "Sora", "Segoe UI", sans-serif;
+}
+
+/* Premium Text Shadows & Glow */
+.text-shadow-glow {
+  text-shadow: 0 0 20px rgba(140, 229, 219, 0.35);
+}
+
+.text-shadow-blue {
+  text-shadow: 0 0 20px rgba(45, 97, 255, 0.4);
+}
+
+/* Modern Glass Panels */
 .glass-panel {
-  background: linear-gradient(145deg, rgba(15, 23, 40, 0.78), rgba(15, 23, 40, 0.38));
-  border: 1px solid rgba(160, 182, 210, 0.24);
-  backdrop-filter: blur(14px);
+  background: linear-gradient(145deg, rgba(13, 21, 39, 0.8), rgba(9, 15, 29, 0.4));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Subtle Shadows */
+.shadow-soft {
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+.shadow-glow-accent {
+  box-shadow: 0 0 25px -5px rgba(140, 229, 219, 0.25);
+}
+
+/* Micro-Animations & Hover Effects */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Image Lazy Loading Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
 }

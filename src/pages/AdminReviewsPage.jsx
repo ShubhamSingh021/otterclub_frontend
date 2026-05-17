@@ -160,7 +160,7 @@ const AdminReviewsPage = () => {
           </div>
 
           {/* Table list */}
-          <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.02]">
+          <div className="hidden md:block overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.02]">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead className="border-b border-white/10 bg-white/[0.03] text-[11px] font-bold uppercase tracking-widest text-slate-400">
@@ -287,6 +287,110 @@ const AdminReviewsPage = () => {
               </table>
             </div>
           </div>
+
+          {/* Mobile Cards Layout */}
+          <div className="mt-8 space-y-4 md:hidden">
+            {loading ? (
+              <div className="py-10 text-center text-slate-500">
+                <div className="flex justify-center items-center gap-3">
+                  <div className="h-5 w-5 animate-spin rounded-full border-t-2 border-[#40e0d0]"></div>
+                  <span>Fetching reviews...</span>
+                </div>
+              </div>
+            ) : reviews.length === 0 ? (
+              <div className="py-10 text-center text-slate-500 font-medium">
+                No testimonials found matching filters.
+              </div>
+            ) : (
+              reviews.map((rev) => (
+                <div key={rev._id} className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 space-y-4">
+                  <div className="flex justify-between items-start border-b border-white/5 pb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#40e0d0] to-[#2d61ff] overflow-hidden flex items-center justify-center font-bold text-[#061323] shrink-0">
+                        {rev.avatar || rev.avatarUrl ? (
+                          <img src={rev.avatar || rev.avatarUrl} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          rev.userName?.[0]?.toUpperCase() || rev.personName?.[0]?.toUpperCase()
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-bold text-white truncate">{rev.userName || rev.personName}</p>
+                        <p className="text-[10px] text-slate-500 truncate font-semibold uppercase">{rev.personRole}</p>
+                      </div>
+                    </div>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase border ${
+                      rev.status === "approved" ? "bg-green-500/10 text-green-400 border-green-500/20" :
+                      rev.status === "rejected" ? "bg-red-500/10 text-red-400 border-red-500/20" :
+                      "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
+                    }`}>
+                      {rev.status || (rev.isActive ? "approved" : "pending")}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1">
+                    <h4 className="font-bold text-slate-200 text-sm">{rev.title || "Untitled Review"}</h4>
+                    <p className="text-xs text-slate-400 leading-relaxed italic">"{rev.review || rev.quote}"</p>
+                    <div className="flex flex-wrap gap-2 pt-1.5 animate-fadeIn">
+                      <div className="flex text-yellow-400 text-xs items-center mr-2">
+                        {Array.from({ length: rev.rating || 5 }).map((_, i) => (
+                          <span key={i}>★</span>
+                        ))}
+                      </div>
+                      {rev.eventName && (
+                        <span className="px-2 py-0.5 rounded bg-[#40e0d0]/10 border border-[#40e0d0]/20 text-[9px] font-bold text-[#40e0d0]">
+                          Event: {rev.eventName}
+                        </span>
+                      )}
+                      {rev.membershipType && !rev.eventId && (
+                        <span className="px-2 py-0.5 rounded bg-[#2d61ff]/10 border border-[#2d61ff]/20 text-[9px] font-bold text-[#2d61ff]">
+                          {rev.membershipType} Member
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="border-t border-white/5 pt-3 flex flex-wrap items-center justify-between gap-3">
+                    <button
+                      onClick={() => handleToggleFeatured(rev._id, rev.featured || rev.isFeatured)}
+                      className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase border transition hover:scale-105 active:scale-95 ${
+                        rev.featured || rev.isFeatured
+                          ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/30"
+                          : "bg-white/5 text-slate-500 border-white/5"
+                      }`}
+                    >
+                      {(rev.featured || rev.isFeatured) ? "★ Featured" : "Regular"}
+                    </button>
+
+                    <div className="flex gap-2">
+                      {rev.status !== "approved" && (
+                        <button
+                          onClick={() => handleStatusChange(rev._id, "approved")}
+                          className="rounded px-2.5 py-1 text-[10px] font-black uppercase bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20 transition"
+                        >
+                          Approve
+                        </button>
+                      )}
+                      {rev.status !== "rejected" && (
+                        <button
+                          onClick={() => handleStatusChange(rev._id, "rejected")}
+                          className="rounded px-2.5 py-1 text-[10px] font-black uppercase bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/20 transition"
+                        >
+                          Reject
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDelete(rev._id)}
+                        className="rounded px-2.5 py-1 text-[10px] font-black uppercase bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
 
           {/* Pagination */}
           {totalPages > 1 && (

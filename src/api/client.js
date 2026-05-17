@@ -27,13 +27,10 @@ apiClient.interceptors.request.use((config) => {
 
   // Prioritize adminToken if we are in admin context or hitting an admin API
   if (adminToken && (isAdminPath || isAdminApi)) {
-    console.log("Using Admin Token for:", config.url);
     config.headers.Authorization = `Bearer ${adminToken}`;
   } else if (userToken) {
-    console.log("Using User Token for:", config.url);
     config.headers.Authorization = `Bearer ${userToken}`;
   } else if (adminToken) {
-    console.log("Fallback: Using Admin Token for:", config.url);
     // Fallback if no userToken but adminToken exists
     config.headers.Authorization = `Bearer ${adminToken}`;
   }

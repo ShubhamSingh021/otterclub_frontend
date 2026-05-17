@@ -78,7 +78,7 @@ const AdminEventsPage = () => {
             </button>
           </div>
 
-          <div className="mt-10 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]">
+          <div className="mt-10 hidden md:block overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead className="border-b border-white/10 bg-white/[0.03] text-[11px] font-bold uppercase tracking-widest text-slate-400">
@@ -145,6 +145,66 @@ const AdminEventsPage = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+
+          {/* Mobile Cards Layout */}
+          <div className="mt-8 space-y-4 md:hidden">
+            {loading ? (
+              <div className="py-10 text-center text-slate-500">Loading events...</div>
+            ) : events.length === 0 ? (
+              <div className="py-10 text-center text-slate-500">No events found</div>
+            ) : (
+              events.map((event) => (
+                <div key={event._id} className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 space-y-4">
+                  <div className="flex items-start gap-4">
+                    <img src={event.eventImage} alt="" className="h-14 w-14 rounded-xl object-cover shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-white text-base truncate">{event.title}</p>
+                      <p className="text-xs text-slate-500 truncate">/{event.slug}</p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <span className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-300">
+                          {event.category}
+                        </span>
+                        <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${
+                          event.status === "upcoming" ? "bg-green-500/10 text-green-400" : "bg-slate-500/10 text-slate-400"
+                        }`}>
+                          {event.status}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 border-t border-b border-white/5 py-3 text-xs">
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-black">Event Date</p>
+                      <p className="mt-1 font-semibold text-slate-300">
+                        {format(new Date(event.eventDate), "MMM dd, yyyy")}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-black">Status Controls</p>
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        <button onClick={() => handleToggleVisibility(event._id)} className={`px-2 py-0.5 rounded text-[9px] font-bold border transition ${event.isVisible ? "border-green-500/30 text-green-400 bg-green-500/5" : "border-red-500/30 text-red-400 bg-red-500/5"}`}>
+                          {event.isVisible ? "Visible" : "Hidden"}
+                        </button>
+                        <button onClick={() => handleToggleFeatured(event._id)} className={`px-2 py-0.5 rounded text-[9px] font-bold border transition ${event.isFeatured ? "border-yellow-500/30 text-yellow-400 bg-yellow-500/5" : "border-slate-500/30 text-slate-400 bg-white/5"}`}>
+                          {event.isFeatured ? "★ Featured" : "Regular"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-4 text-xs font-bold pt-1">
+                    <button onClick={() => navigate(`/admin/events/edit/${event._id}`)} className="rounded-lg bg-white/5 border border-white/10 px-4 py-2 text-[#40e0d0] hover:bg-white/10 transition">
+                      Edit Event
+                    </button>
+                    <button onClick={() => handleDelete(event._id)} className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-2 text-red-400 hover:bg-red-500/20 transition">
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </Container>
       </main>

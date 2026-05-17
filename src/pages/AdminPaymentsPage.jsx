@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 import { getAllPayments } from "../api/paymentApi";
 import AdminNavbar from "../components/layout/AdminNavbar";
 import Container from "../components/layout/Container";
@@ -52,8 +53,8 @@ const AdminPaymentsPage = () => {
 
       <main className="py-10">
         <Container>
-          <div className="mb-8 flex items-center justify-between">
-            <div className="flex gap-2">
+          <div className="mb-8 flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div className="flex flex-wrap gap-2">
               {["all", "paid", "pending", "failed"].map((f) => (
                 <button
                   key={f}
@@ -69,7 +70,7 @@ const AdminPaymentsPage = () => {
             <p className="text-sm text-slate-400">Total Transactions: {filteredPayments.length}</p>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
+          <div className="hidden md:block overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-white/10 bg-white/[0.02]">
@@ -122,6 +123,55 @@ const AdminPaymentsPage = () => {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Cards Layout */}
+          <div className="mt-8 space-y-4 md:hidden">
+            {loading ? (
+              Array(3).fill(0).map((_, i) => (
+                <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 h-40 animate-pulse" />
+              ))
+            ) : filteredPayments.length === 0 ? (
+              <div className="py-10 text-center text-slate-500 italic">No transactions found</div>
+            ) : (
+              filteredPayments.map((p) => (
+                <div key={p._id} className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 space-y-4">
+                  <div className="flex justify-between items-start border-b border-white/5 pb-3">
+                    <div>
+                      <p className="font-bold text-white text-base">{p.registration?.fullName || "Unknown"}</p>
+                      <p className="text-xs text-slate-500">{p.registration?.email}</p>
+                    </div>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${getStatusColor(p.status)}`}>
+                      {p.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-black">Transaction ID</p>
+                      <p className="mt-1 font-mono text-[#40e0d0] truncate">{p.razorpayPaymentId || p.razorpayOrderId}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-black">Amount</p>
+                      <p className="mt-1 font-bold text-white">₹{p.amount}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-xs border-t border-white/5 pt-3">
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-black">Event</p>
+                      <p className="mt-1 font-medium text-slate-300 truncate">{p.event?.title}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-black">Date</p>
+                      <p className="mt-1 text-slate-400">
+                        {new Date(p.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </Container>
       </main>

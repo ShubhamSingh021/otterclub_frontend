@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
+import { Link, useLocation } from "react-router-dom";
 import Container from "../layout/Container.jsx";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
@@ -30,6 +31,7 @@ const defaultSettings = {
 
 const Navbar = ({ settings: cmsSettings }) => {
   const settings = cmsSettings || defaultSettings;
+  const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
@@ -41,43 +43,43 @@ const Navbar = ({ settings: cmsSettings }) => {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
 
+  const checkAuth = useCallback(() => {
+    const token = localStorage.getItem("token");
+    const adminToken = localStorage.getItem("adminToken");
+    const userData = localStorage.getItem("user");
+    const adminData = localStorage.getItem("adminUser");
+    
+    const isTokenValid = !!token;
+    const isAdminTokenValid = !!adminToken;
+    
+    let currentUser = null;
+    if (userData) {
+      try {
+        currentUser = JSON.parse(userData);
+      } catch (e) {
+        console.error("Failed to parse user data", e);
+      }
+    }
+
+    let currentAdmin = null;
+    if (adminData) {
+      try {
+        currentAdmin = JSON.parse(adminData);
+      } catch (e) {
+        console.error("Failed to parse admin data", e);
+      }
+    }
+
+    setIsUserLoggedIn(isTokenValid);
+    setUser(currentUser);
+
+    const hasAdminRole = (currentUser?.role === "admin" || currentUser?.role === "superadmin") || 
+                        (currentAdmin?.role === "admin" || currentAdmin?.role === "superadmin");
+    
+    setIsAdminLoggedIn(isAdminTokenValid && hasAdminRole);
+  }, []);
+
   useEffect(() => {
-    const checkAuth = () => {
-      const token = localStorage.getItem("token");
-      const adminToken = localStorage.getItem("adminToken");
-      const userData = localStorage.getItem("user");
-      const adminData = localStorage.getItem("adminUser");
-      
-      const isTokenValid = !!token;
-      const isAdminTokenValid = !!adminToken;
-      
-      let currentUser = null;
-      if (userData) {
-        try {
-          currentUser = JSON.parse(userData);
-        } catch (e) {
-          console.error("Failed to parse user data", e);
-        }
-      }
-
-      let currentAdmin = null;
-      if (adminData) {
-        try {
-          currentAdmin = JSON.parse(adminData);
-        } catch (e) {
-          console.error("Failed to parse admin data", e);
-        }
-      }
-
-      setIsUserLoggedIn(isTokenValid);
-      setUser(currentUser);
-
-      const hasAdminRole = (currentUser?.role === "admin" || currentUser?.role === "superadmin") || 
-                          (currentAdmin?.role === "admin" || currentAdmin?.role === "superadmin");
-      
-      setIsAdminLoggedIn(isAdminTokenValid && hasAdminRole);
-    };
-
     checkAuth();
     window.addEventListener("storage", checkAuth);
     window.addEventListener("focus", checkAuth);
@@ -88,28 +90,9 @@ const Navbar = ({ settings: cmsSettings }) => {
       window.removeEventListener("focus", checkAuth);
       window.removeEventListener("auth-change", checkAuth);
     };
-  }, []);
+  }, [checkAuth]);
 
-  // Poll notifications
-  useEffect(() => {
-    if (isUserLoggedIn) {
-      fetchNotifications();
-      const interval = setInterval(fetchNotifications, 20000); // Every 20 seconds
-
-      const handleNotificationsUpdate = () => {
-        fetchNotifications();
-      };
-
-      window.addEventListener("notifications-updated", handleNotificationsUpdate);
-
-      return () => {
-        clearInterval(interval);
-        window.removeEventListener("notifications-updated", handleNotificationsUpdate);
-      };
-    }
-  }, [isUserLoggedIn]);
-
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       const res = await getNotifications();
       const rawNotifications = res.data?.notifications || res.data?.data || [];
@@ -130,7 +113,26 @@ const Navbar = ({ settings: cmsSettings }) => {
       setNotifications([]);
       setUnreadCount(0);
     }
-  };
+  }, []);
+
+  // Poll notifications
+  useEffect(() => {
+    if (isUserLoggedIn) {
+      fetchNotifications();
+      const interval = setInterval(fetchNotifications, 20000); // Every 20 seconds
+
+      const handleNotificationsUpdate = () => {
+        fetchNotifications();
+      };
+
+      window.addEventListener("notifications-updated", handleNotificationsUpdate);
+
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener("notifications-updated", handleNotificationsUpdate);
+      };
+    }
+  }, [isUserLoggedIn, fetchNotifications]);
 
   const handleMarkAllRead = async () => {
     try {
@@ -188,11 +190,28 @@ const Navbar = ({ settings: cmsSettings }) => {
     window.location.href = "/";
   };
 
+  // Helper component to conditionally render SPA Link or external <a> tag
+  const SmartLink = ({ href, className, children, onClick }) => {
+    const isHash = href.startsWith("#") || href.includes("/#");
+    if (isHash) {
+      return (
+        <a href={href} className={className} onClick={onClick}>
+          {children}
+        </a>
+      );
+    }
+    return (
+      <Link to={href} className={className} onClick={onClick}>
+        {children}
+      </Link>
+    );
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#050b16]/80 backdrop-blur-xl">
       <Container className="py-3 sm:py-4">
         <div className="flex items-center justify-between gap-4">
-          <a className="flex-shrink-0" href="/">
+          <Link className="flex-shrink-0" to="/">
             <div className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-2 py-1.5 sm:rounded-2xl sm:px-2.5">
               <img src="/logo.jpg" alt="Otter Society" className="h-7 w-7 rounded-lg object-cover sm:h-8 sm:w-8" />
               <div className="min-w-0">
@@ -206,41 +225,63 @@ const Navbar = ({ settings: cmsSettings }) => {
                 ) : null}
               </div>
             </div>
-          </a>
+          </Link>
 
-          <button
-            className="group flex flex-col items-center justify-center rounded-xl border border-white/20 bg-white/[0.04] p-2.5 text-white lg:hidden"
-            type="button"
-            onClick={() => setIsMenuOpen((prev) => !prev)}
-            aria-label="Toggle navigation menu"
-          >
-            <span className={`block h-0.5 w-5 rounded-full bg-white transition-all duration-300 ${isMenuOpen ? "translate-y-2 rotate-45" : ""}`} />
-            <span className={`mt-1.5 block h-0.5 w-5 rounded-full bg-white transition-all duration-300 ${isMenuOpen ? "opacity-0" : ""}`} />
-            <span className={`mt-1.5 block h-0.5 w-5 rounded-full bg-white transition-all duration-300 ${isMenuOpen ? "-translate-y-2 -rotate-45" : ""}`} />
-          </button>
+          <div className="flex items-center gap-2 lg:hidden">
+            {/* Notification Bell on Mobile Header (Visible if logged in) */}
+            {isUserLoggedIn && (
+              <div className="relative">
+                <button
+                  onClick={() => setIsNotifOpen(!isNotifOpen)}
+                  className="relative rounded-xl border border-white/10 bg-white/5 p-2 text-slate-300 hover:bg-white/10 hover:text-white transition"
+                  title="Notifications"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-[#050b16]">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+            )}
+
+            <button
+              className="group flex flex-col items-center justify-center rounded-xl border border-white/20 bg-white/[0.04] p-2.5 text-white"
+              type="button"
+              onClick={() => setIsMenuOpen((prev) => !prev)}
+              aria-label="Toggle navigation menu"
+            >
+              <span className={`block h-0.5 w-5 rounded-full bg-white transition-all duration-300 ${isMenuOpen ? "translate-y-2 rotate-45" : ""}`} />
+              <span className={`mt-1.5 block h-0.5 w-5 rounded-full bg-white transition-all duration-300 ${isMenuOpen ? "opacity-0" : ""}`} />
+              <span className={`mt-1.5 block h-0.5 w-5 rounded-full bg-white transition-all duration-300 ${isMenuOpen ? "-translate-y-2 -rotate-45" : ""}`} />
+            </button>
+          </div>
 
           <nav className="hidden items-center gap-1 lg:flex">
             {navLinks.map((link) => (
-              <a
+              <SmartLink
                 key={`${link.label}-${link.href}`}
                 className="whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white"
                 href={link.href}
               >
                 {link.label}
-              </a>
+              </SmartLink>
             ))}
             {isAdminLoggedIn && (
-              <a
-                className="whitespace-nowrap rounded-full border border-[#40e0d0]/20 bg-[#40e0d0]/5 px-3.5 py-2 text-sm font-bold text-[#40e0d0] transition hover:bg-[#40e0d0]/10"
-                href="/admin/events"
+              <Link
+                className="whitespace-nowrap rounded-full border border-[#8ce5db]/20 bg-[#8ce5db]/5 px-3.5 py-2 text-sm font-bold text-[#8ce5db] transition hover:bg-[#8ce5db]/10"
+                to="/admin/events"
               >
                 Admin
-              </a>
+              </Link>
             )}
             {isUserLoggedIn ? (
               <div className="flex items-center gap-3 ml-2 relative">
-                {/* Notification Bell Dropdown Button */}
-                <div className="relative">
+                {/* Notification Bell Dropdown Button (Desktop) */}
+                <div className="relative hidden lg:block">
                   <button
                     onClick={() => setIsNotifOpen(!isNotifOpen)}
                     className="relative rounded-full border border-white/10 bg-white/5 p-2.5 text-slate-300 hover:bg-white/10 hover:text-white transition"
@@ -255,130 +296,13 @@ const Navbar = ({ settings: cmsSettings }) => {
                       </span>
                     )}
                   </button>
-
-                  <AnimatePresence>
-                    {isNotifOpen && (
-                      <>
-                        <div className="fixed inset-0 z-40" onClick={() => setIsNotifOpen(false)} />
-                        
-                        <motion.div
-                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                          className="absolute right-0 mt-3 z-50 w-96 rounded-2xl border border-white/10 bg-[#0a1222]/95 backdrop-blur-xl p-4 shadow-2xl space-y-3 animate-fade-in"
-                        >
-                          <div className="flex justify-between items-center pb-2 border-b border-white/10">
-                            <h4 className="font-bold text-sm text-white flex items-center gap-2">
-                              <span>Notifications</span>
-                              {unreadCount > 0 && (
-                                <span className="bg-[#40e0d0]/20 text-[#40e0d0] text-[10px] font-bold px-2 py-0.5 rounded-full">
-                                  {unreadCount} new
-                                </span>
-                              )}
-                            </h4>
-                            {unreadCount > 0 && (
-                              <button
-                                onClick={handleMarkAllRead}
-                                className="text-xs font-bold text-[#40e0d0] hover:underline"
-                              >
-                                Mark all read
-                              </button>
-                            )}
-                          </div>
-
-                          {/* Beautiful Scrollable Tabs */}
-                          <div className="flex gap-1.5 overflow-x-auto pb-1.5 scrollbar-thin scrollbar-thumb-white/10 text-xs">
-                            {[
-                              { id: "all", label: "All" },
-                              { id: "event", label: "Events" },
-                              { id: "membership", label: "Memberships" },
-                              { id: "payment", label: "Payments" },
-                              { id: "system", label: "System" },
-                            ].map((tab) => (
-                              <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`rounded-full px-3 py-1 font-semibold transition shrink-0 ${
-                                  activeTab === tab.id
-                                    ? "bg-[#40e0d0] text-[#051426]"
-                                    : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
-                                }`}
-                              >
-                                {tab.label}
-                              </button>
-                            ))}
-                          </div>
-
-                          <div className="max-h-64 overflow-y-auto space-y-2 pr-1 text-left scrollbar-thin scrollbar-thumb-white/10">
-                            {filteredNotifications.length === 0 ? (
-                              <p className="text-xs text-slate-500 text-center py-8">No notifications in this category.</p>
-                            ) : (
-                              filteredNotifications.map((notif) => {
-                                // Determine a vibrant color scheme based on notification type
-                                let badgeColor = "bg-slate-500/10 text-slate-400 border-slate-500/20";
-                                if (notif.type === "payment") badgeColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-                                else if (notif.type === "event") badgeColor = "bg-cyan-500/10 text-cyan-400 border-cyan-500/20";
-                                else if (notif.type === "membership") badgeColor = "bg-purple-500/10 text-purple-400 border-purple-500/20";
-                                
-                                return (
-                                  <div
-                                    key={notif._id}
-                                    onClick={() => handleMarkOneRead(notif._id)}
-                                    className={`p-3 rounded-xl border transition cursor-pointer relative ${
-                                      notif.isRead
-                                        ? "bg-white/[0.01] border-white/5 opacity-60"
-                                        : "bg-white/[0.04] border-[#40e0d0]/20 hover:border-[#40e0d0]/40"
-                                    }`}
-                                  >
-                                    <div className="flex justify-between items-start gap-2">
-                                      <div className="flex flex-wrap items-center gap-1.5">
-                                        <span className={`text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded border ${badgeColor}`}>
-                                          {notif.type}
-                                        </span>
-                                        <h5 className="font-bold text-xs text-white leading-tight">{notif.title}</h5>
-                                      </div>
-                                      {!notif.isRead && (
-                                        <span className="h-2 w-2 rounded-full bg-[#40e0d0] shrink-0 mt-1" />
-                                      )}
-                                    </div>
-                                    <p className="text-slate-300 text-[11px] mt-1.5 leading-relaxed">{notif.message}</p>
-                                    {notif.link && (
-                                      <a
-                                        href={notif.link}
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="inline-flex items-center gap-1 text-[10px] font-bold text-[#40e0d0] hover:underline mt-2"
-                                      >
-                                        <span>View details</span>
-                                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                      </a>
-                                    )}
-                                    <span className="text-[9px] text-slate-500 block mt-1 text-right">
-                                      {notif.createdAt ? (() => {
-                                        try {
-                                          return format(new Date(notif.createdAt), "MMM d, h:mm a");
-                                        } catch (e) {
-                                          return "";
-                                        }
-                                      })() : ""}
-                                    </span>
-                                  </div>
-                                );
-                              })
-                            )}
-                          </div>
-                        </motion.div>
-                      </>
-                    )}
-                  </AnimatePresence>
                 </div>
 
-                <a
-                  href="/dashboard"
+                <Link
+                  to="/dashboard"
                   className="flex items-center gap-3 rounded-full border border-white/10 bg-white/5 p-1 pr-4 transition hover:bg-white/10"
                 >
-                  <div className="h-8 w-8 overflow-hidden rounded-full border border-white/10 bg-gradient-to-br from-[#40e0d0] to-[#2d61ff]">
+                  <div className="h-8 w-8 overflow-hidden rounded-full border border-white/10 bg-gradient-to-br from-[#8ce5db] to-[#2d61ff]">
                     {user?.avatar ? (
                       <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
                     ) : (
@@ -388,7 +312,7 @@ const Navbar = ({ settings: cmsSettings }) => {
                     )}
                   </div>
                   <span className="text-sm font-bold text-white">{user?.name?.split(" ")[0]}</span>
-                </a>
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="rounded-full border border-red-500/30 bg-red-500/10 p-2 text-red-400 transition hover:bg-red-500/20"
@@ -401,57 +325,190 @@ const Navbar = ({ settings: cmsSettings }) => {
               </div>
             ) : (
               <>
-                <a
+                <Link
                   className="whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white"
-                  href="/login"
+                  to="/login"
                 >
                   Login
-                </a>
+                </Link>
                 {globalCta?.label && globalCta?.href ? (
-                  <a
-                    className="ml-2 whitespace-nowrap flex-shrink-0 rounded-full bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] px-5 py-2.5 text-sm font-bold text-[#051426] transition hover:shadow-[0_0_20px_rgba(64,224,208,0.3)] hover:scale-[1.02]"
+                  <SmartLink
+                    className="ml-2 whitespace-nowrap flex-shrink-0 rounded-full bg-gradient-to-r from-[#8ce5db] to-[#2d61ff] px-5 py-2.5 text-sm font-bold text-[#051426] transition hover:shadow-[0_0_20px_rgba(140,229,219,0.3)] hover:scale-[1.02]"
                     href={globalCta.href}
                   >
                     {globalCta.label}
-                  </a>
+                  </SmartLink>
                 ) : null}
               </>
             )}
           </nav>
         </div>
 
+        {/* Global Notification Dropdown Overlay Container (Shared Desktop & Mobile) */}
+        <AnimatePresence>
+          {isNotifOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setIsNotifOpen(false)} />
+              
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                className="absolute right-4 sm:right-12 mt-3 z-50 w-[calc(100vw-32px)] sm:w-96 rounded-2xl border border-white/10 bg-[#0d1527] p-4 shadow-2xl space-y-3 animate-fade-in"
+              >
+                <div className="flex justify-between items-center pb-2 border-b border-white/10">
+                  <h4 className="font-bold text-sm text-white flex items-center gap-2">
+                    <span>Notifications</span>
+                    {unreadCount > 0 && (
+                      <span className="bg-[#8ce5db]/20 text-[#8ce5db] text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        {unreadCount} new
+                      </span>
+                    )}
+                  </h4>
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={handleMarkAllRead}
+                      className="text-xs font-bold text-[#8ce5db] hover:underline"
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+
+                {/* Scrollable Tabs */}
+                <div className="flex gap-1.5 overflow-x-auto pb-1.5 text-xs">
+                  {[
+                    { id: "all", label: "All" },
+                    { id: "event", label: "Events" },
+                    { id: "membership", label: "Memberships" },
+                    { id: "payment", label: "Payments" },
+                    { id: "system", label: "System" },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`rounded-full px-3 py-1 font-semibold transition shrink-0 ${
+                        activeTab === tab.id
+                          ? "bg-[#8ce5db] text-[#051426]"
+                          : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="max-h-64 overflow-y-auto space-y-2 pr-1 text-left">
+                  {filteredNotifications.length === 0 ? (
+                    <p className="text-xs text-slate-500 text-center py-8">No notifications in this category.</p>
+                  ) : (
+                    filteredNotifications.map((notif) => {
+                      let badgeColor = "bg-slate-500/10 text-slate-400 border-slate-500/20";
+                      if (notif.type === "payment") badgeColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+                      else if (notif.type === "event") badgeColor = "bg-[#8ce5db]/10 text-[#8ce5db] border-[#8ce5db]/20";
+                      else if (notif.type === "membership") badgeColor = "bg-purple-500/10 text-purple-400 border-purple-500/20";
+                      
+                      return (
+                        <div
+                          key={notif._id}
+                          onClick={() => handleMarkOneRead(notif._id)}
+                          className={`p-3 rounded-xl border transition cursor-pointer relative ${
+                            notif.isRead
+                              ? "bg-white/[0.01] border-white/5 opacity-60"
+                              : "bg-white/[0.04] border-[#8ce5db]/20 hover:border-[#8ce5db]/40"
+                          }`}
+                        >
+                          <div className="flex justify-between items-start gap-2">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className={`text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded border ${badgeColor}`}>
+                                {notif.type}
+                              </span>
+                              <h5 className="font-bold text-xs text-white leading-tight">{notif.title}</h5>
+                            </div>
+                            {!notif.isRead && (
+                              <span className="h-2 w-2 rounded-full bg-[#8ce5db] shrink-0 mt-1" />
+                            )}
+                          </div>
+                          <p className="text-slate-300 text-[11px] mt-1.5 leading-relaxed">{notif.message}</p>
+                          {notif.link && (
+                            <SmartLink
+                              href={notif.link}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setIsNotifOpen(false);
+                              }}
+                              className="inline-flex items-center gap-1 text-[10px] font-bold text-[#8ce5db] hover:underline mt-2"
+                            >
+                              <span>View details</span>
+                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              </svg>
+                            </SmartLink>
+                          )}
+                          <span className="text-[9px] text-slate-500 block mt-1 text-right">
+                            {notif.createdAt ? (() => {
+                              try {
+                                return format(new Date(notif.createdAt), "MMM d, h:mm a");
+                              } catch (e) {
+                                return "";
+                              }
+                            })() : ""}
+                          </span>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
+        {/* Mobile Menu Dropdown Panel */}
         <AnimatePresence>
           {isMenuOpen ? (
             <motion.nav
               key="mobile-nav"
               animate={{ height: "auto", opacity: 1 }}
-              className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-[#0a1222]/95 p-2 backdrop-blur-xl lg:hidden"
+              className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-[#0d1527] p-2 backdrop-blur-xl lg:hidden"
               exit={{ height: 0, opacity: 0 }}
               initial={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               <div className="flex flex-col gap-1 p-2">
                 {navLinks.map((link) => (
-                  <a
+                  <SmartLink
                     key={`${link.label}-${link.href}-mobile`}
                     className="block rounded-xl px-4 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/5 hover:text-white"
                     href={link.href}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {link.label}
-                  </a>
+                  </SmartLink>
                 ))}
+                {isAdminLoggedIn && (
+                  <Link
+                    className="block rounded-xl px-4 py-3 text-sm font-bold text-[#8ce5db] transition hover:bg-white/5"
+                    to="/admin/events"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Admin Panel
+                  </Link>
+                )}
                 {isUserLoggedIn ? (
                   <>
-                    <a
+                    <Link
                       className="block rounded-xl px-4 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/5 hover:text-white"
-                      href="/dashboard"
+                      to="/dashboard"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       My Account
-                    </a>
+                    </Link>
                     <button
-                      onClick={handleLogout}
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        handleLogout();
+                      }}
                       className="mt-2 block rounded-xl bg-red-500/10 px-5 py-3 text-center text-sm font-bold text-red-400"
                     >
                       Logout
@@ -459,21 +516,21 @@ const Navbar = ({ settings: cmsSettings }) => {
                   </>
                 ) : (
                   <>
-                    <a
+                    <Link
                       className="block rounded-xl px-4 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/5 hover:text-white"
-                      href="/login"
+                      to="/login"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Login
-                    </a>
+                    </Link>
                     {globalCta?.label && globalCta?.href ? (
-                      <a
-                        className="mt-2 block rounded-xl bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] px-5 py-3 text-center text-sm font-bold text-[#051426]"
+                      <SmartLink
+                        className="mt-2 block rounded-xl bg-gradient-to-r from-[#8ce5db] to-[#2d61ff] px-5 py-3 text-center text-sm font-bold text-[#051426]"
                         href={globalCta.href}
                         onClick={() => setIsMenuOpen(false)}
                       >
                         {globalCta.label}
-                      </a>
+                      </SmartLink>
                     ) : null}
                   </>
                 )}

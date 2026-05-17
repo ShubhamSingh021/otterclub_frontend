@@ -242,7 +242,7 @@ const AdminCouponsPage = () => {
           </div>
 
           {/* Coupons Table */}
-          <div className="mt-10 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]">
+          <div className="mt-10 hidden md:block overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead className="border-b border-white/10 bg-white/[0.03] text-[11px] font-bold uppercase tracking-widest text-slate-400">
@@ -341,6 +341,92 @@ const AdminCouponsPage = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+
+          {/* Mobile Cards Layout */}
+          <div className="mt-8 space-y-4 md:hidden">
+            {loading ? (
+              <div className="py-10 text-center text-slate-500">Loading coupons...</div>
+            ) : coupons.length === 0 ? (
+              <div className="py-10 text-center text-slate-500">No coupons found</div>
+            ) : (
+              coupons.map((coupon) => (
+                <div key={coupon._id} className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 space-y-4">
+                  <div className="flex justify-between items-start border-b border-white/5 pb-3">
+                    <div>
+                      <p className="font-bold text-white text-base font-mono">{coupon.code}</p>
+                      <p className="text-xs text-slate-400">{coupon.description || "No description"}</p>
+                    </div>
+                    <button
+                      onClick={() => handleToggleActive(coupon._id)}
+                      className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest border transition ${
+                        coupon.isActive
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
+                          : "bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20"
+                      }`}
+                    >
+                      {coupon.isActive ? "Active" : "Inactive"}
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-black">Discount</p>
+                      <p className="mt-1 font-bold text-[#40e0d0]">
+                        {coupon.discountType === "percentage"
+                          ? `${coupon.discountValue}% Off`
+                          : `₹${coupon.discountValue} Off`}
+                      </p>
+                      {coupon.maxDiscountAmount && (
+                        <p className="text-[10px] text-slate-500 mt-0.5">Max: ₹{coupon.maxDiscountAmount}</p>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-black">Usage</p>
+                      <p className="mt-1 font-semibold text-slate-300">
+                        {coupon.usedCount || 0} <span className="text-slate-500 font-normal">/ {coupon.usageLimit || "∞"}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-xs border-t border-white/5 pt-3">
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-black">Applies To</p>
+                      <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest ${
+                        coupon.appliesTo === "both"
+                          ? "bg-slate-500/10 text-slate-300 border border-slate-500/20"
+                          : coupon.appliesTo === "membership"
+                            ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
+                            : "bg-cyan-500/10 text-cyan-300 border border-cyan-500/20"
+                      }`}>
+                        {coupon.appliesTo}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-black">Expiry Date</p>
+                      <p className="mt-1 text-slate-400">
+                        {coupon.expiryDate ? safeFormatDate(coupon.expiryDate) : "Never Expires"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-white/5 pt-3 flex justify-end gap-2.5">
+                    <button
+                      onClick={() => handleOpenEdit(coupon)}
+                      className="rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-xs text-white hover:bg-white/10 transition"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(coupon._id)}
+                      className="rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/20 transition"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </Container>
       </main>

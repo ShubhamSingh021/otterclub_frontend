@@ -106,7 +106,7 @@ const AdminRegistrationsPage = () => {
             </div>
           </div>
 
-          <div className="mt-10 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]">
+          <div className="mt-10 hidden md:block overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead className="border-b border-white/10 bg-white/[0.03] text-[11px] font-bold uppercase tracking-widest text-slate-400">
@@ -145,30 +145,30 @@ const AdminRegistrationsPage = () => {
                           <select 
                             value={reg.registrationStatus}
                             onChange={(e) => handleStatusUpdate(reg._id, e.target.value)}
-                            className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase bg-transparent border border-white/10 focus:outline-none ${
+                            className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase bg-transparent border border-white/10 focus:outline-none cursor-pointer ${
                               reg.registrationStatus === "approved" ? "text-green-400" : reg.registrationStatus === "cancelled" ? "text-red-400" : "text-yellow-400"
                             }`}
                           >
-                            <option value="registered">Registered</option>
-                            <option value="approved">Approved</option>
-                            <option value="cancelled">Cancelled</option>
+                            <option value="registered" className="bg-[#081429] text-white">Registered</option>
+                            <option value="approved" className="bg-[#081429] text-white">Approved</option>
+                            <option value="cancelled" className="bg-[#081429] text-white">Cancelled</option>
                           </select>
                         </td>
                         <td className="px-6 py-4">
                           <select 
                             value={reg.paymentStatus}
                             onChange={(e) => handlePaymentUpdate(reg._id, e.target.value)}
-                            className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase bg-transparent border border-white/10 focus:outline-none ${
+                            className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase bg-transparent border border-white/10 focus:outline-none cursor-pointer ${
                               reg.paymentStatus === "paid" ? "text-green-400" : reg.paymentStatus === "failed" ? "text-red-400" : "text-slate-400"
                             }`}
                           >
-                            <option value="pending">Pending</option>
-                            <option value="paid">Paid</option>
-                            <option value="failed">Failed</option>
+                            <option value="pending" className="bg-[#081429] text-white">Pending</option>
+                            <option value="paid" className="bg-[#081429] text-white">Paid</option>
+                            <option value="failed" className="bg-[#081429] text-white">Failed</option>
                           </select>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <button onClick={() => handleDelete(reg._id)} className="text-red-400 hover:underline">Delete</button>
+                          <button onClick={() => handleDelete(reg._id)} className="text-red-400 hover:underline font-bold text-xs uppercase">Delete</button>
                         </td>
                       </tr>
                     ))
@@ -176,6 +176,74 @@ const AdminRegistrationsPage = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+
+          {/* Mobile Cards Layout */}
+          <div className="mt-8 space-y-4 md:hidden">
+            {loading ? (
+              <div className="py-10 text-center text-slate-500">Loading registrations...</div>
+            ) : filteredRegistrations.length === 0 ? (
+              <div className="py-10 text-center text-slate-500">No registrations found</div>
+            ) : (
+              filteredRegistrations.map((reg) => (
+                <div key={reg._id} className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 space-y-4">
+                  <div className="flex justify-between items-start border-b border-white/5 pb-3">
+                    <div>
+                      <p className="font-bold text-white text-base">{reg.fullName}</p>
+                      <p className="text-xs text-slate-500">Age: {reg.age} | {reg.gender}</p>
+                    </div>
+                    <div className="flex flex-col gap-1.5 items-end">
+                      <select 
+                        value={reg.registrationStatus}
+                        onChange={(e) => handleStatusUpdate(reg._id, e.target.value)}
+                        className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase bg-transparent border border-white/10 focus:outline-none ${
+                          reg.registrationStatus === "approved" ? "text-green-400" : reg.registrationStatus === "cancelled" ? "text-red-400" : "text-yellow-400"
+                        }`}
+                      >
+                        <option value="registered" className="bg-[#081429] text-white">Registered</option>
+                        <option value="approved" className="bg-[#081429] text-white">Approved</option>
+                        <option value="cancelled" className="bg-[#081429] text-white">Cancelled</option>
+                      </select>
+                      <select 
+                        value={reg.paymentStatus}
+                        onChange={(e) => handlePaymentUpdate(reg._id, e.target.value)}
+                        className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase bg-transparent border border-white/10 focus:outline-none ${
+                          reg.paymentStatus === "paid" ? "text-green-400" : reg.paymentStatus === "failed" ? "text-red-400" : "text-slate-400"
+                        }`}
+                      >
+                        <option value="pending" className="bg-[#081429] text-white">Pending</option>
+                        <option value="paid" className="bg-[#081429] text-white">Paid</option>
+                        <option value="failed" className="bg-[#081429] text-white">Failed</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-black">Contact Info</p>
+                      <p className="mt-1 font-semibold text-slate-300 truncate">{reg.email}</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">{reg.phone}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-black">Registered Event</p>
+                      <p className="mt-1 font-medium text-[#40e0d0] truncate">{reg.event?.title}</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">
+                        {reg.event?.eventDate && format(new Date(reg.event.eventDate), "MMM dd, yyyy")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-white/5 pt-3 flex justify-end">
+                    <button
+                      onClick={() => handleDelete(reg._id)}
+                      className="rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-1.5 text-xs font-bold text-red-400 hover:bg-red-500/20 transition"
+                    >
+                      Delete Registration
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </Container>
       </main>
