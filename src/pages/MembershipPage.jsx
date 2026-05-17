@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { getPlans, createMembershipOrder, verifyMembershipPayment } from "../api/membershipApi";
+import { getPlans } from "../api/membershipApi";
 import { getProfile } from "../api/authApi";
 import Navbar from "../components/home/Navbar";
 import Footer from "../components/home/Footer";
+import MembershipCheckoutModal from "../components/membership/MembershipCheckoutModal";
 
 const MembershipPage = () => {
   const [plans, setPlans] = useState(null);
@@ -14,6 +15,12 @@ const MembershipPage = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  // Checkout modal states
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+  const [selectedPlanDetails, setSelectedPlanDetails] = useState(null);
+  const [isCheckoutUpgrade, setIsCheckoutUpgrade] = useState(false);
+  const [currentPlanPrice, setCurrentPlanPrice] = useState(0);
 
   useEffect(() => {
     fetchPlans();
@@ -45,98 +52,33 @@ const MembershipPage = () => {
     }
   };
 
-  const handlePurchase = async (planType) => {
+  const handlePurchase = (planType) => {
     if (!token) {
       toast.error("Please login to purchase a membership");
       navigate("/login", { state: { from: "/membership" } });
       return;
     }
 
-    try {
-      setPurchasingPlan(planType);
-      const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
-      console.log("MEMBERSHIP_PURCHASE_USER_DATA:", currentUser);
+    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const targetPlan = plans?.find(p => p.name === planType);
+    if (!targetPlan) return;
 
-      // Auto-detect if this is an upgrade
-      const hasActive = currentUser.activeMembership && currentUser.activeMembership.membershipStatus === "active";
-      const currentPlan = plans?.find(p => p.name === currentUser.activeMembership?.membershipType);
-      const targetPlan = plans?.find(p => p.name === planType);
-      const isUpgrade = hasActive && targetPlan && currentPlan && (targetPlan.price > currentPlan.price);
+    const hasActive = currentUser.activeMembership && currentUser.activeMembership.membershipStatus === "active";
+    const currentPlan = plans?.find(p => p.name === currentUser.activeMembership?.membershipType);
+    const isUpgrade = hasActive && targetPlan && currentPlan && (targetPlan.price > currentPlan.price);
 
-      const orderRes = await createMembershipOrder(planType, {
-        isUpgrade: isUpgrade,
-        isRenewal: false
-      });
-      
-      if (orderRes && orderRes.success) {
-        const options = {
-          key: import.meta.env.VITE_RAZORPAY_KEY,
-          amount: orderRes.order.amount,
-          currency: orderRes.order.currency,
-          name: "Otter Society",
-          description: isUpgrade ? `Upgrade to ${planType} Membership` : `${planType} Membership`,
-          order_id: orderRes.order.id,
-          handler: async (response) => {
-            try {
-              setPurchasingPlan(planType);
-              const verifyRes = await verifyMembershipPayment({
-                ...response,
-                planType,
-                isUpgrade: isUpgrade,
-                isRenewal: false
-              });
-              if (verifyRes.success) {
-                // Sync user profile immediately
-                try {
-                  const profileRes = await getProfile();
-                  if (profileRes.success) {
-                    localStorage.setItem("user", JSON.stringify(profileRes.data));
-                    window.dispatchEvent(new Event("auth-change"));
-                  }
-                } catch (profileErr) {
-                  console.error("Profile sync error after purchase:", profileErr);
-                }
-                toast.success(verifyRes.message || "Membership activated!");
-                setTimeout(() => navigate("/dashboard"), 2000);
-              }
-            } catch (err) {
-              console.error("Verification error:", err);
-              toast.error(err.response?.data?.message || "Payment verification failed");
-            } finally {
-              setPurchasingPlan(null);
-            }
-          },
-          prefill: {
-            name: currentUser.name || "",
-            email: currentUser.email || "",
-            contact: currentUser.phone || "",
-          },
-          theme: {
-            color: "#40e0d0",
-          },
-        };
+    setSelectedPlanDetails(targetPlan);
+    setIsCheckoutUpgrade(isUpgrade);
+    setCurrentPlanPrice(currentPlan ? currentPlan.price : 0);
+    setCheckoutModalOpen(true);
+  };
 
-        const rzp = new window.Razorpay(options);
-        rzp.on('payment.failed', function (response) {
-          toast.error("Payment failed: " + response.error.description);
-          setPurchasingPlan(null);
-        });
-        rzp.open();
-      } else {
-        toast.error(orderRes?.message || "Failed to create order");
-      }
-    } catch (error) {
-      if (error.response?.status === 401) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        toast.error("Session expired. Please login again.");
-        setTimeout(() => navigate("/login"), 1500);
-      } else {
-        toast.error(error.response?.data?.message || "Failed to initiate purchase. Please try again.");
-      }
-    } finally {
-      setPurchasingPlan(null);
-    }
+  const handleCheckoutSuccess = () => {
+    // Re-sync profile
+    syncUserProfile();
+    setTimeout(() => {
+      navigate("/dashboard");
+    }, 1000);
   };
 
   if (loading) {
@@ -250,7 +192,7 @@ const MembershipPage = () => {
                               ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 hover:scale-[1.02] shadow-[0_0_15px_rgba(245,158,11,0.4)]'
                               : plan.name === 'ELITE'
                                 ? 'bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] text-[#061323] hover:scale-[1.02]'
-                                : 'bg-white/10 hover:bg-white/20 text-white shadow-lg'
+                                  : 'bg-white/10 hover:bg-white/20 text-white shadow-lg'
                         }`}
                       >
                         {buttonText}
@@ -309,6 +251,16 @@ const MembershipPage = () => {
           </div>
         </div>
       </section>
+
+      <MembershipCheckoutModal
+        isOpen={checkoutModalOpen}
+        onClose={() => setCheckoutModalOpen(false)}
+        plan={selectedPlanDetails}
+        isUpgrade={isCheckoutUpgrade}
+        isRenewal={false}
+        currentPlanPrice={currentPlanPrice}
+        onSuccess={handleCheckoutSuccess}
+      />
 
       <Footer />
     </div>

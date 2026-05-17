@@ -6,6 +6,7 @@ import EventsPage from "../pages/EventsPage.jsx";
 import EventDetailPage from "../pages/EventDetailPage.jsx";
 import MembershipPage from "../pages/MembershipPage.jsx";
 import AdminCMSPage from "../pages/AdminCMSPage.jsx";
+import AdminReviewsPage from "../pages/AdminReviewsPage.jsx";
 import AdminEventsPage from "../pages/AdminEventsPage.jsx";
 import AdminRegistrationsPage from "../pages/AdminRegistrationsPage.jsx";
 import AdminPaymentsPage from "../pages/AdminPaymentsPage.jsx";
@@ -24,6 +25,8 @@ import CommunityFeed from "../pages/community/CommunityFeed.jsx";
 import CommunityDetail from "../pages/community/CommunityDetail.jsx";
 import AdminCommunityPage from "../pages/AdminCommunityPage.jsx";
 import AdminPostFormPage from "../pages/AdminPostFormPage.jsx";
+import AdminCouponsPage from "../pages/AdminCouponsPage.jsx";
+import AdminBroadcastPage from "../pages/AdminBroadcastPage.jsx";
 
 const AppRouter = () => {
   return (
@@ -58,7 +61,10 @@ const AppRouter = () => {
       <Route path="/admin/payments" element={<AdminPaymentsPage />} />
       <Route path="/admin/memberships" element={<AdminMembershipsPage />} />
       <Route path="/admin/cms" element={<AdminCMSPage />} />
+      <Route path="/admin/reviews" element={<AdminReviewsPage />} />
       <Route path="/admin/scanner" element={<AdminScannerPage />} />
+      <Route path="/admin/coupons" element={<AdminCouponsPage />} />
+      <Route path="/admin/broadcast" element={<AdminBroadcastPage />} />
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

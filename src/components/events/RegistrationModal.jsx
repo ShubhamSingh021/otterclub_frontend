@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { createRegistration } from "../../api/registrationApi.js";
 import { createOrder, verifyPayment } from "../../api/paymentApi.js";
+import { validateCoupon } from "../../api/couponApi.js";
 
 const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess, membership }) => {
   const [formData, setFormData] = useState({
@@ -17,6 +18,12 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess, membership }
   });
   const [loading, setLoading] = useState(false);
   const [discountInfo, setDiscountInfo] = useState({ discount: 0, finalFee: event.eventFee });
+
+  // Coupon States
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
 
   // Prefill user data if logged in
   useEffect(() => {
@@ -40,8 +47,16 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess, membership }
       
       const finalFee = event.eventFee * (1 - discount);
       setDiscountInfo({ discount: discount * 100, finalFee });
+
+      // Reset coupon states
+      setCouponCode("");
+      setAppliedCoupon(null);
+      setCouponError("");
     } else {
       setDiscountInfo({ discount: 0, finalFee: event.eventFee });
+      setCouponCode("");
+      setAppliedCoupon(null);
+      setCouponError("");
     }
   }, [isOpen, event.eventFee, membership]);
 
@@ -53,6 +68,72 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess, membership }
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return;
+    setCouponLoading(true);
+    setCouponError("");
+    try {
+      const res = await validateCoupon(couponCode, "event", event._id, event.eventFee);
+      if (res.data.success) {
+        const coupon = res.data.coupon;
+        setAppliedCoupon(coupon);
+        
+        // Calculate new final fee with coupon applied
+        let discount = 0;
+        const userInfo = JSON.parse(localStorage.getItem("user") || "null");
+        const activeMember = membership || (userInfo && userInfo.activeMembership);
+        const isMemberActive = activeMember && activeMember.membershipStatus === "active";
+        const membershipType = isMemberActive ? activeMember.membershipType : null;
+
+        if (membershipType === "ELITE") discount = 0.1;
+        else if (membershipType === "PRO") discount = 0.2;
+        
+        const preCouponFee = event.eventFee * (1 - discount);
+        let couponDiscountAmount = 0;
+        if (coupon.discountType === "percentage") {
+          couponDiscountAmount = Math.round((preCouponFee * coupon.discountValue) / 100);
+        } else {
+          couponDiscountAmount = Math.min(coupon.discountValue, preCouponFee);
+        }
+        
+        const finalFee = Math.max(0, preCouponFee - couponDiscountAmount);
+        
+        setDiscountInfo(prev => ({
+          ...prev,
+          finalFee
+        }));
+        
+        toast.success(`Coupon "${coupon.code}" applied successfully!`);
+      }
+    } catch (err) {
+      console.error(err);
+      setCouponError(err.response?.data?.message || "Invalid coupon code");
+      toast.error(err.response?.data?.message || "Invalid coupon code");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError("");
+    
+    // Reset finalFee to only membership discount
+    let discount = 0;
+    const userInfo = JSON.parse(localStorage.getItem("user") || "null");
+    const activeMember = membership || (userInfo && userInfo.activeMembership);
+    const isMemberActive = activeMember && activeMember.membershipStatus === "active";
+    const membershipType = isMemberActive ? activeMember.membershipType : null;
+
+    if (membershipType === "ELITE") discount = 0.1;
+    else if (membershipType === "PRO") discount = 0.2;
+    
+    const finalFee = event.eventFee * (1 - discount);
+    setDiscountInfo({ discount: discount * 100, finalFee });
+    toast.success("Coupon removed.");
   };
 
   const handlePayment = async (orderData, eventTitle) => {
@@ -72,7 +153,8 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess, membership }
             setLoading(true);
             toast.loading("Verifying payment...", { id: "verify-toast" });
             const verifyRes = await verifyPayment({
-              ...response
+              ...response,
+              couponCode: appliedCoupon ? appliedCoupon.code : undefined
             });
 
             console.log("PAYMENT_DEBUG: Verification response:", verifyRes.data);
@@ -135,15 +217,22 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess, membership }
       const token = localStorage.getItem("token");
       
       if (event.eventFee > 0) {
-        toast.loading("Initiating payment...", { duration: 2000 });
+        toast.loading("Initiating registration...", { duration: 2000 });
         
         const orderRes = await createOrder({
           eventId: event._id,
-          registrationData: formData
-        }, token); // Pass token for membership check
+          registrationData: formData,
+          couponCode: appliedCoupon ? appliedCoupon.code : undefined
+        }, token);
 
         if (orderRes.data.success) {
-          await handlePayment(orderRes.data, event.title);
+          if (orderRes.data.isFree) {
+            toast.success("Registration successful! (Discounted to Free)", { id: "free-toast" });
+            onShowSuccess();
+            onClose();
+          } else {
+            await handlePayment(orderRes.data, event.title);
+          }
         }
       } else {
         // FREE EVENT: Use direct registration
@@ -233,7 +322,54 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess, membership }
               <FormField label="Additional Notes" name="additionalNotes" value={formData.additionalNotes} onChange={handleChange} isTextArea placeholder="Anything else we should know?" />
             </div>
 
-            <div className="mt-10">
+            {/* Promo Code Input Section */}
+            {event.eventFee > 0 && (
+              <div className="mt-6 border-t border-white/10 pt-6">
+                <label className="text-xs font-bold uppercase tracking-widest text-slate-500 block mb-2">Promo Code</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => {
+                      setCouponCode(e.target.value);
+                      setCouponError("");
+                    }}
+                    placeholder="Enter Coupon Code"
+                    disabled={appliedCoupon}
+                    className="flex-1 rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:border-[#40e0d0] focus:outline-none focus:ring-1 focus:ring-[#40e0d0] uppercase"
+                  />
+                  {appliedCoupon ? (
+                    <button
+                      type="button"
+                      onClick={handleRemoveCoupon}
+                      className="px-4 py-3 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30 text-sm font-semibold hover:bg-red-500/30 transition duration-200"
+                    >
+                      Remove
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      disabled={couponLoading || !couponCode}
+                      className="px-6 py-3 rounded-xl bg-[#40e0d0] text-[#061323] text-sm font-bold hover:scale-[1.02] active:scale-95 transition duration-200 disabled:opacity-50"
+                    >
+                      {couponLoading ? "Applying..." : "Apply"}
+                    </button>
+                  )}
+                </div>
+                {couponError && <p className="mt-2 text-xs text-red-400 font-medium">{couponError}</p>}
+                {appliedCoupon && (
+                  <p className="mt-2 text-xs text-emerald-400 font-medium">
+                    Code <span className="font-bold">{appliedCoupon.code}</span> applied successfully! Discount:{" "}
+                    {appliedCoupon.discountType === "percentage"
+                      ? `${appliedCoupon.discountValue}%`
+                      : `₹${appliedCoupon.discountValue}`}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="mt-8 border-t border-white/10 pt-6">
               {discountInfo.discount > 0 && (
                 <div className="mb-4 rounded-xl bg-[#40e0d0]/10 p-4 border border-[#40e0d0]/20">
                   <div className="flex justify-between items-center">
@@ -290,3 +426,4 @@ const FormField = ({ label, name, type = "text", value, onChange, required, plac
 );
 
 export default RegistrationModal;
+

@@ -5,6 +5,19 @@ import { format, differenceInDays } from "date-fns";
 import { getProfile, updateProfile } from "../api/authApi";
 import { getMyMembership, getMembershipHistory } from "../api/membershipApi";
 import { getMyRegistrations } from "../api/registrationApi";
+import { 
+  getReviewEligibility, 
+  submitReview, 
+  getMyReviews, 
+  updateMyReview, 
+  deleteMyReview 
+} from "../api/reviewApi";
+import {
+  getNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  deleteNotification
+} from "../api/notificationApi";
 import Navbar from "../components/home/Navbar";
 import Footer from "../components/home/Footer";
 
@@ -21,6 +34,26 @@ const UserDashboard = () => {
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [updating, setUpdating] = useState(false);
+
+  // Review & Testimonials state
+  const [eligibility, setEligibility] = useState({ isEligible: false, eligibleEvents: [] });
+  const [myReviews, setMyReviews] = useState([]);
+  const [reviewLoading, setReviewLoading] = useState(true);
+  
+  // Review form state
+  const [reviewForm, setReviewForm] = useState({
+    rating: 5,
+    title: "",
+    review: "",
+    eventId: ""
+  });
+  const [editingReviewId, setEditingReviewId] = useState(null);
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  // Tabs and Notifications state
+  const [activeTab, setActiveTab] = useState("membership");
+  const [notifications, setNotifications] = useState([]);
+  const [notifLoading, setNotifLoading] = useState(true);
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
@@ -52,6 +85,36 @@ const UserDashboard = () => {
         name: profileRes.data.name,
         phone: profileRes.data.phone || "",
       });
+
+      // Try fetching review/testimonial data
+      try {
+        const [eligRes, reviewsRes] = await Promise.all([
+          getReviewEligibility(),
+          getMyReviews()
+        ]);
+        setEligibility(eligRes.data);
+        setMyReviews(reviewsRes.data || []);
+      } catch (err) {
+        console.error("Failed to load review details", err);
+      } finally {
+        setReviewLoading(false);
+      }
+
+      // Fetch user notifications
+      try {
+        const notifRes = await getNotifications();
+        if (notifRes.data && notifRes.data.success) {
+          const fetchedNotifs = (notifRes.data.data || []).map((n) => ({
+            ...n,
+            isRead: n.read ?? false,
+          }));
+          setNotifications(fetchedNotifs);
+        }
+      } catch (err) {
+        console.error("Failed to load notifications in dashboard", err);
+      } finally {
+        setNotifLoading(false);
+      }
     } catch (error) {
       console.error(error);
       if (error.response?.status === 401) {
@@ -150,6 +213,108 @@ const UserDashboard = () => {
     navigate("/");
   };
 
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (reviewForm.review.trim().length < 10) {
+      toast.error("Review must be at least 10 characters long");
+      return;
+    }
+    setSubmittingReview(true);
+    try {
+      if (editingReviewId) {
+        // Edit review
+        const res = await updateMyReview(editingReviewId, reviewForm);
+        if (res.success) {
+          toast.success("Review updated successfully!");
+          setEditingReviewId(null);
+        }
+      } else {
+        // Submit new review
+        const res = await submitReview(reviewForm);
+        if (res.success) {
+          toast.success("Review submitted for moderation!");
+        }
+      }
+      
+      // Reset form
+      setReviewForm({ rating: 5, title: "", review: "", eventId: "" });
+      
+      // Refresh list
+      const reviewsRes = await getMyReviews();
+      setMyReviews(reviewsRes.data || []);
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Failed to submit review");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const handleEditClick = (rev) => {
+    setEditingReviewId(rev._id);
+    setReviewForm({
+      rating: rev.rating,
+      title: rev.title || "",
+      review: rev.review || "",
+      eventId: rev.eventId || ""
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingReviewId(null);
+    setReviewForm({ rating: 5, title: "", review: "", eventId: "" });
+  };
+
+  const handleMarkOneRead = async (id) => {
+    try {
+      const res = await markNotificationAsRead(id);
+      if (res.data && res.data.success) {
+        setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+        toast.success("Notification marked as read");
+      }
+    } catch (err) {
+      toast.error("Failed to update notification");
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      const res = await markAllNotificationsAsRead();
+      if (res.data && res.data.success) {
+        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        toast.success("All notifications marked as read");
+      }
+    } catch (err) {
+      toast.error("Failed to mark all as read");
+    }
+  };
+
+  const handleDeleteNotif = async (id) => {
+    try {
+      const res = await deleteNotification(id);
+      if (res.data && res.data.success) {
+        setNotifications(prev => prev.filter(n => n._id !== id));
+        toast.success("Notification deleted");
+      }
+    } catch (err) {
+      toast.error("Failed to delete notification");
+    }
+  };
+
+  const handleDeleteReview = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this review?")) return;
+    try {
+      const res = await deleteMyReview(id);
+      if (res.success) {
+        toast.success("Review deleted successfully");
+        setMyReviews(prev => prev.filter(r => r._id !== id));
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Failed to delete review");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#060b16]">
@@ -210,8 +375,37 @@ const UserDashboard = () => {
           {/* Left Column: Membership & History */}
           <div className="lg:col-span-8 space-y-8">
             
+            {/* Navigation Tabs */}
+            <div className="flex gap-2 p-1.5 rounded-2xl bg-white/[0.02] border border-white/10 mb-6 overflow-x-auto max-w-full scrollbar-none">
+              {[
+                { id: "membership", label: "Membership & Bookings", icon: "💎" },
+                { id: "reviews", label: "Reviews & Testimonials", icon: "★" },
+                { id: "notifications", label: "Notification Inbox", icon: "🔔", badge: notifications.filter(n => !n.isRead).length },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-xs transition-all duration-300 whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? "bg-[#40e0d0]/10 border border-[#40e0d0]/30 text-[#40e0d0] shadow-[0_0_20px_rgba(64,224,208,0.1)]"
+                      : "border border-transparent text-slate-400 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <span>{tab.icon}</span>
+                  <span>{tab.label}</span>
+                  {tab.badge > 0 && (
+                    <span className="ml-1.5 px-2 py-0.5 rounded-full bg-red-500 text-[9px] text-white font-black">
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
             {/* Membership Details */}
-            <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/[0.02] p-8 lg:p-10">
+            {activeTab === "membership" && (
+              <div className="space-y-10">
+              <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/[0.02] p-8 lg:p-10">
               <div className="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none">
                 <svg className="h-64 w-64" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
@@ -363,6 +557,274 @@ const UserDashboard = () => {
                 </div>
               )}
             </div>
+              </div>
+            )}
+
+            {/* Testimonials & Reviews Section */}
+            {activeTab === "reviews" && (
+            <div className="rounded-[2.5rem] border border-white/10 bg-white/[0.02] p-8 lg:p-10">
+              <div className="flex items-center justify-between mb-10">
+                <h2 className="text-2xl font-bold">Community Testimonials & Reviews</h2>
+                <span className="px-4 py-1 rounded-full bg-white/5 text-xs text-slate-400 font-bold">
+                  {myReviews.length} Submitted
+                </span>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* Left Sub-column: Submission Form */}
+                <div>
+                  <h3 className="text-lg font-bold mb-6 text-[#40e0d0]">
+                    {editingReviewId ? "Edit Your Review" : "Write a Testimonial"}
+                  </h3>
+                  
+                  {!eligibility.isEligible ? (
+                    <div className="p-6 rounded-3xl bg-yellow-500/5 border border-yellow-500/20 text-yellow-500/90 text-sm">
+                      <p className="font-bold mb-2">Review Access Restricted</p>
+                      <p className="leading-relaxed">
+                        To prevent spam and keep our community reviews authentic, only members with active subscriptions or attendees of past events can submit reviews. 
+                      </p>
+                      <div className="mt-4 flex flex-col gap-2">
+                        <Link to="/membership" className="text-xs font-bold text-[#40e0d0] hover:underline">
+                          → Get a Membership Plan
+                        </Link>
+                        <Link to="/" className="text-xs font-bold text-[#40e0d0] hover:underline">
+                          → Explore Upcoming Events
+                        </Link>
+                      </div>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleReviewSubmit} className="space-y-5">
+                      <div>
+                        <label className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-2 block">
+                          How would you rate your experience?
+                        </label>
+                        <div className="flex gap-2">
+                          {[1, 2, 3, 4, 5].map((num) => (
+                            <button
+                              key={num}
+                              type="button"
+                              onClick={() => setReviewForm({ ...reviewForm, rating: num })}
+                              className="text-3xl transition hover:scale-110 active:scale-90"
+                            >
+                              <span className={reviewForm.rating >= num ? "text-yellow-400" : "text-slate-600"}>★</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1.5 block">
+                          Reference Event (Optional)
+                        </label>
+                        <select
+                          value={reviewForm.eventId}
+                          onChange={(e) => setReviewForm({ ...reviewForm, eventId: e.target.value })}
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[#40e0d0] outline-none text-slate-200"
+                        >
+                          <option value="" className="bg-[#060b16] text-white">General Otter Society Review</option>
+                          {eligibility.eligibleEvents?.map((ev) => (
+                            <option key={ev._id} value={ev._id} className="bg-[#060b16] text-white">
+                              {ev.title} ({ev.attendanceStatus === "attended" ? "Attended" : "Registered"})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1.5 block">
+                          Review Title (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Life-changing sports club!"
+                          value={reviewForm.title}
+                          onChange={(e) => setReviewForm({ ...reviewForm, title: e.target.value })}
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[#40e0d0] outline-none placeholder:text-slate-600"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1.5 block">
+                          Your Review / Quote (Min 10 characters)
+                        </label>
+                        <textarea
+                          rows={4}
+                          placeholder="Tell us what you love about the club, the community, or your coach..."
+                          value={reviewForm.review}
+                          onChange={(e) => setReviewForm({ ...reviewForm, review: e.target.value })}
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[#40e0d0] outline-none placeholder:text-slate-600 resize-none"
+                          required
+                        />
+                        <span className="text-[10px] text-slate-500 mt-1 block text-right font-medium">
+                          {reviewForm.review.trim().length} chars
+                        </span>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <button
+                          type="submit"
+                          disabled={submittingReview}
+                          className="flex-grow py-3.5 rounded-xl bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] text-[#061323] font-black hover:scale-[1.02] active:scale-95 transition disabled:opacity-50 text-sm shadow-[0_10px_30px_rgba(64,224,208,0.2)]"
+                        >
+                          {submittingReview ? "Submitting..." : editingReviewId ? "Save Changes" : "Submit Review"}
+                        </button>
+                        {editingReviewId && (
+                          <button
+                            type="button"
+                            onClick={handleCancelEdit}
+                            className="px-5 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 active:scale-95 transition text-sm"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
+                    </form>
+                  )}
+                </div>
+
+                {/* Right Sub-column: List of Past Submissions */}
+                <div className="border-t border-white/5 pt-8 md:border-t-0 md:border-l md:border-white/5 md:pt-0 md:pl-8">
+                  <h3 className="text-lg font-bold mb-6">Your Past Reviews</h3>
+                  {reviewLoading ? (
+                    <div className="flex justify-center py-10">
+                      <div className="h-8 w-8 animate-spin rounded-full border-t-2 border-[#40e0d0]"></div>
+                    </div>
+                  ) : myReviews.length > 0 ? (
+                    <div className="space-y-4 max-h-[480px] overflow-y-auto pr-2 custom-scrollbar">
+                      {myReviews.map((rev) => (
+                        <div key={rev._id} className="p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/10 transition group">
+                          <div className="flex justify-between items-start mb-2 gap-2">
+                            <div>
+                              <h4 className="font-bold text-sm text-slate-100 line-clamp-1">{rev.title || "Untitled Review"}</h4>
+                              {rev.eventName && (
+                                <span className="text-[9px] text-[#40e0d0] uppercase tracking-wider font-bold block mt-0.5">
+                                  Event: {rev.eventName}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex flex-col items-end gap-1.5 shrink-0">
+                              <div className="flex text-yellow-400 text-xs">
+                                {Array.from({ length: rev.rating }).map((_, i) => (
+                                  <span key={i}>★</span>
+                                ))}
+                              </div>
+                              <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase border ${
+                                rev.status === "approved" ? "bg-green-500/10 text-green-500 border-green-500/20" :
+                                rev.status === "rejected" ? "bg-red-500/10 text-red-500 border-red-500/20" :
+                                "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
+                              }`}>
+                                {rev.status}
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-xs text-slate-400 mt-3 leading-relaxed break-words">{rev.review}</p>
+                          
+                          {rev.status === "pending" && (
+                            <div className="flex justify-end gap-3 mt-4 pt-3 border-t border-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => handleEditClick(rev)}
+                                className="text-[10px] font-black uppercase text-[#40e0d0] hover:underline"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteReview(rev._id)}
+                                className="text-[10px] font-black uppercase text-red-500 hover:underline"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="py-14 text-center rounded-2xl border border-dashed border-white/5 bg-white/[0.01]">
+                      <p className="text-slate-500 text-sm font-medium">You haven't written any testimonials yet.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            )}
+
+            {/* Notification Inbox Tab Panel */}
+            {activeTab === "notifications" && (
+              <div className="rounded-[2.5rem] border border-white/10 bg-white/[0.02] p-8 lg:p-10">
+                <div className="flex flex-wrap items-center justify-between gap-4 mb-10">
+                  <div>
+                    <h2 className="text-2xl font-bold">Your Notifications</h2>
+                    <p className="text-slate-400 text-sm mt-1">Stay updated with broadcast announcements and membership alerts.</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {notifications.some(n => !n.isRead) && (
+                      <button
+                        onClick={handleMarkAllRead}
+                        className="px-4 py-2 rounded-xl bg-[#40e0d0]/10 border border-[#40e0d0]/20 text-[#40e0d0] text-xs font-black uppercase tracking-wider hover:bg-[#40e0d0]/20 transition"
+                      >
+                        Mark All Read
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {notifLoading ? (
+                  <div className="flex justify-center py-20">
+                    <div className="h-10 w-10 animate-spin rounded-full border-t-2 border-[#40e0d0]"></div>
+                  </div>
+                ) : notifications.length > 0 ? (
+                  <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                    {notifications.map((notif) => (
+                      <div
+                        key={notif._id}
+                        onClick={() => !notif.isRead && handleMarkOneRead(notif._id)}
+                        className={`group relative p-6 rounded-3xl border transition-all duration-300 cursor-pointer text-left ${
+                          notif.isRead
+                            ? "bg-white/[0.01] border-white/5 hover:bg-white/[0.02] opacity-75"
+                            : "bg-white/[0.04] border-[#40e0d0]/20 hover:border-[#40e0d0]/40 shadow-[0_4px_20px_rgba(64,224,208,0.05)]"
+                        }`}
+                      >
+                        <div className="flex justify-between items-start gap-4 pr-10">
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-bold text-base text-white">{notif.title}</h3>
+                              {!notif.isRead && (
+                                <span className="px-2 py-0.5 rounded-md bg-[#40e0d0]/10 border border-[#40e0d0]/30 text-[#40e0d0] text-[9px] font-black uppercase tracking-wider">
+                                  New
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-slate-300 text-sm mt-2 leading-relaxed">{notif.message}</p>
+                            <span className="text-xs text-slate-500 block mt-3 font-medium">
+                              {format(new Date(notif.createdAt), "MMMM dd, yyyy 'at' hh:mm a")}
+                            </span>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteNotif(notif._id);
+                          }}
+                          className="absolute top-6 right-6 p-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition opacity-0 group-hover:opacity-100"
+                          title="Delete notification"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-24 text-center rounded-[2rem] border border-dashed border-white/10 bg-white/[0.01]">
+                    <span className="text-4xl">🔔</span>
+                    <h3 className="font-bold text-lg text-white mt-4">Inbox is clean</h3>
+                    <p className="text-slate-500 text-sm mt-1 max-w-sm mx-auto">No notifications or announcements at the moment. We'll alert you when something exciting happens!</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Right Column: Profile & Stats */}

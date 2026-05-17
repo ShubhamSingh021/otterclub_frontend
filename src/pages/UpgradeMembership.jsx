@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
-import { getPlans, getMyMembership, createMembershipOrder, verifyMembershipPayment } from "../api/membershipApi";
+import { getPlans, getMyMembership } from "../api/membershipApi";
 import { getProfile } from "../api/authApi";
 import Navbar from "../components/home/Navbar";
 import Footer from "../components/home/Footer";
+import MembershipCheckoutModal from "../components/membership/MembershipCheckoutModal";
 
 const UpgradeMembership = () => {
   const [plans, setPlans] = useState(null);
@@ -17,6 +18,12 @@ const UpgradeMembership = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   
   const isRenewal = location.search.includes("type=renewal");
+
+  // Checkout modal states
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+  const [selectedPlanDetails, setSelectedPlanDetails] = useState(null);
+  const [isCheckoutUpgrade, setIsCheckoutUpgrade] = useState(false);
+  const [currentPlanPrice, setCurrentPlanPrice] = useState(0);
 
   useEffect(() => {
     if (!token) {
@@ -47,74 +54,22 @@ const UpgradeMembership = () => {
     }
   };
 
-  const handleAction = async (planType) => {
-    try {
-      setPurchasingPlan(planType);
-      const orderRes = await createMembershipOrder(planType, {
-        isUpgrade: !isRenewal,
-        isRenewal: isRenewal
-      });
+  const handleAction = (planType) => {
+    const targetPlan = plans?.find(p => p.name === planType);
+    if (!targetPlan) return;
 
-      if (!orderRes.success) {
-        throw new Error(orderRes.message || "Failed to create order");
-      }
+    setSelectedPlanDetails(targetPlan);
+    setIsCheckoutUpgrade(!isRenewal);
+    setCurrentPlanPrice(currentPlan ? currentPlan.price : 0);
+    setCheckoutModalOpen(true);
+  };
 
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY,
-        amount: orderRes.order.amount,
-        currency: orderRes.order.currency,
-        name: "Otter Society",
-        description: isRenewal ? `Renew ${planType} Membership` : `Upgrade to ${planType} Membership`,
-        order_id: orderRes.order.id,
-        handler: async (response) => {
-          try {
-            toast.loading("Verifying payment...", { id: "verify-payment" });
-            const verifyRes = await verifyMembershipPayment({
-              ...response,
-              planType,
-              isUpgrade: !isRenewal,
-              isRenewal: isRenewal,
-            });
-
-            if (verifyRes.success) {
-              // Sync user profile immediately
-              try {
-                const profileRes = await getProfile();
-                if (profileRes.success) {
-                  localStorage.setItem("user", JSON.stringify(profileRes.data));
-                  window.dispatchEvent(new Event("auth-change"));
-                }
-              } catch (profileErr) {
-                console.error("Profile sync error after upgrade:", profileErr);
-              }
-              toast.success("Membership updated successfully!", { id: "verify-payment" });
-              navigate("/dashboard");
-            }
-          } catch (error) {
-            console.error("VERIFY_ERROR:", error);
-            toast.error(error.response?.data?.message || "Payment verification failed", { id: "verify-payment" });
-          }
-        },
-        prefill: {
-          name: user.name || membership?.userName || "",
-          email: user.email || membership?.email || "",
-          contact: user.phone || membership?.phone || "",
-        },
-        theme: {
-          color: "#40e0d0",
-        },
-      };
-
-      console.log("RAZORPAY_PREFILL_DATA:", options.prefill);
-
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } catch (error) {
-      console.error("PAYMENT_ACTION_ERROR:", error);
-      toast.error(error.response?.data?.message || error.message || "Payment initialization failed");
-    } finally {
-      setPurchasingPlan(null);
-    }
+  const handleCheckoutSuccess = () => {
+    // Sync profile
+    fetchData();
+    setTimeout(() => {
+      navigate("/dashboard");
+    }, 1000);
   };
 
   if (loading) {
@@ -204,6 +159,16 @@ const UpgradeMembership = () => {
           )}
         </div>
       </main>
+
+      <MembershipCheckoutModal
+        isOpen={checkoutModalOpen}
+        onClose={() => setCheckoutModalOpen(false)}
+        plan={selectedPlanDetails}
+        isUpgrade={isCheckoutUpgrade}
+        isRenewal={isRenewal}
+        currentPlanPrice={currentPlanPrice}
+        onSuccess={handleCheckoutSuccess}
+      />
 
       <Footer />
     </div>

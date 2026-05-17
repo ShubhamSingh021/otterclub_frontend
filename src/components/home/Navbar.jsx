@@ -1,6 +1,13 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useMemo, useState, useEffect } from "react";
 import Container from "../layout/Container.jsx";
+import toast from "react-hot-toast";
+import { format } from "date-fns";
+import {
+  getNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+} from "../../api/notificationApi.js";
 
 const sortLinks = (links = []) =>
   [...links].sort((a, b) => Number(a.order || 0) - Number(b.order || 0));
@@ -27,6 +34,12 @@ const Navbar = ({ settings: cmsSettings }) => {
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
+
+  // Live Notifications Center States
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
     const checkAuth = () => {
@@ -59,7 +72,6 @@ const Navbar = ({ settings: cmsSettings }) => {
       setIsUserLoggedIn(isTokenValid);
       setUser(currentUser);
 
-      // Only show Admin Dashboard link if logged in with an admin token AND has admin role
       const hasAdminRole = (currentUser?.role === "admin" || currentUser?.role === "superadmin") || 
                           (currentAdmin?.role === "admin" || currentAdmin?.role === "superadmin");
       
@@ -77,6 +89,72 @@ const Navbar = ({ settings: cmsSettings }) => {
       window.removeEventListener("auth-change", checkAuth);
     };
   }, []);
+
+  // Poll notifications
+  useEffect(() => {
+    if (isUserLoggedIn) {
+      fetchNotifications();
+      const interval = setInterval(fetchNotifications, 20000); // Every 20 seconds
+      return () => clearInterval(interval);
+    }
+  }, [isUserLoggedIn]);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await getNotifications();
+      const rawNotifications = res.data?.notifications || res.data?.data || [];
+      
+      const mappedNotifications = Array.isArray(rawNotifications)
+        ? rawNotifications.map(n => ({
+            ...n,
+            isRead: n.isRead !== undefined ? n.isRead : !!n.read
+          }))
+        : [];
+
+      setNotifications(mappedNotifications);
+      
+      const unread = mappedNotifications.filter(n => !n.isRead).length;
+      setUnreadCount(unread);
+    } catch (err) {
+      console.error("Failed to fetch notifications in Navbar:", err);
+      setNotifications([]);
+      setUnreadCount(0);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      const res = await markAllNotificationsAsRead();
+      if (res.data && res.data.success) {
+        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        setUnreadCount(0);
+        toast.success("All notifications marked as read");
+      }
+    } catch (err) {
+      toast.error("Failed to mark all as read");
+    }
+  };
+
+  const handleMarkOneRead = async (id) => {
+    try {
+      const res = await markNotificationAsRead(id);
+      if (res.data && res.data.success) {
+        setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const filteredNotifications = useMemo(() => {
+    if (!Array.isArray(notifications)) return [];
+    if (activeTab === "all") return notifications;
+    if (activeTab === "system") {
+      return notifications.filter(n => ["admin", "announcement", "reminder", "review"].includes(n.type));
+    }
+    return notifications.filter(n => n.type === activeTab);
+  }, [notifications, activeTab]);
 
   const navLinks = useMemo(() => sortLinks(settings?.navigationLinks?.length ? settings.navigationLinks : defaultLinks), [settings]);
   const globalCta = settings?.globalCta || defaultSettings.globalCta;
@@ -139,7 +217,142 @@ const Navbar = ({ settings: cmsSettings }) => {
               </a>
             )}
             {isUserLoggedIn ? (
-              <div className="flex items-center gap-2 ml-2">
+              <div className="flex items-center gap-3 ml-2 relative">
+                {/* Notification Bell Dropdown Button */}
+                <div className="relative">
+                  <button
+                    onClick={() => setIsNotifOpen(!isNotifOpen)}
+                    className="relative rounded-full border border-white/10 bg-white/5 p-2.5 text-slate-300 hover:bg-white/10 hover:text-white transition"
+                    title="Notifications"
+                  >
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-[#050b16]">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  <AnimatePresence>
+                    {isNotifOpen && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setIsNotifOpen(false)} />
+                        
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          className="absolute right-0 mt-3 z-50 w-96 rounded-2xl border border-white/10 bg-[#0a1222]/95 backdrop-blur-xl p-4 shadow-2xl space-y-3 animate-fade-in"
+                        >
+                          <div className="flex justify-between items-center pb-2 border-b border-white/10">
+                            <h4 className="font-bold text-sm text-white flex items-center gap-2">
+                              <span>Notifications</span>
+                              {unreadCount > 0 && (
+                                <span className="bg-[#40e0d0]/20 text-[#40e0d0] text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                  {unreadCount} new
+                                </span>
+                              )}
+                            </h4>
+                            {unreadCount > 0 && (
+                              <button
+                                onClick={handleMarkAllRead}
+                                className="text-xs font-bold text-[#40e0d0] hover:underline"
+                              >
+                                Mark all read
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Beautiful Scrollable Tabs */}
+                          <div className="flex gap-1.5 overflow-x-auto pb-1.5 scrollbar-thin scrollbar-thumb-white/10 text-xs">
+                            {[
+                              { id: "all", label: "All" },
+                              { id: "event", label: "Events" },
+                              { id: "membership", label: "Memberships" },
+                              { id: "payment", label: "Payments" },
+                              { id: "system", label: "System" },
+                            ].map((tab) => (
+                              <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`rounded-full px-3 py-1 font-semibold transition shrink-0 ${
+                                  activeTab === tab.id
+                                    ? "bg-[#40e0d0] text-[#051426]"
+                                    : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
+                                }`}
+                              >
+                                {tab.label}
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="max-h-64 overflow-y-auto space-y-2 pr-1 text-left scrollbar-thin scrollbar-thumb-white/10">
+                            {filteredNotifications.length === 0 ? (
+                              <p className="text-xs text-slate-500 text-center py-8">No notifications in this category.</p>
+                            ) : (
+                              filteredNotifications.map((notif) => {
+                                // Determine a vibrant color scheme based on notification type
+                                let badgeColor = "bg-slate-500/10 text-slate-400 border-slate-500/20";
+                                if (notif.type === "payment") badgeColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+                                else if (notif.type === "event") badgeColor = "bg-cyan-500/10 text-cyan-400 border-cyan-500/20";
+                                else if (notif.type === "membership") badgeColor = "bg-purple-500/10 text-purple-400 border-purple-500/20";
+                                
+                                return (
+                                  <div
+                                    key={notif._id}
+                                    onClick={() => handleMarkOneRead(notif._id)}
+                                    className={`p-3 rounded-xl border transition cursor-pointer relative ${
+                                      notif.isRead
+                                        ? "bg-white/[0.01] border-white/5 opacity-60"
+                                        : "bg-white/[0.04] border-[#40e0d0]/20 hover:border-[#40e0d0]/40"
+                                    }`}
+                                  >
+                                    <div className="flex justify-between items-start gap-2">
+                                      <div className="flex flex-wrap items-center gap-1.5">
+                                        <span className={`text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded border ${badgeColor}`}>
+                                          {notif.type}
+                                        </span>
+                                        <h5 className="font-bold text-xs text-white leading-tight">{notif.title}</h5>
+                                      </div>
+                                      {!notif.isRead && (
+                                        <span className="h-2 w-2 rounded-full bg-[#40e0d0] shrink-0 mt-1" />
+                                      )}
+                                    </div>
+                                    <p className="text-slate-300 text-[11px] mt-1.5 leading-relaxed">{notif.message}</p>
+                                    {notif.link && (
+                                      <a
+                                        href={notif.link}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="inline-flex items-center gap-1 text-[10px] font-bold text-[#40e0d0] hover:underline mt-2"
+                                      >
+                                        <span>View details</span>
+                                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                      </a>
+                                    )}
+                                    <span className="text-[9px] text-slate-500 block mt-1 text-right">
+                                      {notif.createdAt ? (() => {
+                                        try {
+                                          return format(new Date(notif.createdAt), "MMM d, h:mm a");
+                                        } catch (e) {
+                                          return "";
+                                        }
+                                      })() : ""}
+                                    </span>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
+
                 <a
                   href="/dashboard"
                   className="flex items-center gap-3 rounded-full border border-white/10 bg-white/5 p-1 pr-4 transition hover:bg-white/10"
