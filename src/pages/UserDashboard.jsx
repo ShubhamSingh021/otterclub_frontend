@@ -529,7 +529,7 @@ const UserDashboard = () => {
                           <div className="flex gap-2">
                             {reg.attendanceStatus === 'attended' ? (
                               <a 
-                                href={`${API_URL}/registrations/certificate/${reg._id}`}
+                                href={`${API_URL}/registrations/certificate/${reg._id}?token=${localStorage.getItem("token")}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="px-3 py-2 rounded-xl bg-[#40e0d0]/10 border border-[#40e0d0]/20 text-[#40e0d0] text-[10px] font-black uppercase tracking-widest hover:bg-[#40e0d0]/20 transition"

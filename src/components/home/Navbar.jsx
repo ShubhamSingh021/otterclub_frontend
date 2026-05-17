@@ -157,7 +157,16 @@ const Navbar = ({ settings: cmsSettings }) => {
   }, [notifications, activeTab]);
 
   const navLinks = useMemo(() => sortLinks(settings?.navigationLinks?.length ? settings.navigationLinks : defaultLinks), [settings]);
-  const globalCta = settings?.globalCta || defaultSettings.globalCta;
+  const globalCta = useMemo(() => {
+    const rawCta = settings?.globalCta || defaultSettings.globalCta;
+    if (rawCta?.label === "Become a Member") {
+      return {
+        label: "Get Started",
+        href: "/register"
+      };
+    }
+    return rawCta;
+  }, [settings]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
