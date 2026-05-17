@@ -16,9 +16,7 @@ const AdminLoginPage = () => {
     try {
       const res = await apiClient.post("/admin/login", { email, password });
       if (res.data.success) {
-        // Clear any old session data to prevent state mix
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+        // Clear old admin session data to prevent state mix
         localStorage.removeItem("adminToken");
         localStorage.removeItem("adminUser");
 

@@ -29,6 +29,9 @@ const AdminScannerPage = () => {
             fps: 10,
             qrbox: { width: 250, height: 250 },
             aspectRatio: 1.0,
+            videoConstraints: {
+              facingMode: "environment"
+            }
           },
           false
         );
@@ -50,24 +53,50 @@ const AdminScannerPage = () => {
   }, []);
 
   async function onScanSuccess(result) {
+    if (!result) return;
+    
+    let registrationId = null;
+    let scanData = null;
+
+    // 1. Try parsing as JSON first
     try {
       const data = JSON.parse(result);
-      if (data.type === "event_ticket" && data.registrationId) {
-        if (data.registrationId !== lastScannedId) {
-          if (scannerRef.current) {
-            try {
-              scannerRef.current.pause();
-            } catch (e) {}
-          }
-          setScanResult(data);
-          setLastScannedId(data.registrationId);
-          await verifyTicket(data.registrationId);
-        }
-      } else {
-        toast.error("Invalid QR Code: Not an Otter Club ticket");
+      if (data && data.registrationId) {
+        registrationId = data.registrationId;
+        scanData = data;
       }
     } catch (err) {
-      console.error("Scan error:", err);
+      // Not a JSON string
+    }
+
+    // 2. Fallback: Extract 24-char hex ObjectId if present (e.g. raw ID or ticket URL)
+    if (!registrationId) {
+      const match = result.match(/[0-9a-fA-F]{24}/);
+      if (match) {
+        registrationId = match[0];
+        scanData = {
+          type: "event_ticket",
+          registrationId: registrationId,
+          bookingId: "Extracted from scan",
+          userName: "Ticket Holder"
+        };
+      }
+    }
+
+    // 3. If registration ID found, verify
+    if (registrationId) {
+      if (registrationId !== lastScannedId) {
+        if (scannerRef.current) {
+          try {
+            scannerRef.current.pause();
+          } catch (e) {}
+        }
+        setScanResult(scanData);
+        setLastScannedId(registrationId);
+        await verifyTicket(registrationId);
+      }
+    } else {
+      toast.error("Invalid QR Code: Could not find a valid registration ID", { id: "invalid-qr" });
     }
   }
 

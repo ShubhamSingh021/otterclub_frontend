@@ -152,6 +152,13 @@ const AdminAnalyticsPage = () => {
                       <td className="py-4 font-black text-[#40e0d0]">₹{m.revenue}</td>
                     </tr>
                   ))}
+                  {data?.stats && (
+                    <tr className="group hover:bg-white/[0.02] transition">
+                      <td className="py-4 font-bold">Event Registrations</td>
+                      <td className="py-4 text-slate-400">{data.stats.totalRegistrations || 0}</td>
+                      <td className="py-4 font-black text-[#40e0d0]">₹{data.stats.eventRevenue || 0}</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

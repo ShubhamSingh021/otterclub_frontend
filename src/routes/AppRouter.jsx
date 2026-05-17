@@ -20,6 +20,10 @@ import TicketPage from "../pages/TicketPage.jsx";
 import ForgotPassword from "../pages/ForgotPassword.jsx";
 import ResetPassword from "../pages/ResetPassword.jsx";
 import NotFoundPage from "../pages/NotFoundPage.jsx";
+import CommunityFeed from "../pages/community/CommunityFeed.jsx";
+import CommunityDetail from "../pages/community/CommunityDetail.jsx";
+import AdminCommunityPage from "../pages/AdminCommunityPage.jsx";
+import AdminPostFormPage from "../pages/AdminPostFormPage.jsx";
 
 const AppRouter = () => {
   return (
@@ -28,10 +32,12 @@ const AppRouter = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/events" element={<EventsPage />} />
-      <Route path="/events/:id" element={<EventDetailPage />} />
+      <Route path="/events/:slug" element={<EventDetailPage />} />
       <Route path="/membership" element={<MembershipPage />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
+      <Route path="/community" element={<CommunityFeed />} />
+      <Route path="/community/:slug" element={<CommunityDetail />} />
 
       {/* User Routes */}
       <Route path="/dashboard" element={<UserDashboard />} />
@@ -45,6 +51,9 @@ const AppRouter = () => {
       <Route path="/admin/events" element={<AdminEventsPage />} />
       <Route path="/admin/events/new" element={<AdminEventFormPage />} />
       <Route path="/admin/events/edit/:id" element={<AdminEventFormPage />} />
+      <Route path="/admin/community" element={<AdminCommunityPage />} />
+      <Route path="/admin/community/new" element={<AdminPostFormPage />} />
+      <Route path="/admin/community/edit/:id" element={<AdminPostFormPage />} />
       <Route path="/admin/registrations" element={<AdminRegistrationsPage />} />
       <Route path="/admin/payments" element={<AdminPaymentsPage />} />
       <Route path="/admin/memberships" element={<AdminMembershipsPage />} />

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getEventBySlug } from "../api/eventApi.js";
+import { getMyMembership } from "../api/membershipApi.js";
 import Navbar from "../components/home/Navbar.jsx";
 import Footer from "../components/home/Footer.jsx";
 import Container from "../components/layout/Container.jsx";
@@ -11,6 +12,7 @@ import toast from "react-hot-toast";
 const EventDetailPage = () => {
   const { slug } = useParams();
   const [event, setEvent] = useState(null);
+  const [membership, setMembership] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeadlinePassed, setIsDeadlinePassed] = useState(false);
@@ -28,6 +30,18 @@ const EventDetailPage = () => {
       const res = await getEventBySlug(slug);
       setEvent(res.data);
       setIsDeadlinePassed(checkDeadline(res.data.registrationDeadline));
+      
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const memberRes = await getMyMembership();
+          if (memberRes.success) {
+            setMembership(memberRes.data);
+          }
+        } catch (memberErr) {
+          console.error("Failed to fetch membership on event page:", memberErr);
+        }
+      }
     } catch (error) {
       console.error("Failed to fetch event:", error);
     } finally {
@@ -157,6 +171,7 @@ const EventDetailPage = () => {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         onShowSuccess={fetchEvent}
+        membership={membership}
       />
 
       <Footer />

@@ -22,11 +22,9 @@ const LoginPage = () => {
     try {
       const res = await login(formData);
       if (res.success) {
-        // Clear ALL old session data to prevent state mix
+        // Clear standard session data to prevent state mix
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        localStorage.removeItem("adminToken");
-        localStorage.removeItem("adminUser");
 
         localStorage.setItem("token", res.token);
         localStorage.setItem("user", JSON.stringify(res.data));

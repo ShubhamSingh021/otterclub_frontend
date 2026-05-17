@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import { getPlans, getMyMembership, createMembershipOrder, verifyMembershipPayment } from "../api/membershipApi";
+import { getProfile } from "../api/authApi";
 import Navbar from "../components/home/Navbar";
 import Footer from "../components/home/Footer";
 
@@ -27,12 +28,17 @@ const UpgradeMembership = () => {
 
   const fetchData = async () => {
     try {
-      const [plansRes, memberRes] = await Promise.all([
+      const [plansRes, memberRes, profileRes] = await Promise.all([
         getPlans(),
-        getMyMembership()
+        getMyMembership(),
+        getProfile()
       ]);
       setPlans(plansRes.data);
       setMembership(memberRes.data);
+      if (profileRes.success) {
+        localStorage.setItem("user", JSON.stringify(profileRes.data));
+        window.dispatchEvent(new Event("auth-change"));
+      }
     } catch (error) {
       console.error("FETCH_DATA_ERROR:", error);
       toast.error("Failed to load membership data");
@@ -71,6 +77,16 @@ const UpgradeMembership = () => {
             });
 
             if (verifyRes.success) {
+              // Sync user profile immediately
+              try {
+                const profileRes = await getProfile();
+                if (profileRes.success) {
+                  localStorage.setItem("user", JSON.stringify(profileRes.data));
+                  window.dispatchEvent(new Event("auth-change"));
+                }
+              } catch (profileErr) {
+                console.error("Profile sync error after upgrade:", profileErr);
+              }
               toast.success("Membership updated successfully!", { id: "verify-payment" });
               navigate("/dashboard");
             }

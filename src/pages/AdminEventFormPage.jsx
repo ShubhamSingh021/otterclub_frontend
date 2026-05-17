@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { createEvent, updateEvent, getEventBySlug, getEvents, getEventById } from "../api/eventApi.js";
 import Container from "../components/layout/Container.jsx";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 const AdminEventFormPage = () => {
   const { id } = useParams();
@@ -80,9 +80,24 @@ const AdminEventFormPage = () => {
       }
     } else {
       const files = Array.from(e.target.files);
-      // We'll append new files to the existing selection
-      setGalleryImages(prev => [...prev, ...files]);
-      const newPreviews = files.map(file => ({
+      const currentCount = previewGallery.length;
+
+      if (currentCount >= 10) {
+        toast.error("You have already reached the maximum limit of 10 gallery photos.");
+        return;
+      }
+
+      let filesToAdd = files;
+      if (currentCount + files.length > 10) {
+        const allowedCount = 10 - currentCount;
+        toast.error(`You can only select up to 10 photos. Adding first ${allowedCount} selected images.`);
+        filesToAdd = files.slice(0, allowedCount);
+      }
+
+      if (filesToAdd.length === 0) return;
+
+      setGalleryImages(prev => [...prev, ...filesToAdd]);
+      const newPreviews = filesToAdd.map(file => ({
         url: URL.createObjectURL(file),
         isNew: true,
         file: file
@@ -109,6 +124,10 @@ const AdminEventFormPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (previewGallery.length > 10) {
+      toast.error("A maximum of 10 gallery photos are allowed.");
+      return;
+    }
     setLoading(true);
 
     const data = new FormData();
@@ -117,6 +136,10 @@ const AdminEventFormPage = () => {
     });
     if (eventImage) data.append("eventImage", eventImage);
     galleryImages.forEach(img => data.append("galleryImages", img));
+
+    // Send the list of preserved existing images
+    const existingGallery = previewGallery.filter(img => typeof img === 'string' || !img.isNew);
+    data.append("existingGallery", JSON.stringify(existingGallery));
 
     try {
       if (id) {
@@ -273,9 +296,14 @@ const AdminEventFormPage = () => {
                   <input type="file" name="eventImage" accept="image/*" onChange={handleFileChange} className="mt-2 w-full text-sm text-slate-400 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-white/20" />
                 </div>
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Gallery (Multiple)</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Gallery (Multiple)</label>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${previewGallery.length >= 10 ? 'bg-red-500/20 text-red-400' : 'bg-white/10 text-[#40e0d0]'}`}>
+                      {previewGallery.length}/10
+                    </span>
+                  </div>
                   {previewGallery && previewGallery.length > 0 && (
-                    <div className="mt-2 mb-4 grid grid-cols-5 gap-2">
+                    <div className="mt-3 mb-4 grid grid-cols-5 gap-2">
                       {previewGallery.map((item, idx) => {
                         const url = typeof item === 'string' ? item : item.url;
                         return (
@@ -305,7 +333,13 @@ const AdminEventFormPage = () => {
                       })}
                     </div>
                   )}
-                  <input type="file" multiple name="galleryImages" accept="image/*" onChange={handleFileChange} className="mt-2 w-full text-sm text-slate-400 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-white/20" />
+                  {previewGallery.length >= 10 ? (
+                    <div className="mt-2 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-400 font-medium">
+                      ⚠️ Maximum limit of 10 gallery photos reached. Remove existing ones to upload new snapshots.
+                    </div>
+                  ) : (
+                    <input type="file" multiple name="galleryImages" accept="image/*" onChange={handleFileChange} className="mt-2 w-full text-sm text-slate-400 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-white/20" />
+                  )}
                 </div>
               </div>
             </div>

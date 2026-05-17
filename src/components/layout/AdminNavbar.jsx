@@ -20,6 +20,7 @@ const AdminNavbar = () => {
           <button onClick={() => navigate("/admin/memberships")} className="text-sm font-medium text-slate-400 hover:text-white">Memberships</button>
           <button onClick={() => navigate("/admin/registrations")} className="text-sm font-medium text-slate-400 hover:text-white">Registrations</button>
           <button onClick={() => navigate("/admin/events")} className="text-sm font-medium text-slate-400 hover:text-white">Manage Events</button>
+          <button onClick={() => navigate("/admin/community")} className="text-sm font-medium text-slate-400 hover:text-white">Community</button>
           <button onClick={() => navigate("/admin/cms")} className="text-sm font-medium text-slate-400 hover:text-white">Manage CMS</button>
           <button onClick={() => navigate("/admin/payments")} className="text-sm font-medium text-slate-400 hover:text-white">Payments</button>
           <button onClick={() => navigate("/")} className="text-sm font-medium text-slate-400 hover:text-white">View Site</button>

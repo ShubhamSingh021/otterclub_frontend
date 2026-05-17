@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 import { createRegistration } from "../../api/registrationApi.js";
 import { createOrder, verifyPayment } from "../../api/paymentApi.js";
 
-const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
+const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess, membership }) => {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -31,16 +31,19 @@ const RegistrationModal = ({ event, isOpen, onClose, onShowSuccess }) => {
 
       // Calculate discount for UI display
       let discount = 0;
-      const membership = userInfo.activeMembership?.membershipType;
-      if (membership === "ELITE") discount = 0.1;
-      else if (membership === "PRO") discount = 0.2;
+      const activeMember = membership || userInfo.activeMembership;
+      const isMemberActive = activeMember && activeMember.membershipStatus === "active";
+      const membershipType = isMemberActive ? activeMember.membershipType : null;
+
+      if (membershipType === "ELITE") discount = 0.1;
+      else if (membershipType === "PRO") discount = 0.2;
       
       const finalFee = event.eventFee * (1 - discount);
       setDiscountInfo({ discount: discount * 100, finalFee });
     } else {
       setDiscountInfo({ discount: 0, finalFee: event.eventFee });
     }
-  }, [isOpen, event.eventFee]);
+  }, [isOpen, event.eventFee, membership]);
 
   if (!isOpen) return null;
 

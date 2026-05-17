@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import Container from "../layout/Container.jsx";
 
 const defaultContent = {
@@ -8,16 +9,25 @@ const defaultContent = {
   primaryCta: { label: "Explore Events", href: "/#events" },
   secondaryCta: { label: "Learn More", href: "/#about" },
   stats: [
-    { label: "Members", value: "2.5K+" },
-    { label: "Events", value: "150+" },
-    { label: "Clubs", value: "25+" },
-    { label: "States", value: "12" },
+    { label: "Athletes & Members", value: "2,500+" },
+    { label: "Coaching Sessions / Month", value: "320+" },
+    { label: "Active Programs", value: "18" },
+    { label: "Weekly Community Events", value: "12" },
   ],
 };
 
-const HeroSection = ({ content: cmsContent }) => {
+const HeroSection = ({ content: cmsContent, stats: liveStats }) => {
   const content = cmsContent || defaultContent;
-  const stats = content.stats || defaultContent.stats;
+  
+  // Seamlessly link live backend database/CMS stats to the Hero showcase cards!
+  const stats = liveStats
+    ? [
+        { label: liveStats.stat1Label || "Athletes & Members", value: liveStats.stat1Value || "2,500+" },
+        { label: liveStats.stat2Label || "Coaching Sessions / Month", value: liveStats.stat2Value || "320+" },
+        { label: liveStats.stat3Label || "Active Programs", value: liveStats.stat3Value || "18" },
+        { label: liveStats.stat4Label || "Weekly Community Events", value: liveStats.stat4Value || "12" },
+      ]
+    : (content.stats && content.stats.length > 0 ? content.stats : defaultContent.stats);
 
   return (
     <section id="home" className="relative pb-10 pt-2 sm:pt-4 lg:pb-16">
@@ -55,20 +65,38 @@ const HeroSection = ({ content: cmsContent }) => {
 
               <div className="mt-10 flex flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:gap-3">
                 {content.primaryCta?.label && content.primaryCta?.href ? (
-                  <a
-                    className="rounded-full bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] px-8 py-3.5 text-center text-sm font-bold text-[#041224] shadow-[0_14px_30px_-14px_rgba(64,224,208,0.6)] transition hover:scale-[1.02] sm:px-7 sm:py-3"
-                    href={content.primaryCta.href}
-                  >
-                    {content.primaryCta.label}
-                  </a>
+                  content.primaryCta.href.startsWith("/") ? (
+                    <Link
+                      className="rounded-full bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] px-8 py-3.5 text-center text-sm font-bold text-[#041224] shadow-[0_14px_30px_-14px_rgba(64,224,208,0.6)] transition hover:scale-[1.02] sm:px-7 sm:py-3"
+                      to={content.primaryCta.href}
+                    >
+                      {content.primaryCta.label}
+                    </Link>
+                  ) : (
+                    <a
+                      className="rounded-full bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] px-8 py-3.5 text-center text-sm font-bold text-[#041224] shadow-[0_14px_30px_-14px_rgba(64,224,208,0.6)] transition hover:scale-[1.02] sm:px-7 sm:py-3"
+                      href={content.primaryCta.href}
+                    >
+                      {content.primaryCta.label}
+                    </a>
+                  )
                 ) : null}
                 {content.secondaryCta?.label && content.secondaryCta?.href ? (
-                  <a
-                    className="rounded-full border border-white/30 bg-white/5 px-8 py-3.5 text-center text-sm font-semibold text-white transition hover:bg-white/10 sm:px-7 sm:py-3"
-                    href={content.secondaryCta.href}
-                  >
-                    {content.secondaryCta.label}
-                  </a>
+                  content.secondaryCta.href.startsWith("/") ? (
+                    <Link
+                      className="rounded-full border border-white/30 bg-white/5 px-8 py-3.5 text-center text-sm font-semibold text-white transition hover:bg-white/10 sm:px-7 sm:py-3"
+                      to={content.secondaryCta.href}
+                    >
+                      {content.secondaryCta.label}
+                    </Link>
+                  ) : (
+                    <a
+                      className="rounded-full border border-white/30 bg-white/5 px-8 py-3.5 text-center text-sm font-semibold text-white transition hover:bg-white/10 sm:px-7 sm:py-3"
+                      href={content.secondaryCta.href}
+                    >
+                      {content.secondaryCta.label}
+                    </a>
+                  )
                 ) : null}
               </div>
             </motion.div>

@@ -7,6 +7,7 @@ import EventsPreviewSection from "../components/home/EventsPreviewSection.jsx";
 import HeroSection from "../components/home/HeroSection.jsx";
 import TestimonialsSection from "../components/home/TestimonialsSection.jsx";
 import WhyJoinSection from "../components/home/WhyJoinSection.jsx";
+import CommunityHighlightsSection from "../components/home/CommunityHighlightsSection.jsx";
 import AppShell from "../components/layout/AppShell.jsx";
 import { useHomepage } from "../hooks/useHomepage";
 
@@ -30,7 +31,7 @@ const HomePage = () => {
 
   return (
     <AppShell siteSettings={siteSettings}>
-      <HeroSection content={heroContent} />
+      <HeroSection content={heroContent} stats={data?.stats} />
       <AboutSection
         content={aboutContent}
         fallbackImageUrl={heroContent?.backgroundImageUrl || siteSettings?.logoUrl || ""}
@@ -40,6 +41,7 @@ const HomePage = () => {
         section={homepageSections.eventsPreview} 
         featuredEvents={featuredEvents}
       />
+      <CommunityHighlightsSection />
       <TestimonialsSection section={homepageSections.testimonials} testimonials={testimonials} />
       <ContactCTASection section={homepageSections.contactCta} siteSettings={siteSettings} />
     </AppShell>

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { getPlans, createMembershipOrder, verifyMembershipPayment } from "../api/membershipApi";
+import { getProfile } from "../api/authApi";
 import Navbar from "../components/home/Navbar";
 import Footer from "../components/home/Footer";
 
@@ -16,7 +17,22 @@ const MembershipPage = () => {
 
   useEffect(() => {
     fetchPlans();
-  }, []);
+    if (token) {
+      syncUserProfile();
+    }
+  }, [token]);
+
+  const syncUserProfile = async () => {
+    try {
+      const res = await getProfile();
+      if (res.success) {
+        localStorage.setItem("user", JSON.stringify(res.data));
+        window.dispatchEvent(new Event("auth-change"));
+      }
+    } catch (err) {
+      console.error("Failed to sync profile on membership page mount:", err);
+    }
+  };
 
   const fetchPlans = async () => {
     try {
@@ -38,10 +54,19 @@ const MembershipPage = () => {
 
     try {
       setPurchasingPlan(planType);
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      console.log("MEMBERSHIP_PURCHASE_USER_DATA:", user);
+      const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+      console.log("MEMBERSHIP_PURCHASE_USER_DATA:", currentUser);
 
-      const orderRes = await createMembershipOrder(planType);
+      // Auto-detect if this is an upgrade
+      const hasActive = currentUser.activeMembership && currentUser.activeMembership.membershipStatus === "active";
+      const currentPlan = plans?.find(p => p.name === currentUser.activeMembership?.membershipType);
+      const targetPlan = plans?.find(p => p.name === planType);
+      const isUpgrade = hasActive && targetPlan && currentPlan && (targetPlan.price > currentPlan.price);
+
+      const orderRes = await createMembershipOrder(planType, {
+        isUpgrade: isUpgrade,
+        isRenewal: false
+      });
       
       if (orderRes && orderRes.success) {
         const options = {
@@ -49,7 +74,7 @@ const MembershipPage = () => {
           amount: orderRes.order.amount,
           currency: orderRes.order.currency,
           name: "Otter Society",
-          description: `${planType} Membership`,
+          description: isUpgrade ? `Upgrade to ${planType} Membership` : `${planType} Membership`,
           order_id: orderRes.order.id,
           handler: async (response) => {
             try {
@@ -57,10 +82,20 @@ const MembershipPage = () => {
               const verifyRes = await verifyMembershipPayment({
                 ...response,
                 planType,
-                isUpgrade: false,
+                isUpgrade: isUpgrade,
                 isRenewal: false
               });
               if (verifyRes.success) {
+                // Sync user profile immediately
+                try {
+                  const profileRes = await getProfile();
+                  if (profileRes.success) {
+                    localStorage.setItem("user", JSON.stringify(profileRes.data));
+                    window.dispatchEvent(new Event("auth-change"));
+                  }
+                } catch (profileErr) {
+                  console.error("Profile sync error after purchase:", profileErr);
+                }
                 toast.success(verifyRes.message || "Membership activated!");
                 setTimeout(() => navigate("/dashboard"), 2000);
               }
@@ -72,9 +107,9 @@ const MembershipPage = () => {
             }
           },
           prefill: {
-            name: user.name || "",
-            email: user.email || "",
-            contact: user.phone || "",
+            name: currentUser.name || "",
+            email: currentUser.email || "",
+            contact: currentUser.phone || "",
           },
           theme: {
             color: "#40e0d0",
@@ -178,21 +213,50 @@ const MembershipPage = () => {
                   ))}
                 </ul>
 
-                  <button
-                    onClick={() => handlePurchase(plan.name)}
-                    disabled={user?.role === 'admin' || user.activeMembership?.membershipType === plan.name || purchasingPlan === plan.name}
-                    className={`w-full py-4 rounded-xl font-bold transition-all duration-300 ${
-                      user?.role === 'admin' 
-                        ? 'bg-slate-700 text-slate-400 cursor-not-allowed opacity-50'
-                        : user.activeMembership?.membershipType === plan.name
-                          ? 'bg-white/5 text-slate-400 cursor-default'
-                          : plan.name === 'ELITE'
-                            ? 'bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] text-[#061323] hover:scale-[1.02]'
-                            : 'bg-white/10 hover:bg-white/20 text-white shadow-lg'
-                    }`}
-                  >
-                    {user?.role === 'admin' ? 'Admin Account' : user.activeMembership?.membershipType === plan.name ? "Current Plan" : purchasingPlan === plan.name ? "Processing..." : "Select Plan"}
-                  </button>
+                  {(() => {
+                    const isActive = user.activeMembership && user.activeMembership.membershipStatus === "active";
+                    const currentPlan = plans?.find(p => p.name === user.activeMembership?.membershipType);
+                    const isCurrent = user.activeMembership?.membershipType === plan.name;
+                    const isDowngrade = isActive && currentPlan && plan.price < currentPlan.price;
+                    const isUpgrade = isActive && currentPlan && plan.price > currentPlan.price;
+
+                    let buttonText = "Select Plan";
+                    let isDisabled = purchasingPlan === plan.name;
+
+                    if (user?.role === 'admin') {
+                      buttonText = "Admin Account";
+                      isDisabled = true;
+                    } else if (isCurrent) {
+                      buttonText = "Current Plan";
+                      isDisabled = true;
+                    } else if (isDowngrade) {
+                      buttonText = "Downgrade Blocked";
+                      isDisabled = true;
+                    } else if (isUpgrade) {
+                      buttonText = "Upgrade Plan";
+                      isDisabled = false;
+                    } else if (purchasingPlan === plan.name) {
+                      buttonText = "Processing...";
+                    }
+
+                    return (
+                      <button
+                        onClick={() => handlePurchase(plan.name)}
+                        disabled={isDisabled}
+                        className={`w-full py-4 rounded-xl font-bold transition-all duration-300 ${
+                          isDisabled 
+                            ? 'bg-white/5 text-slate-500 cursor-not-allowed opacity-50'
+                            : isUpgrade
+                              ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 hover:scale-[1.02] shadow-[0_0_15px_rgba(245,158,11,0.4)]'
+                              : plan.name === 'ELITE'
+                                ? 'bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] text-[#061323] hover:scale-[1.02]'
+                                : 'bg-white/10 hover:bg-white/20 text-white shadow-lg'
+                        }`}
+                      >
+                        {buttonText}
+                      </button>
+                    );
+                  })()}
               </motion.div>
             ))}
           </div>

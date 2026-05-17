@@ -9,9 +9,10 @@ const defaultLinks = [
   { label: "Home", href: "/#home", order: 1 },
   { label: "Membership", href: "/membership", order: 2 },
   { label: "Events", href: "/#events", order: 3 },
-  { label: "About", href: "/#about", order: 4 },
-  { label: "Testimonials", href: "/#testimonials", order: 5 },
-  { label: "Contact", href: "/#contact", order: 6 },
+  { label: "Community", href: "/community", order: 4 },
+  { label: "About", href: "/#about", order: 5 },
+  { label: "Testimonials", href: "/#testimonials", order: 6 },
+  { label: "Contact", href: "/#contact", order: 7 },
 ];
 
 const defaultSettings = {
@@ -83,10 +84,7 @@ const Navbar = ({ settings: cmsSettings }) => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("adminUser");
     setIsUserLoggedIn(false);
-    setIsAdminLoggedIn(false);
     setUser(null);
     window.location.href = "/";
   };
@@ -177,7 +175,7 @@ const Navbar = ({ settings: cmsSettings }) => {
                 </a>
                 {globalCta?.label && globalCta?.href ? (
                   <a
-                    className="ml-2 rounded-full bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] px-5 py-2.5 text-sm font-bold text-[#051426] transition hover:shadow-[0_0_20px_rgba(64,224,208,0.3)] hover:scale-[1.02]"
+                    className="ml-2 whitespace-nowrap flex-shrink-0 rounded-full bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] px-5 py-2.5 text-sm font-bold text-[#051426] transition hover:shadow-[0_0_20px_rgba(64,224,208,0.3)] hover:scale-[1.02]"
                     href={globalCta.href}
                   >
                     {globalCta.label}

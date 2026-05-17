@@ -260,6 +260,14 @@ const StatsForm = ({ initialData, onUpdate }) => {
   const [formData, setFormData] = useState({
     clubCount: initialData?.clubCount || 0,
     stateCount: initialData?.stateCount || 0,
+    stat1Label: initialData?.stat1Label || "",
+    stat1Value: initialData?.stat1Value || "",
+    stat2Label: initialData?.stat2Label || "",
+    stat2Value: initialData?.stat2Value || "",
+    stat3Label: initialData?.stat3Label || "",
+    stat3Value: initialData?.stat3Value || "",
+    stat4Label: initialData?.stat4Label || "",
+    stat4Value: initialData?.stat4Value || "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -268,6 +276,14 @@ const StatsForm = ({ initialData, onUpdate }) => {
       setFormData({
         clubCount: initialData.clubCount || 0,
         stateCount: initialData.stateCount || 0,
+        stat1Label: initialData.stat1Label || "",
+        stat1Value: initialData.stat1Value || "",
+        stat2Label: initialData.stat2Label || "",
+        stat2Value: initialData.stat2Value || "",
+        stat3Label: initialData.stat3Label || "",
+        stat3Value: initialData.stat3Value || "",
+        stat4Label: initialData.stat4Label || "",
+        stat4Value: initialData.stat4Value || "",
       });
     }
   }, [initialData]);
@@ -308,26 +324,107 @@ const StatsForm = ({ initialData, onUpdate }) => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid gap-6 sm:grid-cols-2">
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Club Count (Manual)</label>
-            <input 
-              type="number" 
-              value={formData.clubCount}
-              onChange={(e) => setFormData({...formData, clubCount: parseInt(e.target.value)})}
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-[#40e0d0] outline-none transition"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">State Count (Manual)</label>
-            <input 
-              type="number" 
-              value={formData.stateCount}
-              onChange={(e) => setFormData({...formData, stateCount: parseInt(e.target.value)})}
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-[#40e0d0] outline-none transition"
-            />
+        <div>
+          <h4 className="text-sm font-semibold text-[#40e0d0] mb-4">Homepage Hero Stat Cards (Manual Edit)</h4>
+          <div className="space-y-6">
+            {/* Stat 1 */}
+            <div className="grid gap-4 sm:grid-cols-2 p-4 rounded-xl bg-white/5 border border-white/5">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Stat 1 Value</label>
+                <input 
+                  type="text" 
+                  value={formData.stat1Value}
+                  onChange={(e) => setFormData({...formData, stat1Value: e.target.value})}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-[#40e0d0] outline-none transition"
+                  placeholder="e.g. 2,500+"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Stat 1 Label</label>
+                <input 
+                  type="text" 
+                  value={formData.stat1Label}
+                  onChange={(e) => setFormData({...formData, stat1Label: e.target.value})}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-[#40e0d0] outline-none transition"
+                  placeholder="e.g. Athletes & Members"
+                />
+              </div>
+            </div>
+
+            {/* Stat 2 */}
+            <div className="grid gap-4 sm:grid-cols-2 p-4 rounded-xl bg-white/5 border border-white/5">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Stat 2 Value</label>
+                <input 
+                  type="text" 
+                  value={formData.stat2Value}
+                  onChange={(e) => setFormData({...formData, stat2Value: e.target.value})}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-[#40e0d0] outline-none transition"
+                  placeholder="e.g. 320+"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Stat 2 Label</label>
+                <input 
+                  type="text" 
+                  value={formData.stat2Label}
+                  onChange={(e) => setFormData({...formData, stat2Label: e.target.value})}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-[#40e0d0] outline-none transition"
+                  placeholder="e.g. Coaching Sessions / Month"
+                />
+              </div>
+            </div>
+
+            {/* Stat 3 */}
+            <div className="grid gap-4 sm:grid-cols-2 p-4 rounded-xl bg-white/5 border border-white/5">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Stat 3 Value</label>
+                <input 
+                  type="text" 
+                  value={formData.stat3Value}
+                  onChange={(e) => setFormData({...formData, stat3Value: e.target.value})}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-[#40e0d0] outline-none transition"
+                  placeholder="e.g. 18"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Stat 3 Label</label>
+                <input 
+                  type="text" 
+                  value={formData.stat3Label}
+                  onChange={(e) => setFormData({...formData, stat3Label: e.target.value})}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-[#40e0d0] outline-none transition"
+                  placeholder="e.g. Active Programs"
+                />
+              </div>
+            </div>
+
+            {/* Stat 4 */}
+            <div className="grid gap-4 sm:grid-cols-2 p-4 rounded-xl bg-white/5 border border-white/5">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Stat 4 Value</label>
+                <input 
+                  type="text" 
+                  value={formData.stat4Value}
+                  onChange={(e) => setFormData({...formData, stat4Value: e.target.value})}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-[#40e0d0] outline-none transition"
+                  placeholder="e.g. 12"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Stat 4 Label</label>
+                <input 
+                  type="text" 
+                  value={formData.stat4Label}
+                  onChange={(e) => setFormData({...formData, stat4Label: e.target.value})}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-[#40e0d0] outline-none transition"
+                  placeholder="e.g. Weekly Community Events"
+                />
+              </div>
+            </div>
           </div>
         </div>
+
         <button 
           disabled={loading}
           className="rounded-xl bg-[#40e0d0] px-8 py-3 font-bold text-[#061323] transition hover:scale-[1.02] disabled:opacity-50"

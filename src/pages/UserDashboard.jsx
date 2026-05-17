@@ -109,10 +109,6 @@ const UserDashboard = () => {
         // Only update admin keys if the user actually has an admin role
         if (updatedUser.role === "admin" || updatedUser.role === "superadmin") {
           localStorage.setItem("adminUser", JSON.stringify(updatedUser));
-        } else {
-          // If a non-admin updated their profile, make sure no stale admin data remains
-          localStorage.removeItem("adminUser");
-          localStorage.removeItem("adminToken");
         }
         
         if (newToken) {
