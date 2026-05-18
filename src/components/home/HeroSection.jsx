@@ -56,7 +56,7 @@ const HeroSection = ({ content: cmsContent, stats: liveStats }) => {
                 </p>
               ) : null}
 
-              <h1 className="mt-6 break-words font-display text-2xl xs:text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold leading-[1.1] tracking-tight text-white">
+              <h1 className="mt-6 break-words font-display text-[clamp(1.75rem,5.5vw,4.5rem)] font-semibold leading-[1.15] tracking-tight text-white">
                 {content.title}
               </h1>
               {content.subtitle ? (

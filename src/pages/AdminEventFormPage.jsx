@@ -176,9 +176,13 @@ const AdminEventFormPage = () => {
         <button
           type="button"
           onClick={() => navigate("/admin/events")}
-          className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold text-slate-300 transition hover:bg-white/10"
+          className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-slate-300 transition hover:bg-white/10 hover:text-white"
         >
-          ← Back to Events
+          <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          <span className="hidden xs:inline">Back to Events</span>
+          <span className="inline xs:hidden">Back</span>
         </button>
       </div>
 

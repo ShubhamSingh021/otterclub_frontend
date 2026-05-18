@@ -221,7 +221,8 @@ const MembershipPage = () => {
         <section className="py-24 bg-white/[0.02]">
           <div className="container mx-auto px-4 max-w-4xl">
             <h2 className="text-3xl font-bold text-center mb-16">Compare Benefits</h2>
-            <div className="overflow-x-auto">
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-white/10">
@@ -260,6 +261,65 @@ const MembershipPage = () => {
                   </tr>
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Stacked Plan Comparison Cards */}
+            <div className="block md:hidden space-y-6">
+              {plans.map(plan => {
+                const isElite = plan.name === "ELITE";
+                const isPro = plan.name === "PRO";
+                return (
+                  <div
+                    key={plan.name}
+                    className={`rounded-2xl border ${
+                      isElite 
+                        ? "border-[#8ce5db] bg-[#8ce5db]/5 shadow-lg shadow-[#8ce5db]/5" 
+                        : isPro 
+                          ? "border-[#2d61ff]/30 bg-[#2d61ff]/5" 
+                          : "border-white/10 bg-white/[0.02]"
+                    } p-6 flex flex-col`}
+                  >
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className={`text-base font-bold tracking-widest uppercase ${isElite ? "text-[#8ce5db]" : isPro ? "text-[#2d61ff]" : "text-slate-400"}`}>
+                        {plan.name}
+                      </h3>
+                      <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold text-slate-300">
+                        {plan.benefits.length} Perks
+                      </span>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <span className="text-3xl font-bold tracking-tight">₹{plan.price}</span>
+                      <span className="text-xs text-slate-500 ml-1">/ {plan.validityDays || 30} days</span>
+                    </div>
+
+                    <div className="border-t border-white/5 pt-4">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3">Plan Benefits Included:</p>
+                      <ul className="space-y-2 text-xs text-slate-300">
+                        {plan.benefits.map((benefit, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <svg className="h-4 w-4 text-[#8ce5db] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>{benefit}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <button
+                      onClick={() => handlePurchase(plan.name)}
+                      className={`mt-6 w-full py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 hover:scale-[1.02] active:scale-95 ${
+                        isElite
+                          ? 'bg-gradient-to-r from-[#8ce5db] to-[#2d61ff] text-[#061323]'
+                          : 'bg-white/10 text-white hover:bg-white/20'
+                      }`}
+                    >
+                      Select {plan.name}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>

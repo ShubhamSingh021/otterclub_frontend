@@ -166,12 +166,13 @@ const AdminScannerPage = () => {
 
         <button 
           onClick={() => navigate("/admin/events")}
-          className="mt-8 w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-slate-400 font-bold hover:bg-white/10 transition flex items-center justify-center gap-2"
+          className="mt-8 w-full py-3.5 rounded-2xl bg-white/5 border border-white/10 text-slate-400 font-bold hover:bg-white/10 hover:text-white transition flex items-center justify-center gap-2 text-sm"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          Back to Events
+          <span className="hidden xs:inline">Back to Events</span>
+          <span className="inline xs:hidden">Back</span>
         </button>
       </div>
       

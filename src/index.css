@@ -41,9 +41,18 @@
   background: rgba(140, 229, 219, 0.3);
 }
 
-body {
+html,
+body,
+#root {
   margin: 0;
   min-width: 320px;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  position: relative;
+}
+
+body {
   font-family: "Manrope", "Segoe UI", sans-serif;
   color: var(--text);
   background:
@@ -52,7 +61,6 @@ body {
     linear-gradient(180deg, #040812 0%, #060b16 45%, #050a14 100%),
     var(--surface);
   line-height: 1.5;
-  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 

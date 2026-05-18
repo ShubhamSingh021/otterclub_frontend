@@ -35,9 +35,9 @@ const AboutSection = ({ content: cmsContent, fallbackImageUrl }) => {
             alt={content.heading}
             src={primaryImage}
             fallbackSrc={fallbackImageUrl}
-            wrapperClassName="h-full min-h-[320px]"
-            className="h-full min-h-[320px] w-full object-cover"
-            fallbackClassName="h-full min-h-[320px] w-full"
+            wrapperClassName="h-64 sm:h-full min-h-[250px] sm:min-h-[320px]"
+            className="h-64 sm:h-full min-h-[250px] sm:min-h-[320px] w-full object-cover"
+            fallbackClassName="h-64 sm:h-full min-h-[250px] sm:min-h-[320px] w-full"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#040914] via-transparent to-transparent" />
 

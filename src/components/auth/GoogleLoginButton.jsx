@@ -43,7 +43,7 @@ const GoogleLoginButton = () => {
   const [buttonWidth, setButtonWidth] = useState(() => {
     const screenWidth = window.innerWidth;
     if (screenWidth < 480) {
-      return Math.max(200, Math.min(382, screenWidth - 80)).toString();
+      return Math.max(200, Math.min(382, screenWidth - 110)).toString();
     }
     return "382";
   });
@@ -53,7 +53,7 @@ const GoogleLoginButton = () => {
       const screenWidth = window.innerWidth;
       let targetWidth = 382;
       if (screenWidth < 480) {
-        targetWidth = Math.max(200, Math.min(382, screenWidth - 80));
+        targetWidth = Math.max(200, Math.min(382, screenWidth - 110));
       }
       setButtonWidth(targetWidth.toString());
     };

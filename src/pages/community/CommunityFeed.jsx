@@ -36,7 +36,8 @@ const CommunityPostCard = memo(({ post, currentUser, userToken, handleLikeToggle
       )}
 
       {/* Cover media section */}
-      <div className="relative h-60 overflow-hidden">
+      {/* Cover media section */}
+      <div className="relative h-48 xs:h-56 sm:h-60 overflow-hidden">
         {post.coverImage ? (
           <img
             alt={post.title}
@@ -58,10 +59,10 @@ const CommunityPostCard = memo(({ post, currentUser, userToken, handleLikeToggle
       </div>
 
       {/* Metadata body content */}
-      <div className="flex flex-grow flex-col p-6 lg:p-8">
+      <div className="flex flex-grow flex-col p-5 sm:p-6 lg:p-8">
         
         {/* Date and Views metadata indicators */}
-        <div className="flex justify-between items-center text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">
+        <div className="flex justify-between items-center text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">
           <span>{format(new Date(post.publishedAt), "MMM dd, yyyy")}</span>
           <span className="flex items-center gap-1">
             <svg className="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -72,11 +73,11 @@ const CommunityPostCard = memo(({ post, currentUser, userToken, handleLikeToggle
           </span>
         </div>
 
-        <h3 className="font-display text-2xl font-bold leading-tight text-white group-hover:text-[#8ce5db] transition-colors line-clamp-1">
+        <h3 className="font-display text-xl sm:text-2xl font-bold leading-tight text-white group-hover:text-[#8ce5db] transition-colors line-clamp-1">
           {post.title}
         </h3>
         
-        <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-slate-400 flex-grow">
+        <p className="mt-3 line-clamp-2 text-xs sm:text-sm leading-relaxed text-slate-400 flex-grow">
           {post.description}
         </p>
 
@@ -89,23 +90,23 @@ const CommunityPostCard = memo(({ post, currentUser, userToken, handleLikeToggle
         </div>
 
         {/* Interactive metrics footer bar */}
-        <div className="mt-6 pt-5 border-t border-white/5 flex justify-between items-center">
+        <div className="mt-6 pt-4 border-t border-white/5 flex justify-between items-center">
           <button
             onClick={(e) => handleLikeToggle(post._id, e)}
-            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition duration-300 ${
+            className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full transition duration-300 ${
               isUserLiked 
                 ? "bg-[#ef4444]/10 text-[#ef4444] border border-[#ef4444]/20" 
                 : "bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white"
             }`}
           >
-            <svg className={`w-4 h-4 ${isUserLiked ? "fill-current" : ""}`} fill={isUserLiked ? "#ef4444" : "none"} stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <svg className={`w-3.5 h-3.5 ${isUserLiked ? "fill-current" : ""}`} fill={isUserLiked ? "#ef4444" : "none"} stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
             <span>{post.likesCount || 0}</span>
           </button>
 
-          <div className="flex items-center gap-1.5 text-xs font-semibold bg-white/5 px-3 py-1.5 rounded-full text-slate-300">
-            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+          <div className="flex items-center gap-1.5 text-xs font-semibold bg-white/5 px-2.5 py-1 rounded-full text-slate-300">
+            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
             </svg>
             <span>{post.comments?.length || 0}</span>
@@ -203,20 +204,20 @@ const CommunityFeed = () => {
           />
 
           {/* Search and Sort Control Panel */}
-          <div className="mt-10 p-6 rounded-3xl border border-white/5 bg-[#0a1222]/60 backdrop-blur-md shadow-xl">
-            <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-4 justify-between items-center">
+          <div className="mt-10 p-5 sm:p-6 rounded-3xl border border-white/5 bg-[#0a1222]/60 backdrop-blur-md shadow-xl">
+            <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-4 justify-between items-center w-full">
               
               {/* Search Field */}
               <div className="relative w-full md:max-w-md">
                 <input
                   type="text"
-                  placeholder="Search stories, highlights, achievements..."
+                  placeholder="Search stories, highlights..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 rounded-full border border-white/10 bg-[#050b16]/80 text-white focus:outline-none focus:border-[#8ce5db] transition duration-300"
+                  className="w-full pl-11 pr-8 py-2.5 rounded-full border border-white/10 bg-[#050b16]/80 text-sm text-white focus:outline-none focus:border-[#8ce5db] transition duration-300 placeholder:text-slate-500"
                 />
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </span>
@@ -224,7 +225,7 @@ const CommunityFeed = () => {
                   <button
                     type="button"
                     onClick={() => { setSearchQuery(""); setTimeout(() => fetchPosts(), 0); }}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-lg"
                   >
                     ×
                   </button>
@@ -232,23 +233,23 @@ const CommunityFeed = () => {
               </div>
 
               {/* Action row (Sort and Button) */}
-              <div className="flex w-full md:w-auto items-center gap-4 justify-end">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs uppercase tracking-wider text-slate-500 font-bold">Sort By</span>
+              <div className="flex w-full md:w-auto items-center justify-between md:justify-end gap-3">
+                <div className="flex items-center gap-2 flex-grow md:flex-grow-0">
+                  <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold shrink-0">Sort By</span>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="py-2.5 px-4 rounded-full border border-white/10 bg-[#050b16] text-sm text-slate-200 focus:outline-none focus:border-[#8ce5db] cursor-pointer"
+                    className="w-full md:w-auto py-2.5 px-4 rounded-full border border-white/10 bg-[#050b16] text-xs text-slate-200 focus:outline-none focus:border-[#8ce5db] cursor-pointer"
                   >
                     <option value="newest">Newest</option>
-                    <option value="popular">Popular (Likes)</option>
-                    <option value="views">Most Viewed</option>
+                    <option value="popular">Popular</option>
+                    <option value="views">Views</option>
                   </select>
                 </div>
 
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#2d61ff] to-[#8ce5db] text-sm font-bold text-[#060b16] hover:shadow-[0_0_15px_rgba(140,229,219,0.4)] transition duration-300 font-display"
+                  className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#2d61ff] to-[#8ce5db] text-xs font-bold text-[#060b16] hover:shadow-[0_0_15px_rgba(140,229,219,0.4)] transition duration-300 font-display shrink-0"
                 >
                   Search
                 </button>
