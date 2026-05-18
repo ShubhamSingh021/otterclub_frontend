@@ -40,6 +40,28 @@ const GoogleLoginButton = () => {
     }
   };
 
+  const [buttonWidth, setButtonWidth] = useState(() => {
+    const screenWidth = window.innerWidth;
+    if (screenWidth < 480) {
+      return Math.max(200, Math.min(382, screenWidth - 80)).toString();
+    }
+    return "382";
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      const screenWidth = window.innerWidth;
+      let targetWidth = 382;
+      if (screenWidth < 480) {
+        targetWidth = Math.max(200, Math.min(382, screenWidth - 80));
+      }
+      setButtonWidth(targetWidth.toString());
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   useEffect(() => {
     // If script is already loaded, initialize directly
     if (window.google?.accounts?.id) {
@@ -68,6 +90,13 @@ const GoogleLoginButton = () => {
     };
   }, []);
 
+  // Re-run initialization whenever buttonWidth or loading state changes
+  useEffect(() => {
+    if (window.google?.accounts?.id && !loading) {
+      initializeGoogle();
+    }
+  }, [buttonWidth, loading]);
+
   const initializeGoogle = () => {
     if (!window.google?.accounts?.id) return;
 
@@ -79,17 +108,21 @@ const GoogleLoginButton = () => {
         cancel_on_tap_outside: true,
       });
 
-      window.google.accounts.id.renderButton(
-        document.getElementById("google-signin-btn"),
-        {
-          theme: "outline", // Matches premium dark glassmorphism card theme perfectly
-          size: "large",
-          width: "382", // Fits login and signup pages beautifully
-          shape: "pill", // Matches round premium aesthetic
-          text: "continue_with",
-          logo_alignment: "center",
-        }
-      );
+      const btnEl = document.getElementById("google-signin-btn");
+      if (btnEl) {
+        btnEl.innerHTML = ""; // Clear existing button markup to prevent duplicates
+        window.google.accounts.id.renderButton(
+          btnEl,
+          {
+            theme: "outline", // Matches premium dark glassmorphism card theme perfectly
+            size: "large",
+            width: buttonWidth, // Fits login and signup pages beautifully
+            shape: "pill", // Matches round premium aesthetic
+            text: "continue_with",
+            logo_alignment: "center",
+          }
+        );
+      }
     } catch (err) {
       console.error("Error initializing Google Identity Services:", err);
     }
@@ -116,8 +149,8 @@ const GoogleLoginButton = () => {
         ) : (
           <div 
             id="google-signin-btn" 
-            className="w-full flex justify-center hover:scale-[1.01] transition-transform duration-200" 
-            style={{ minHeight: "44px" }}
+            className="w-full flex justify-center hover:scale-[1.01] transition-transform duration-200 overflow-hidden" 
+            style={{ minHeight: "44px", maxWidth: "100%" }}
           />
         )}
       </div>

@@ -45,7 +45,7 @@ const LoginPage = () => {
     <div className="min-h-screen bg-[#060b16] text-white">
       <Navbar />
       <div className="flex min-h-[calc(100vh-80px)] items-center justify-center p-4">
-        <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.02] p-8 shadow-2xl backdrop-blur-xl">
+        <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.02] p-6 sm:p-8 shadow-2xl backdrop-blur-xl box-border overflow-hidden">
           <div className="text-center">
             <h1 className="font-display text-3xl font-bold tracking-tight">Member Login</h1>
             <p className="mt-2 text-slate-400">Access your club membership dashboard</p>

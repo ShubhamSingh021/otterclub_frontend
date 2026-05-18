@@ -138,3 +138,18 @@ a {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Google Sign-in Button Responsive Override */
+#google-signin-btn {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+
+#google-signin-btn iframe {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
