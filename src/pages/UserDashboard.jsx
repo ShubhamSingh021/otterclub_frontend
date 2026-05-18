@@ -868,10 +868,10 @@ const UserDashboard = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
                   {/* Left Section: User info and Tier Badge */}
                   <div className="flex items-center gap-4">
-                    <div className="h-16 w-16 rounded-2xl p-[1px] bg-gradient-to-tr from-[#2d61ff] via-[#8ce5db]/50 to-[#8ce5db] flex items-center justify-center shadow-glow-accent">
+                    <div className="h-16 w-16 shrink-0 aspect-square rounded-2xl p-[1px] bg-gradient-to-tr from-[#2d61ff] via-[#8ce5db]/50 to-[#8ce5db] flex items-center justify-center shadow-glow-accent">
                       <div className="h-full w-full rounded-2xl bg-[#060b16] overflow-hidden flex items-center justify-center text-xl font-black text-white">
                         {user?.avatar ? (
-                          <img src={getAvatarUrl(user.avatar, avatarTimestamp)} alt={user.name} className="h-full w-full object-cover" />
+                          <img src={getAvatarUrl(user.avatar, avatarTimestamp)} alt={user.name} className="h-full w-full object-cover shrink-0" />
                         ) : (
                           <span className="text-xl font-black">{user?.name?.[0]?.toUpperCase()}</span>
                         )}

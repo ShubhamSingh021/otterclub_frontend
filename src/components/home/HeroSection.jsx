@@ -21,9 +21,9 @@ const HeroSection = ({ content: cmsContent, stats: liveStats }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleCtaClick = (e, href) => {
+  const handleCtaClick = (e, href, label = "") => {
     e.preventDefault();
-    if (href.includes("membership")) {
+    if (href.toLowerCase().includes("membership") || label.toLowerCase().includes("membership")) {
       navigate("/membership");
       return;
     }
@@ -54,11 +54,11 @@ const HeroSection = ({ content: cmsContent, stats: liveStats }) => {
     : (content.stats && content.stats.length > 0 ? content.stats : defaultContent.stats);
 
   return (
-    <section id="home" className="relative pb-10 pt-0 sm:pt-10 lg:pt-12 lg:pb-16 -mt-16 sm:mt-0">
-      <div className="sm:hidden absolute inset-0 bg-[#060b16] z-[-1]" />
-      <Container className="!px-0 sm:!px-8">
+    <section id="home" className="relative pb-10 lg:pb-16 pt-0 -mt-16 sm:-mt-20">
+      <div className="absolute inset-0 bg-[#060b16] z-[-1]" />
+      <Container className="!px-0">
         <div
-          className="relative overflow-hidden rounded-none sm:rounded-[2.2rem] lg:rounded-[2.8rem] border-0 sm:border border-white/[0.08] bg-cover bg-[position:82%_center] md:bg-center shadow-none sm:shadow-[0_20px_60px_rgba(0,0,0,0.35),_inset_0_1px_1px_rgba(255,255,255,0.08),_0_0_50px_rgba(140,229,219,0.04)] pt-16 sm:pt-0"
+          className="relative overflow-hidden rounded-none border-b border-white/[0.05] bg-cover bg-[position:82%_center] md:bg-center shadow-none pt-16 sm:pt-20"
           style={{
             backgroundImage: content.backgroundImageUrl
               ? `linear-gradient(115deg, rgba(2, 8, 24, 0.94), rgba(5, 18, 42, 0.78) 55%, rgba(64, 224, 208, 0.2)), url(${content.backgroundImageUrl})`
@@ -91,7 +91,7 @@ const HeroSection = ({ content: cmsContent, stats: liveStats }) => {
               <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-4 sm:gap-5 w-full max-w-md sm:max-w-none mx-auto">
                 {content.primaryCta?.label && content.primaryCta?.href ? (
                   <button
-                    onClick={(e) => handleCtaClick(e, content.primaryCta.href)}
+                    onClick={(e) => handleCtaClick(e, content.primaryCta.href, content.primaryCta.label)}
                     className="h-14 px-10 rounded-full bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] flex items-center justify-center text-sm font-bold text-[#041224] tracking-wide uppercase shadow-[0_0_20px_rgba(64,224,208,0.25)] hover:shadow-[0_0_30px_rgba(64,224,208,0.45)] hover:scale-105 active:scale-95 transition-all duration-300 w-full sm:w-auto shrink-0"
                   >
                     {content.primaryCta.label}
@@ -99,7 +99,7 @@ const HeroSection = ({ content: cmsContent, stats: liveStats }) => {
                 ) : null}
                 {content.secondaryCta?.label && content.secondaryCta?.href ? (
                   <button
-                    onClick={(e) => handleCtaClick(e, content.secondaryCta.href)}
+                    onClick={(e) => handleCtaClick(e, content.secondaryCta.href, content.secondaryCta.label)}
                     className="h-14 px-10 rounded-full border border-white/15 bg-white/[0.03] backdrop-blur-md flex items-center justify-center text-sm font-bold text-white tracking-wide uppercase hover:bg-white/[0.08] hover:border-white/30 hover:scale-105 active:scale-95 transition-all duration-300 w-full sm:w-auto shrink-0"
                   >
                     {content.secondaryCta.label}
