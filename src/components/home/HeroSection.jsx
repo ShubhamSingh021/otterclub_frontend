@@ -30,10 +30,10 @@ const HeroSection = ({ content: cmsContent, stats: liveStats }) => {
     : (content.stats && content.stats.length > 0 ? content.stats : defaultContent.stats);
 
   return (
-    <section id="home" className="relative pb-10 pt-2 sm:pt-4 lg:pb-16">
+    <section id="home" className="relative pb-10 pt-7 sm:pt-10 lg:pt-12 lg:pb-16">
       <Container>
         <div
-          className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-cover bg-[position:82%_center] md:bg-center shadow-soft sm:rounded-[2.4rem]"
+          className="relative overflow-hidden rounded-[1.8rem] sm:rounded-[2.2rem] lg:rounded-[2.8rem] border border-white/[0.08] bg-cover bg-[position:82%_center] md:bg-center shadow-[0_20px_60px_rgba(0,0,0,0.35),_inset_0_1px_1px_rgba(255,255,255,0.08),_0_0_50px_rgba(140,229,219,0.04)]"
           style={{
             backgroundImage: content.backgroundImageUrl
               ? `linear-gradient(115deg, rgba(2, 8, 24, 0.94), rgba(5, 18, 42, 0.78) 55%, rgba(64, 224, 208, 0.2)), url(${content.backgroundImageUrl})`
