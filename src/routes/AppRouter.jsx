@@ -1,5 +1,5 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { lazy, Suspense, useEffect } from "react";
 
 // Static imports for core landing routes to ensure instantaneous first paint
 import HomePage from "../pages/HomePage.jsx";
@@ -49,11 +49,54 @@ const RouteLoader = () => (
   </div>
 );
 
+const ScrollToSection = () => {
+  const { pathname, hash } = useLocation();
+
+  useEffect(() => {
+    let targetId = "";
+    if (hash) {
+      targetId = hash.replace("#", "");
+    } else if (pathname === "/about") {
+      targetId = "about";
+    } else if (pathname === "/testimonials") {
+      targetId = "testimonials";
+    } else if (pathname === "/contact") {
+      targetId = "contact";
+    }
+
+    if (targetId) {
+      let attempts = 0;
+      const maxAttempts = 100; // Poll for up to 5 seconds (100 * 50ms) to ensure loading state finishes
+      const interval = setInterval(() => {
+        const element = document.getElementById(targetId);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+          clearInterval(interval);
+        }
+        attempts++;
+        if (attempts >= maxAttempts) {
+          clearInterval(interval);
+        }
+      }, 50);
+
+      return () => clearInterval(interval);
+    } else if ((pathname === "/" || pathname === "") && !hash) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [pathname, hash]);
+
+  return null;
+};
+
 const AppRouter = () => {
   return (
     <Suspense fallback={<RouteLoader />}>
+      <ScrollToSection />
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<HomePage />} />
+        <Route path="/testimonials" element={<HomePage />} />
+        <Route path="/contact" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/events" element={<EventsPage />} />
