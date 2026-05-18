@@ -482,7 +482,7 @@ const AdminBroadcastPage = () => {
                         </div>
                       </div>
 
-                      <div className="text-slate-300 text-xs leading-relaxed line-clamp-3 bg-white/[0.02] p-3 rounded-lg border border-white/5">
+                      <div className="text-slate-300 text-xs leading-relaxed max-h-24 overflow-y-auto bg-white/[0.02] p-3 rounded-lg border border-white/5">
                         {n.message}
                       </div>
 

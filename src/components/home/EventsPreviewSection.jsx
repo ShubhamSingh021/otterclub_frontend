@@ -101,27 +101,27 @@ const EventsPreviewSection = ({ section: cmsSection, featuredEvents }) => {
                 </p>
 
                 <dl className="mt-5 grid grid-cols-2 gap-2">
-                  <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
+                  <div className="min-w-0 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
                     <dt className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Date</dt>
-                    <dd className="mt-1 break-words text-xs font-semibold text-slate-200 sm:text-sm">
+                    <dd className="mt-1 truncate text-xs font-semibold text-slate-200 sm:text-sm">
                       {format(new Date(event.eventDate), "MMM dd, yyyy")}
                     </dd>
                   </div>
-                  <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
+                  <div className="min-w-0 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
                     <dt className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Time</dt>
-                    <dd className="mt-1 break-words text-xs font-semibold text-slate-200 sm:text-sm">
+                    <dd className="mt-1 truncate text-xs font-semibold text-slate-200 sm:text-sm">
                       {event.startTime}
                     </dd>
                   </div>
-                  <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
+                  <div className="min-w-0 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
                     <dt className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Venue</dt>
                     <dd className="mt-1 truncate text-xs font-semibold text-slate-200 sm:text-sm" title={event.venue}>
                       {event.venue}
                     </dd>
                   </div>
-                  <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
+                  <div className="min-w-0 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
                     <dt className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Fee</dt>
-                    <dd className="mt-1 break-words text-xs font-semibold text-slate-200 sm:text-sm">
+                    <dd className="mt-1 truncate text-xs font-semibold text-slate-200 sm:text-sm">
                       {event.eventFee === 0 ? "Free" : `₹${event.eventFee}`}
                     </dd>
                   </div>

@@ -223,7 +223,7 @@ const Navbar = ({ settings: cmsSettings }) => {
 
   return (
     <header className="sticky top-4 z-50 w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pointer-events-none">
-      <div className="pointer-events-auto flex items-center justify-between gap-2 sm:gap-4 rounded-full border border-white/10 bg-[#050b16]/75 backdrop-blur-xl py-1.5 sm:py-2 px-3 sm:px-6 shadow-[0_8px_32px_rgba(0,0,0,0.6)] shadow-cyan-500/5 hover:border-[#8ce5db]/30 hover:shadow-[0_8px_32px_rgba(140,229,219,0.08)] transition-all duration-500 w-full">
+      <div className="pointer-events-auto flex items-center justify-between gap-2 sm:gap-4 rounded-full border border-white/10 bg-[#060b16]/30 backdrop-blur-2xl py-1.5 sm:py-2 px-3 sm:px-6 shadow-[0_8px_32px_rgba(0,0,0,0.6)] shadow-cyan-500/5 hover:border-[#8ce5db]/30 transition-all duration-500 w-full">
         
         {/* LEFT SECTION - Branding */}
         <Link className="flex items-center gap-2.5 transition-opacity hover:opacity-90 flex-shrink-0" to="/">

@@ -263,15 +263,15 @@ const MembershipPage = () => {
               </table>
             </div>
 
-            {/* Mobile Stacked Plan Comparison Cards */}
-            <div className="block md:hidden space-y-6">
+            {/* Mobile Swipeable Plan Comparison Cards */}
+            <div className="flex md:hidden overflow-x-auto snap-x snap-mandatory gap-4 pb-6 no-scrollbar">
               {plans.map(plan => {
                 const isElite = plan.name === "ELITE";
                 const isPro = plan.name === "PRO";
                 return (
                   <div
                     key={plan.name}
-                    className={`rounded-2xl border ${
+                    className={`flex-none w-[85vw] snap-center rounded-2xl border ${
                       isElite 
                         ? "border-[#8ce5db] bg-[#8ce5db]/5 shadow-lg shadow-[#8ce5db]/5" 
                         : isPro 

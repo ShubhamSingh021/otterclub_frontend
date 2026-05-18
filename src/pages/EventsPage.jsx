@@ -40,15 +40,15 @@ const EventCard = memo(({ event }) => {
         </p>
 
         <div className="mt-8 grid grid-cols-2 gap-4">
-          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-3">
+          <div className="min-w-0 rounded-2xl border border-white/5 bg-white/[0.02] p-3">
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Date</p>
-            <p className="mt-1 text-xs font-bold text-slate-200">
+            <p className="mt-1 truncate text-xs font-bold text-slate-200">
               {format(new Date(event.eventDate), "MMM dd, yyyy")}
             </p>
           </div>
-          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-3">
+          <div className="min-w-0 rounded-2xl border border-white/5 bg-white/[0.02] p-3">
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Fee</p>
-            <p className="mt-1 text-xs font-bold text-slate-200">
+            <p className="mt-1 truncate text-xs font-bold text-slate-200">
               {event.eventFee === 0 ? "Free" : `₹${event.eventFee}`}
             </p>
           </div>
