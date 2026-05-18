@@ -41,31 +41,31 @@ const CommunityHighlightsSection = () => {
   }
 
   return (
-    <SectionWrapper id="highlights" className="relative overflow-hidden bg-[#030812] py-24 border-t border-white/5">
+    <SectionWrapper id="highlights" className="relative overflow-hidden bg-[#030812] py-14 sm:py-24 border-t border-white/5">
       {/* Decorative gradient glowing orb */}
       <div className="pointer-events-none absolute -right-40 top-1/2 h-[500px] w-[500px] -translate-y-1/2 rounded-full bg-[#40e0d0]/5 blur-[120px]" />
 
       <Container className="relative z-10">
         
         {/* Header Title */}
-        <div className="mb-16 text-center">
+        <div className="mb-10 sm:mb-16 text-center">
           <h2 className="text-xs font-black uppercase tracking-[0.25em] text-[#40e0d0]">
             Club Chronicles
           </h2>
-          <p className="mt-3 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+          <p className="mt-3 text-2xl xs:text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
             Community Spotlight
           </p>
-          <p className="mx-auto mt-4 max-w-xl text-base text-slate-400">
+          <p className="mx-auto mt-4 max-w-xl text-sm sm:text-base text-slate-400">
             Relive event achievements, athlete stories, and exclusive club announcements.
           </p>
         </div>
 
         {/* Highlights Grid */}
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 xs:gap-6 sm:gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {highlights.map((post) => (
             <article
               key={post._id}
-              className="group relative flex flex-col overflow-hidden rounded-3xl border border-white/5 bg-[#081121]/40 backdrop-blur-md transition hover:border-[#40e0d0]/20 hover:bg-[#0a152a]/60"
+              className="group relative flex flex-col overflow-hidden rounded-[1.6rem] border border-white/5 bg-[#081121]/40 backdrop-blur-md transition hover:border-[#40e0d0]/20 hover:bg-[#0a152a]/60"
             >
               {/* Cover Aspect Ratio Image */}
               <div className="relative aspect-[16/10] overflow-hidden bg-slate-950">
@@ -82,7 +82,7 @@ const CommunityHighlightsSection = () => {
               </div>
 
               {/* Card Body */}
-              <div className="flex flex-1 flex-col p-6">
+              <div className="flex flex-1 flex-col p-5 xs:p-6">
                 <div className="flex items-center gap-3 text-[11px] font-bold text-slate-400">
                   <span>{post.author}</span>
                   <span className="h-1 w-1 rounded-full bg-white/20" />
@@ -123,10 +123,10 @@ const CommunityHighlightsSection = () => {
         </div>
 
         {/* View All CTA Link Button */}
-        <div className="mt-16 text-center">
+        <div className="mt-10 sm:mt-16 text-center">
           <Link
             to="/community"
-            className="inline-flex rounded-full bg-white/5 border border-white/10 px-8 py-3.5 text-sm font-bold text-white transition hover:bg-white/10 hover:border-white/20 hover:scale-[1.02] active:scale-[0.98]"
+            className="inline-flex rounded-full bg-white/5 border border-white/10 px-8 py-3.5 text-sm font-bold text-white transition hover:bg-white/10 hover:border-white/20 hover:scale-[1.02] active:scale-[0.98] w-full xs:w-auto justify-center"
           >
             Explore Community Feed
           </Link>

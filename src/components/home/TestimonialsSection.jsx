@@ -1,9 +1,7 @@
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SectionHeader from "../common/SectionHeader.jsx";
 import SectionWrapper from "../layout/SectionWrapper.jsx";
-
-const windowSize = 3;
 
 const defaultSection = {
   sectionLabel: "Testimonials",
@@ -37,10 +35,27 @@ const TestimonialsSection = ({ testimonials: cmsTestimonials, section: cmsSectio
   const section = cmsSection || defaultSection;
 
   const [startIndex, setStartIndex] = useState(0);
+  const [windowSize, setWindowSize] = useState(3);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setWindowSize(1);
+      } else if (window.innerWidth < 1024) {
+        setWindowSize(2);
+      } else {
+        setWindowSize(3);
+      }
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const canSlide = testimonials.length > windowSize;
 
   const visibleItems = useMemo(() => {
-    if (!canSlide) {
+    if (testimonials.length <= windowSize) {
       return testimonials;
     }
 
@@ -49,7 +64,7 @@ const TestimonialsSection = ({ testimonials: cmsTestimonials, section: cmsSectio
       items.push(testimonials[(startIndex + i) % testimonials.length]);
     }
     return items;
-  }, [canSlide, startIndex, testimonials]);
+  }, [windowSize, startIndex, testimonials]);
 
   return (
     <SectionWrapper id="testimonials">
@@ -88,7 +103,7 @@ const TestimonialsSection = ({ testimonials: cmsTestimonials, section: cmsSectio
           <motion.article
             key={item._id}
             animate={{ opacity: 1, y: 0 }}
-            className={`group flex h-full flex-col rounded-[1.6rem] border border-white/10 bg-gradient-to-b from-[#101b31] to-[#0b1427] p-6 shadow-soft transition hover:border-[#6ee0d2]/45 ${index >= 1 ? "hidden md:flex" : "flex"} ${index >= 2 ? "hidden lg:flex" : ""}`}
+            className="group flex h-full flex-col rounded-[1.6rem] border border-white/10 bg-gradient-to-b from-[#101b31] to-[#0b1427] p-6 shadow-soft transition hover:border-[#6ee0d2]/45"
             initial={{ opacity: 0, y: 16 }}
             transition={{ delay: index * 0.06, duration: 0.25 }}
           >

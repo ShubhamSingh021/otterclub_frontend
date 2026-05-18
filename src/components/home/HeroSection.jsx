@@ -56,14 +56,14 @@ const HeroSection = ({ content: cmsContent, stats: liveStats }) => {
                 </p>
               ) : null}
 
-              <h1 className="mt-6 break-words font-display text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold leading-[1.1] tracking-tight text-white">
+              <h1 className="mt-6 break-words font-display text-2xl xs:text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold leading-[1.1] tracking-tight text-white">
                 {content.title}
               </h1>
               {content.subtitle ? (
-                <p className="mt-6 max-w-2xl break-words text-base leading-relaxed text-slate-200 sm:text-lg lg:text-xl">{content.subtitle}</p>
+                <p className="mt-4 sm:mt-6 max-w-2xl break-words text-sm xs:text-base sm:text-lg lg:text-xl leading-relaxed text-slate-200">{content.subtitle}</p>
               ) : null}
 
-              <div className="mt-10 flex flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:gap-3">
+              <div className="mt-8 sm:mt-10 flex flex-col items-stretch gap-3.5 xs:flex-row xs:items-center xs:gap-3">
                 {content.primaryCta?.label && content.primaryCta?.href ? (
                   content.primaryCta.href.startsWith("/") ? (
                     <Link
@@ -102,17 +102,17 @@ const HeroSection = ({ content: cmsContent, stats: liveStats }) => {
             </motion.div>
 
             {stats.length > 0 ? (
-              <div className="mt-12 grid gap-3 grid-cols-2 lg:mt-16 lg:grid-cols-4">
+              <div className="mt-10 grid gap-2.5 xs:gap-3 grid-cols-2 lg:mt-16 lg:grid-cols-4">
                 {stats.map((stat, index) => (
                   <motion.article
                     key={`${stat.label}-${index}`}
                     animate={{ opacity: 1, y: 0 }}
-                    className="glass-panel rounded-2xl p-4 sm:p-5"
+                    className="glass-panel rounded-2xl p-3 xs:p-4 sm:p-5"
                     initial={{ opacity: 0, y: 16 }}
                     transition={{ delay: index * 0.06, duration: 0.3 }}
                   >
-                    <p className="break-words font-display text-xl sm:text-3xl lg:text-4xl font-semibold text-white">{stat.value}</p>
-                    <p className="mt-1 break-words text-xs font-medium uppercase tracking-wider text-slate-400 sm:text-sm">{stat.label}</p>
+                    <p className="break-words font-display text-lg xs:text-xl sm:text-3xl lg:text-4xl font-bold text-white">{stat.value}</p>
+                    <p className="mt-1 break-words text-[10px] xs:text-xs font-medium uppercase tracking-wider text-slate-400 sm:text-sm">{stat.label}</p>
                   </motion.article>
                 ))}
               </div>

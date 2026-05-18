@@ -8,11 +8,11 @@ const SectionHeader = ({ label, title, subtitle, align = "center", className = "
       <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#7ee0d3]">{label}</p>
     ) : null}
     {title ? (
-      <h2 className="mt-4 break-words font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-5xl">
+      <h2 className="mt-3 sm:mt-4 break-words font-display text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white">
         {title}
       </h2>
     ) : null}
-    {subtitle ? <p className="mt-5 break-words text-base leading-relaxed text-slate-300 sm:text-lg">{subtitle}</p> : null}
+    {subtitle ? <p className="mt-3 sm:mt-5 break-words text-sm sm:text-base md:text-lg leading-relaxed text-slate-300">{subtitle}</p> : null}
   </div>
 );
 

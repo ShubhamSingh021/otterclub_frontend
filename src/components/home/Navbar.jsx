@@ -223,7 +223,7 @@ const Navbar = ({ settings: cmsSettings }) => {
 
   return (
     <header className="sticky top-4 z-50 w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pointer-events-none">
-      <div className="pointer-events-auto flex items-center justify-between gap-4 rounded-full border border-white/10 bg-[#050b16]/75 backdrop-blur-xl py-2 px-4 sm:px-6 shadow-[0_8px_32px_rgba(0,0,0,0.6)] shadow-cyan-500/5 hover:border-[#8ce5db]/30 hover:shadow-[0_8px_32px_rgba(140,229,219,0.08)] transition-all duration-500 w-full">
+      <div className="pointer-events-auto flex items-center justify-between gap-2 sm:gap-4 rounded-full border border-white/10 bg-[#050b16]/75 backdrop-blur-xl py-1.5 sm:py-2 px-3 sm:px-6 shadow-[0_8px_32px_rgba(0,0,0,0.6)] shadow-cyan-500/5 hover:border-[#8ce5db]/30 hover:shadow-[0_8px_32px_rgba(140,229,219,0.08)] transition-all duration-500 w-full">
         
         {/* LEFT SECTION - Branding */}
         <Link className="flex items-center gap-2.5 transition-opacity hover:opacity-90 flex-shrink-0" to="/">
@@ -236,7 +236,7 @@ const Navbar = ({ settings: cmsSettings }) => {
             <p className="font-display text-xs sm:text-sm font-semibold tracking-tight text-white leading-tight">
               {settings?.siteName || "Otter Society"}
             </p>
-            <p className="text-[7.5px] font-semibold uppercase tracking-[0.18em] text-slate-400/80 leading-none mt-0.5">
+            <p className="hidden xs:block text-[7.5px] font-semibold uppercase tracking-[0.18em] text-slate-400/80 leading-none mt-0.5">
               {settings?.siteTagline || "PREMIUM SPORTS COMMUNITY"}
             </p>
           </div>
@@ -263,7 +263,7 @@ const Navbar = ({ settings: cmsSettings }) => {
         </nav>
 
         {/* RIGHT SECTION - Actions & User Info */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           
           {/* Admin Panel Button */}
           {isAdminLoggedIn && (
@@ -307,7 +307,7 @@ const Navbar = ({ settings: cmsSettings }) => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.95 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute right-0 mt-3 z-50 w-[calc(100vw-32px)] sm:w-96 rounded-2xl border border-white/10 bg-[#0d1527]/95 backdrop-blur-xl p-4 shadow-[0_8px_32px_rgba(0,0,0,0.5)] space-y-3"
+                      className="fixed top-20 right-4 left-4 sm:absolute sm:top-auto sm:right-0 sm:left-auto sm:w-96 w-auto mt-3 z-50 rounded-2xl border border-white/10 bg-[#0d1527]/95 backdrop-blur-xl p-4 shadow-[0_8px_32px_rgba(0,0,0,0.5)] space-y-3"
                     >
                       <div className="flex justify-between items-center pb-2 border-b border-white/10">
                         <h4 className="font-bold text-sm text-white flex items-center gap-2">
@@ -428,7 +428,7 @@ const Navbar = ({ settings: cmsSettings }) => {
                   setIsProfileOpen(!isProfileOpen);
                   setIsNotifOpen(false);
                 }}
-                className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1 pr-3.5 transition-all duration-300 hover:bg-white/10 hover:border-[#8ce5db]/30 group"
+                className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1 sm:pr-3.5 transition-all duration-300 hover:bg-white/10 hover:border-[#8ce5db]/30 group"
               >
                 <div className="h-7 w-7 overflow-hidden rounded-full border border-white/10 bg-gradient-to-br from-[#8ce5db] to-[#2d61ff]">
                   {user?.avatar ? (
@@ -517,7 +517,7 @@ const Navbar = ({ settings: cmsSettings }) => {
               </Link>
               {globalCta?.label && globalCta?.href ? (
                 <Link
-                  className="whitespace-nowrap flex-shrink-0 rounded-full bg-gradient-to-r from-[#8ce5db] to-[#2d61ff] px-4.5 py-2 text-xs font-bold text-[#051426] transition-all duration-300 hover:shadow-[0_0_20px_rgba(140,229,219,0.3)] hover:scale-[1.03] active:scale-95"
+                  className="whitespace-nowrap flex-shrink-0 rounded-full bg-gradient-to-r from-[#8ce5db] to-[#2d61ff] px-4 sm:px-5 py-2 text-xs font-bold text-[#051426] transition-all duration-300 hover:shadow-[0_0_20px_rgba(140,229,219,0.3)] hover:scale-[1.03] active:scale-95"
                   to={globalCta.href}
                 >
                   {globalCta.label}

@@ -103,7 +103,7 @@ const AdminOverviewPage = () => {
     <div className="space-y-10">
       
       {/* Welcome Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-8 rounded-3xl border border-white/10 bg-gradient-to-r from-[#080f1d] to-[#050b14] relative overflow-hidden">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 sm:p-8 rounded-3xl border border-white/10 bg-gradient-to-r from-[#080f1d] to-[#050b14] relative overflow-hidden">
         <div className="absolute right-0 top-0 h-40 w-40 bg-[#40e0d0]/5 rounded-full blur-[80px] pointer-events-none" />
         <div className="absolute left-1/3 bottom-0 h-28 w-28 bg-[#2d61ff]/5 rounded-full blur-[60px] pointer-events-none" />
         <div>
@@ -124,101 +124,101 @@ const AdminOverviewPage = () => {
       </div>
 
       {/* 6 Premium KPI Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
         
         {/* KPI 1: Total Users */}
-        <div className="p-6 rounded-3xl border border-white/10 bg-[#080f1d]/60 relative overflow-hidden group hover:border-[#40e0d0]/30 transition-all duration-300 flex flex-col justify-between h-40">
+        <div className="p-4 sm:p-6 rounded-3xl border border-white/10 bg-[#080f1d]/60 relative overflow-hidden group hover:border-[#40e0d0]/30 transition-all duration-300 flex flex-col justify-between h-36 sm:h-40">
           <div className="flex items-center justify-between">
-            <div className="p-3 rounded-2xl bg-white/5 text-[#40e0d0]">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="p-2 sm:p-3 rounded-2xl bg-white/5 text-[#40e0d0]">
+              <svg className="h-4 sm:h-5 w-4 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
-            <span className="text-[10px] font-black uppercase text-[#40e0d0] tracking-widest bg-[#40e0d0]/10 border border-[#40e0d0]/20 px-2 py-0.5 rounded-full">Platform</span>
+            <span className="text-[8px] sm:text-[10px] font-black uppercase text-[#40e0d0] tracking-widest bg-[#40e0d0]/10 border border-[#40e0d0]/20 px-2 py-0.5 rounded-full">Platform</span>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Total Registered Users</p>
-            <p className="text-3xl font-black text-white mt-1">{totalUsers}</p>
+            <p className="text-[8px] sm:text-[10px] text-slate-500 uppercase tracking-widest font-black">Total Registered Users</p>
+            <p className="text-xl xs:text-2xl sm:text-3xl font-black text-white mt-0.5 sm:mt-1">{totalUsers}</p>
           </div>
         </div>
 
         {/* KPI 2: Total Members */}
-        <div className="p-6 rounded-3xl border border-white/10 bg-[#080f1d]/60 relative overflow-hidden group hover:border-[#2d61ff]/30 transition-all duration-300 flex flex-col justify-between h-40">
+        <div className="p-4 sm:p-6 rounded-3xl border border-white/10 bg-[#080f1d]/60 relative overflow-hidden group hover:border-[#2d61ff]/30 transition-all duration-300 flex flex-col justify-between h-36 sm:h-40">
           <div className="flex items-center justify-between">
-            <div className="p-3 rounded-2xl bg-white/5 text-[#2d61ff]">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="p-2 sm:p-3 rounded-2xl bg-white/5 text-[#2d61ff]">
+              <svg className="h-4 sm:h-5 w-4 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
               </svg>
             </div>
-            <span className="text-[10px] font-black uppercase text-[#2d61ff] tracking-widest bg-[#2d61ff]/10 border border-[#2d61ff]/20 px-2 py-0.5 rounded-full">Premium</span>
+            <span className="text-[8px] sm:text-[10px] font-black uppercase text-[#2d61ff] tracking-widest bg-[#2d61ff]/10 border border-[#2d61ff]/20 px-2 py-0.5 rounded-full">Premium</span>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Active Memberships</p>
-            <p className="text-3xl font-black text-white mt-1">{totalMembers}</p>
+            <p className="text-[8px] sm:text-[10px] text-slate-500 uppercase tracking-widest font-black">Active Memberships</p>
+            <p className="text-xl xs:text-2xl sm:text-3xl font-black text-white mt-0.5 sm:mt-1">{totalMembers}</p>
           </div>
         </div>
 
         {/* KPI 3: Revenue */}
-        <div className="p-6 rounded-3xl border border-white/10 bg-[#080f1d]/60 relative overflow-hidden group hover:border-[#40e0d0]/30 transition-all duration-300 flex flex-col justify-between h-40">
+        <div className="p-4 sm:p-6 rounded-3xl border border-white/10 bg-[#080f1d]/60 relative overflow-hidden group hover:border-[#40e0d0]/30 transition-all duration-300 flex flex-col justify-between h-36 sm:h-40">
           <div className="flex items-center justify-between">
-            <div className="p-3 rounded-2xl bg-white/5 text-[#40e0d0]">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="p-2 sm:p-3 rounded-2xl bg-white/5 text-[#40e0d0]">
+              <svg className="h-4 sm:h-5 w-4 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <span className="text-[10px] font-black uppercase text-[#40e0d0] tracking-widest bg-[#40e0d0]/10 border border-[#40e0d0]/20 px-2 py-0.5 rounded-full">Financial</span>
+            <span className="text-[8px] sm:text-[10px] font-black uppercase text-[#40e0d0] tracking-widest bg-[#40e0d0]/10 border border-[#40e0d0]/20 px-2 py-0.5 rounded-full">Financial</span>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Aggregate Revenue</p>
-            <p className="text-3xl font-black text-white mt-1">₹{totalRevenue.toLocaleString()}</p>
+            <p className="text-[8px] sm:text-[10px] text-slate-500 uppercase tracking-widest font-black">Aggregate Revenue</p>
+            <p className="text-xl xs:text-2xl sm:text-3xl font-black text-white mt-0.5 sm:mt-1">₹{totalRevenue.toLocaleString()}</p>
           </div>
         </div>
 
         {/* KPI 4: Upcoming Events */}
-        <div className="p-6 rounded-3xl border border-white/10 bg-[#080f1d]/60 relative overflow-hidden group hover:border-[#2d61ff]/30 transition-all duration-300 flex flex-col justify-between h-40">
+        <div className="p-4 sm:p-6 rounded-3xl border border-white/10 bg-[#080f1d]/60 relative overflow-hidden group hover:border-[#2d61ff]/30 transition-all duration-300 flex flex-col justify-between h-36 sm:h-40">
           <div className="flex items-center justify-between">
-            <div className="p-3 rounded-2xl bg-white/5 text-[#2d61ff]">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <div className="p-2 sm:p-3 rounded-2xl bg-white/5 text-[#2d61ff]">
+              <svg className="h-4 sm:h-5 w-4 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <span className="text-[10px] font-black uppercase text-[#2d61ff] tracking-widest bg-[#2d61ff]/10 border border-[#2d61ff]/20 px-2 py-0.5 rounded-full">Events</span>
+            <span className="text-[8px] sm:text-[10px] font-black uppercase text-[#2d61ff] tracking-widest bg-[#2d61ff]/10 border border-[#2d61ff]/20 px-2 py-0.5 rounded-full">Events</span>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Active Event Schedules</p>
-            <p className="text-3xl font-black text-white mt-1">{upcomingEvents.length}</p>
+            <p className="text-[8px] sm:text-[10px] text-slate-500 uppercase tracking-widest font-black">Active Event Schedules</p>
+            <p className="text-xl xs:text-2xl sm:text-3xl font-black text-white mt-0.5 sm:mt-1">{upcomingEvents.length}</p>
           </div>
         </div>
 
         {/* KPI 5: Pending Registrations */}
-        <div className="p-6 rounded-3xl border border-white/10 bg-[#080f1d]/60 relative overflow-hidden group hover:border-[#40e0d0]/30 transition-all duration-300 flex flex-col justify-between h-40">
+        <div className="p-4 sm:p-6 rounded-3xl border border-white/10 bg-[#080f1d]/60 relative overflow-hidden group hover:border-[#40e0d0]/30 transition-all duration-300 flex flex-col justify-between h-36 sm:h-40">
           <div className="flex items-center justify-between">
-            <div className="p-3 rounded-2xl bg-white/5 text-[#40e0d0]">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="p-2 sm:p-3 rounded-2xl bg-white/5 text-[#40e0d0]">
+              <svg className="h-4 sm:h-5 w-4 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <span className="text-[10px] font-black uppercase text-[#40e0d0] tracking-widest bg-[#40e0d0]/10 border border-[#40e0d0]/20 px-2 py-0.5 rounded-full">Signups</span>
+            <span className="text-[8px] sm:text-[10px] font-black uppercase text-[#40e0d0] tracking-widest bg-[#40e0d0]/10 border border-[#40e0d0]/20 px-2 py-0.5 rounded-full">Signups</span>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Event Registrations</p>
-            <p className="text-3xl font-black text-white mt-1">{totalRegistrations}</p>
+            <p className="text-[8px] sm:text-[10px] text-slate-500 uppercase tracking-widest font-black">Event Registrations</p>
+            <p className="text-xl xs:text-2xl sm:text-3xl font-black text-white mt-0.5 sm:mt-1">{totalRegistrations}</p>
           </div>
         </div>
 
         {/* KPI 6: Broadcasts Sent */}
-        <div className="p-6 rounded-3xl border border-white/10 bg-[#080f1d]/60 relative overflow-hidden group hover:border-[#2d61ff]/30 transition-all duration-300 flex flex-col justify-between h-40">
+        <div className="p-4 sm:p-6 rounded-3xl border border-white/10 bg-[#080f1d]/60 relative overflow-hidden group hover:border-[#2d61ff]/30 transition-all duration-300 flex flex-col justify-between h-36 sm:h-40">
           <div className="flex items-center justify-between">
-            <div className="p-3 rounded-2xl bg-white/5 text-[#2d61ff]">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="p-2 sm:p-3 rounded-2xl bg-white/5 text-[#2d61ff]">
+              <svg className="h-4 sm:h-5 w-4 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6" />
               </svg>
             </div>
-            <span className="text-[10px] font-black uppercase text-[#2d61ff] tracking-widest bg-[#2d61ff]/10 border border-[#2d61ff]/20 px-2 py-0.5 rounded-full">Campaigns</span>
+            <span className="text-[8px] sm:text-[10px] font-black uppercase text-[#2d61ff] tracking-widest bg-[#2d61ff]/10 border border-[#2d61ff]/20 px-2 py-0.5 rounded-full">Campaigns</span>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Outreach Broadcasts</p>
-            <p className="text-3xl font-black text-white mt-1">{broadcastsSent}</p>
+            <p className="text-[8px] sm:text-[10px] text-slate-500 uppercase tracking-widest font-black">Outreach Broadcasts</p>
+            <p className="text-xl xs:text-2xl sm:text-3xl font-black text-white mt-0.5 sm:mt-1">{broadcastsSent}</p>
           </div>
         </div>
 
@@ -246,7 +246,7 @@ const AdminOverviewPage = () => {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+              <table className="w-full text-left text-xs min-w-[600px] sm:min-w-full">
                 <thead>
                   <tr className="border-b border-white/5 text-slate-500 uppercase tracking-widest font-bold text-[9px]">
                     <th className="pb-3 font-semibold">User Details</th>

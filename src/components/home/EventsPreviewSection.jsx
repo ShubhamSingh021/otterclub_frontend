@@ -71,7 +71,7 @@ const EventsPreviewSection = ({ section: cmsSection, featuredEvents }) => {
           No upcoming events at the moment.
         </div>
       ) : (
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="grid gap-4 xs:gap-5 lg:grid-cols-3">
           {events.map((event) => (
             <article
               key={event._id}
@@ -94,8 +94,8 @@ const EventsPreviewSection = ({ section: cmsSection, featuredEvents }) => {
                 </div>
               </div>
 
-              <div className="flex flex-grow flex-col p-5 sm:p-6">
-                <h3 className="break-words font-display text-2xl font-semibold leading-tight text-white">{event.title}</h3>
+              <div className="flex flex-grow flex-col p-4 xs:p-5 sm:p-6">
+                <h3 className="break-words font-display text-xl xs:text-2xl font-bold leading-tight text-white">{event.title}</h3>
                 <p className="mt-3 line-clamp-2 flex-grow break-words text-sm leading-relaxed text-slate-300">
                   {event.description}
                 </p>
@@ -128,7 +128,7 @@ const EventsPreviewSection = ({ section: cmsSection, featuredEvents }) => {
                 </dl>
 
                 <a
-                  className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] px-5 py-2.5 text-sm font-bold text-[#061323] transition hover:scale-[1.02] sm:w-auto sm:self-start"
+                  className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] px-5 py-2.5 text-sm font-bold text-[#061323] transition hover:scale-[1.02] xs:w-auto xs:self-start"
                   href={`/events/${event.slug}`}
                 >
                   View Details
