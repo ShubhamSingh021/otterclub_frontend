@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import { googleLogin } from "../../api/authApi";
@@ -7,6 +7,7 @@ const GoogleLoginButton = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
+  const containerRef = useRef(null);
   const from = location.state?.from || "/dashboard";
 
   const handleCredentialResponse = async (response) => {
@@ -40,26 +41,24 @@ const GoogleLoginButton = () => {
     }
   };
 
-  const [buttonWidth, setButtonWidth] = useState(() => {
-    const screenWidth = window.innerWidth;
-    if (screenWidth < 480) {
-      return Math.max(200, Math.min(382, Math.floor(screenWidth * 0.92) - 48)).toString();
-    }
-    return "382";
-  });
+  const [buttonWidth, setButtonWidth] = useState("382");
 
   useEffect(() => {
     const handleResize = () => {
-      const screenWidth = window.innerWidth;
-      let targetWidth = 382;
-      if (screenWidth < 480) {
-        targetWidth = Math.max(200, Math.min(382, Math.floor(screenWidth * 0.92) - 48));
+      if (containerRef.current) {
+        const width = containerRef.current.offsetWidth;
+        setButtonWidth(Math.max(200, Math.min(382, width)).toString());
       }
-      setButtonWidth(targetWidth.toString());
     };
+    
+    // Slight delay to ensure DOM is fully painted and paddings are applied
+    const timeoutId = setTimeout(handleResize, 50);
 
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   useEffect(() => {
@@ -137,7 +136,7 @@ const GoogleLoginButton = () => {
         </span>
       </div>
 
-      <div className="flex w-full flex-col items-center justify-center relative min-h-[44px]">
+      <div ref={containerRef} className="flex w-full flex-col items-center justify-center relative min-h-[44px]">
         {/* The Google Sign-In button stays permanently mounted to avoid iframe re-creation layout shifts */}
         <div 
           id="google-signin-btn" 

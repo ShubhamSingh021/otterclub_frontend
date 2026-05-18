@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import Container from "../layout/Container.jsx";
 
 const defaultContent = {
@@ -18,6 +18,30 @@ const defaultContent = {
 
 const HeroSection = ({ content: cmsContent, stats: liveStats }) => {
   const content = cmsContent || defaultContent;
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleCtaClick = (e, href) => {
+    e.preventDefault();
+    if (href.includes("membership")) {
+      navigate("/membership");
+      return;
+    }
+    
+    const isHash = href.startsWith("#") || href.startsWith("/#");
+    if (isHash) {
+      const id = href.replace(/^\/?#/, '');
+      if (location.pathname !== "/") {
+         navigate(`/#${id}`);
+      } else {
+         const el = document.getElementById(id);
+         if (el) el.scrollIntoView({ behavior: "smooth" });
+         else window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    } else {
+       navigate(href);
+    }
+  };
   
   // Seamlessly link live backend database/CMS stats to the Hero showcase cards!
   const stats = liveStats
@@ -30,10 +54,11 @@ const HeroSection = ({ content: cmsContent, stats: liveStats }) => {
     : (content.stats && content.stats.length > 0 ? content.stats : defaultContent.stats);
 
   return (
-    <section id="home" className="relative pb-10 pt-7 sm:pt-10 lg:pt-12 lg:pb-16">
-      <Container>
+    <section id="home" className="relative pb-10 pt-0 sm:pt-10 lg:pt-12 lg:pb-16 -mt-16 sm:mt-0">
+      <div className="sm:hidden absolute inset-0 bg-[#060b16] z-[-1]" />
+      <Container className="!px-0 sm:!px-8">
         <div
-          className="relative overflow-hidden rounded-[1.8rem] sm:rounded-[2.2rem] lg:rounded-[2.8rem] border border-white/[0.08] bg-cover bg-[position:82%_center] md:bg-center shadow-[0_20px_60px_rgba(0,0,0,0.35),_inset_0_1px_1px_rgba(255,255,255,0.08),_0_0_50px_rgba(140,229,219,0.04)]"
+          className="relative overflow-hidden rounded-none sm:rounded-[2.2rem] lg:rounded-[2.8rem] border-0 sm:border border-white/[0.08] bg-cover bg-[position:82%_center] md:bg-center shadow-none sm:shadow-[0_20px_60px_rgba(0,0,0,0.35),_inset_0_1px_1px_rgba(255,255,255,0.08),_0_0_50px_rgba(140,229,219,0.04)] pt-16 sm:pt-0"
           style={{
             backgroundImage: content.backgroundImageUrl
               ? `linear-gradient(115deg, rgba(2, 8, 24, 0.94), rgba(5, 18, 42, 0.78) 55%, rgba(64, 224, 208, 0.2)), url(${content.backgroundImageUrl})`
@@ -65,38 +90,20 @@ const HeroSection = ({ content: cmsContent, stats: liveStats }) => {
 
               <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-4 sm:gap-5 w-full max-w-md sm:max-w-none mx-auto">
                 {content.primaryCta?.label && content.primaryCta?.href ? (
-                  content.primaryCta.href.startsWith("/") ? (
-                    <Link
-                      className="h-14 px-10 rounded-full bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] flex items-center justify-center text-sm font-bold text-[#041224] tracking-wide uppercase shadow-[0_0_20px_rgba(64,224,208,0.25)] hover:shadow-[0_0_30px_rgba(64,224,208,0.45)] hover:scale-105 active:scale-95 transition-all duration-300 w-full sm:w-auto shrink-0"
-                      to={content.primaryCta.href}
-                    >
-                      {content.primaryCta.label}
-                    </Link>
-                  ) : (
-                    <a
-                      className="h-14 px-10 rounded-full bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] flex items-center justify-center text-sm font-bold text-[#041224] tracking-wide uppercase shadow-[0_0_20px_rgba(64,224,208,0.25)] hover:shadow-[0_0_30px_rgba(64,224,208,0.45)] hover:scale-105 active:scale-95 transition-all duration-300 w-full sm:w-auto shrink-0"
-                      href={content.primaryCta.href}
-                    >
-                      {content.primaryCta.label}
-                    </a>
-                  )
+                  <button
+                    onClick={(e) => handleCtaClick(e, content.primaryCta.href)}
+                    className="h-14 px-10 rounded-full bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] flex items-center justify-center text-sm font-bold text-[#041224] tracking-wide uppercase shadow-[0_0_20px_rgba(64,224,208,0.25)] hover:shadow-[0_0_30px_rgba(64,224,208,0.45)] hover:scale-105 active:scale-95 transition-all duration-300 w-full sm:w-auto shrink-0"
+                  >
+                    {content.primaryCta.label}
+                  </button>
                 ) : null}
                 {content.secondaryCta?.label && content.secondaryCta?.href ? (
-                  content.secondaryCta.href.startsWith("/") ? (
-                    <Link
-                      className="h-14 px-10 rounded-full border border-white/15 bg-white/[0.03] backdrop-blur-md flex items-center justify-center text-sm font-bold text-white tracking-wide uppercase hover:bg-white/[0.08] hover:border-white/30 hover:scale-105 active:scale-95 transition-all duration-300 w-full sm:w-auto shrink-0"
-                      to={content.secondaryCta.href}
-                    >
-                      {content.secondaryCta.label}
-                    </Link>
-                  ) : (
-                    <a
-                      className="h-14 px-10 rounded-full border border-white/15 bg-white/[0.03] backdrop-blur-md flex items-center justify-center text-sm font-bold text-white tracking-wide uppercase hover:bg-white/[0.08] hover:border-white/30 hover:scale-105 active:scale-95 transition-all duration-300 w-full sm:w-auto shrink-0"
-                      href={content.secondaryCta.href}
-                    >
-                      {content.secondaryCta.label}
-                    </a>
-                  )
+                  <button
+                    onClick={(e) => handleCtaClick(e, content.secondaryCta.href)}
+                    className="h-14 px-10 rounded-full border border-white/15 bg-white/[0.03] backdrop-blur-md flex items-center justify-center text-sm font-bold text-white tracking-wide uppercase hover:bg-white/[0.08] hover:border-white/30 hover:scale-105 active:scale-95 transition-all duration-300 w-full sm:w-auto shrink-0"
+                  >
+                    {content.secondaryCta.label}
+                  </button>
                 ) : null}
               </div>
             </motion.div>

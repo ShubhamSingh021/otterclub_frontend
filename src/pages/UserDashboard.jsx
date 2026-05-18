@@ -620,7 +620,7 @@ const UserDashboard = () => {
               title="Open Navigation"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16m-7 6h7" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
             <Link
@@ -732,9 +732,9 @@ const UserDashboard = () => {
                 }}
                 className="relative flex items-center gap-2 p-1.5 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all duration-300 shrink-0"
               >
-                <div className="h-7 w-7 rounded-lg bg-[#060b16] overflow-hidden flex items-center justify-center text-xs font-black text-white shrink-0 border border-white/10">
+                <div className="h-8 w-8 sm:h-9 sm:w-9 aspect-square rounded-full bg-[#060b16] overflow-hidden flex items-center justify-center text-xs font-black text-white shrink-0 border border-white/10">
                   {user?.avatar ? (
-                    <img src={getAvatarUrl(user.avatar, avatarTimestamp)} alt={user.name} className="h-full w-full object-cover" />
+                    <img src={getAvatarUrl(user.avatar, avatarTimestamp)} alt={user.name} className="h-full w-full object-cover shrink-0" />
                   ) : (
                     user?.name?.[0]?.toUpperCase()
                   )}
