@@ -102,23 +102,40 @@ const HeroSection = ({ content: cmsContent, stats: liveStats }) => {
             </motion.div>
 
             {stats.length > 0 ? (
-              <div className="mt-10 grid gap-2.5 xs:gap-3 grid-cols-2 lg:mt-16 lg:grid-cols-4 w-full">
+              <div className="hidden sm:grid mt-10 gap-3 sm:gap-4 grid-cols-2 lg:mt-16 lg:grid-cols-4 w-full">
                 {stats.map((stat, index) => (
                   <motion.article
-                    key={`${stat.label}-${index}`}
+                    key={`desktop-${stat.label}-${index}`}
                     animate={{ opacity: 1, y: 0 }}
-                    className="glass-panel rounded-2xl p-3 xs:p-4 sm:p-5"
+                    className="glass-panel rounded-2xl p-4 sm:p-5"
                     initial={{ opacity: 0, y: 16 }}
                     transition={{ delay: index * 0.06, duration: 0.3 }}
                   >
-                    <p className="break-words font-display text-lg xs:text-xl sm:text-3xl lg:text-4xl font-bold text-white">{stat.value}</p>
-                    <p className="mt-1 break-words text-[10px] xs:text-xs font-medium uppercase tracking-wider text-slate-400 sm:text-sm">{stat.label}</p>
+                    <p className="break-words font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-white">{stat.value}</p>
+                    <p className="mt-1 break-words text-xs font-medium uppercase tracking-wider text-slate-400 sm:text-sm">{stat.label}</p>
                   </motion.article>
                 ))}
               </div>
             ) : null}
           </div>
         </div>
+
+        {stats.length > 0 ? (
+          <div className="grid sm:hidden mt-6 gap-3 grid-cols-2 w-full">
+            {stats.map((stat, index) => (
+              <motion.article
+                key={`mobile-${stat.label}-${index}`}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-[1.25rem] border border-white/10 bg-[#080f1d] p-4 shadow-sm"
+                initial={{ opacity: 0, y: 16 }}
+                transition={{ delay: index * 0.06, duration: 0.3 }}
+              >
+                <p className="break-words font-display text-[1.35rem] leading-none font-bold text-white">{stat.value}</p>
+                <p className="mt-1.5 break-words text-[9px] font-bold uppercase tracking-wider text-slate-400 leading-tight">{stat.label}</p>
+              </motion.article>
+            ))}
+          </div>
+        ) : null}
       </Container>
     </section>
   );

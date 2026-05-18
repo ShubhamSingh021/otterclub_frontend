@@ -30,18 +30,18 @@ const AboutSection = ({ content: cmsContent, fallbackImageUrl }) => {
         subtitle={content.description}
       />
       <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-stretch">
-        <div className="relative overflow-hidden rounded-[1.8rem] border border-white/10">
+        <div className="flex flex-col sm:block relative overflow-hidden rounded-[1.8rem] border border-white/10 bg-[#040914]">
           <CMSImage
             alt={content.heading}
             src={primaryImage}
             fallbackSrc={fallbackImageUrl}
-            wrapperClassName="h-64 sm:h-full min-h-[250px] sm:min-h-[320px]"
-            className="h-64 sm:h-full min-h-[250px] sm:min-h-[320px] w-full object-cover"
-            fallbackClassName="h-64 sm:h-full min-h-[250px] sm:min-h-[320px] w-full"
+            wrapperClassName="h-48 sm:h-full min-h-[200px] sm:min-h-[320px]"
+            className="h-48 sm:h-full min-h-[200px] sm:min-h-[320px] w-full object-cover"
+            fallbackClassName="h-48 sm:h-full min-h-[200px] sm:min-h-[320px] w-full"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#040914] via-transparent to-transparent" />
+          <div className="hidden sm:block absolute inset-0 bg-gradient-to-t from-[#040914] via-transparent to-transparent pointer-events-none" />
 
-          <div className="absolute bottom-4 left-4 right-4 rounded-2xl border border-white/10 bg-[#0b1425]/85 p-4 backdrop-blur-md sm:p-5">
+          <div className="relative sm:absolute sm:bottom-4 sm:left-4 sm:right-4 m-4 sm:m-0 rounded-2xl border border-white/10 bg-[#0b1425]/85 p-4 backdrop-blur-md sm:p-5 z-10">
             {content.mission ? (
               <>
                 <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#7ee0d3]">Mission</p>

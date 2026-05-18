@@ -389,7 +389,7 @@ const AdminBroadcastPage = () => {
             </h3>
 
             <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] shadow-xl">
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto hidden md:block">
                 <table className="w-full text-left text-sm">
                   <thead className="border-b border-white/10 bg-white/[0.03] text-[11px] font-bold uppercase tracking-widest text-slate-400">
                     <tr>
@@ -455,6 +455,54 @@ const AdminBroadcastPage = () => {
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Card Layout */}
+              <div className="grid grid-cols-1 gap-3 p-3 sm:p-4 md:hidden">
+                {loading ? (
+                  <div className="py-10 text-center text-slate-500 text-sm">
+                    Loading notification logs...
+                  </div>
+                ) : notifications.length === 0 ? (
+                  <div className="py-10 text-center text-slate-500 text-sm">
+                    No notifications broadcasted yet. Try creating one using the form above.
+                  </div>
+                ) : (
+                  notifications.map((n) => (
+                    <div key={`mobile-${n._id}`} className="rounded-xl border border-white/5 bg-[#0a1222] p-4 flex flex-col gap-3 shadow-sm relative overflow-hidden transition-all hover:border-[#40e0d0]/30">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <span className="text-xl bg-white/5 p-2 rounded-lg border border-white/10 select-none shrink-0 flex items-center justify-center">
+                            {getTypeIcon(n.type)}
+                          </span>
+                          <div className="min-w-0">
+                            <div className="font-bold text-white text-sm line-clamp-1 break-words">{n.title}</div>
+                            <span className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">{formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-slate-300 text-xs leading-relaxed line-clamp-3 bg-white/[0.02] p-3 rounded-lg border border-white/5">
+                        {n.message}
+                      </div>
+
+                      <div className="pt-1 flex items-center justify-between mt-1">
+                        <span className={`inline-block px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wide ${
+                          n.userId ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" : "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                        }`}>
+                          {n.userId ? "Individual" : "Global"}
+                        </span>
+                        
+                        <button
+                          onClick={() => handleDelete(n._id)}
+                          className="rounded-md bg-red-500/10 border border-red-500/20 px-3 py-1.5 text-[10px] uppercase tracking-wider text-red-400 hover:bg-red-500/20 transition font-bold"
+                        >
+                          Recall
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>

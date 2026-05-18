@@ -328,8 +328,8 @@ const Navbar = ({ settings: cmsSettings }) => {
                         )}
                       </div>
 
-                      {/* Notification Scrollable Tabs */}
-                      <div className="flex gap-1.5 overflow-x-auto pb-1.5 text-xs">
+                      {/* Notification Wrap Tabs */}
+                      <div className="flex flex-wrap gap-2 pb-1.5 text-xs">
                         {[
                           { id: "all", label: "All" },
                           { id: "event", label: "Events" },

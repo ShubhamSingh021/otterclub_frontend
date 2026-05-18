@@ -386,9 +386,7 @@ const AdminLayout = () => {
         {/* Brand identity header */}
         <div className="h-20 flex items-center justify-between px-6 border-b border-white/10">
           <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate("/admin/overview")}>
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-[#40e0d0] to-[#2d61ff] flex items-center justify-center font-black text-slate-900 text-lg shadow-lg shadow-[#40e0d0]/20">
-              O
-            </div>
+            <img src="/logo.jpg" alt="Logo" className="h-9 w-9 rounded-xl object-cover shadow-lg shadow-[#40e0d0]/20" />
             <div>
               <h1 className="font-extrabold text-white tracking-tight text-sm uppercase leading-none">Otter Society</h1>
               <span className="text-[10px] font-bold text-[#40e0d0] uppercase tracking-widest leading-none mt-1">Admin Workspace</span>
@@ -446,9 +444,7 @@ const AdminLayout = () => {
         <div>
           <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-5">
             <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-[#40e0d0] to-[#2d61ff] flex items-center justify-center font-black text-slate-900 text-sm">
-                O
-              </div>
+              <img src="/logo.jpg" alt="Logo" className="h-8 w-8 rounded-lg object-cover shadow-sm" />
               <h2 className="font-extrabold text-white tracking-tight text-sm uppercase">Otter Society</h2>
             </div>
             <button
@@ -516,7 +512,7 @@ const AdminLayout = () => {
             </button>
 
             <div className="flex flex-col min-w-0">
-              <h2 className="text-sm xs:text-base sm:text-lg font-black text-white tracking-tight leading-none uppercase truncate max-w-[120px] xs:max-w-[160px] sm:max-w-[280px] md:max-w-none" title={getPageTitle()}>
+              <h2 className="text-[11px] xs:text-sm sm:text-lg font-black text-white tracking-tight leading-tight uppercase break-words" title={getPageTitle()}>
                 {getPageTitle()}
               </h2>
             </div>
