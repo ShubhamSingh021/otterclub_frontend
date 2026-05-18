@@ -501,13 +501,13 @@ const AdminLayout = () => {
       <div className="flex-grow flex flex-col min-h-screen min-w-0 relative">
         
         {/* STICKY TOP UTILITY BAR */}
-        <header className="h-20 border-b border-white/10 bg-[#060b16]/75 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between px-6 lg:px-10 shrink-0">
+        <header className="h-20 border-b border-white/10 bg-[#060b16]/75 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 lg:px-10 shrink-0">
           
           {/* Mobile hamburger trigger + page title path */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3.5 min-w-0">
             <button
               onClick={() => setMobileOpen(true)}
-              className="lg:hidden p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition focus:outline-none"
+              className="lg:hidden p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition focus:outline-none min-h-[40px] min-w-[40px] flex items-center justify-center border border-transparent hover:border-white/10 shrink-0"
               aria-label="Open sidebar"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -515,13 +515,15 @@ const AdminLayout = () => {
               </svg>
             </button>
 
-            <div className="flex flex-col">
-              <h2 className="text-lg font-black text-white tracking-tight leading-none uppercase">{getPageTitle()}</h2>
+            <div className="flex flex-col min-w-0">
+              <h2 className="text-sm xs:text-base sm:text-lg font-black text-white tracking-tight leading-none uppercase truncate max-w-[120px] xs:max-w-[160px] sm:max-w-[280px] md:max-w-none" title={getPageTitle()}>
+                {getPageTitle()}
+              </h2>
             </div>
           </div>
 
           {/* Controls: Search, notifications, and settings dropdown */}
-          <div className="flex items-center gap-4 sm:gap-6">
+          <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
             
             {/* Notification System popover */}
             <div className="relative">
@@ -530,20 +532,20 @@ const AdminLayout = () => {
                   setNotificationsOpen(!notificationsOpen);
                   setProfileDropdownOpen(false);
                 }}
-                className="p-2 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-[#40e0d0] hover:bg-white/10 transition relative"
+                className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-[#40e0d0] hover:bg-white/10 active:scale-95 transition-all duration-300 relative min-h-[40px] min-w-[40px] flex items-center justify-center shrink-0"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
                 {notifications.filter(n => !n.read).length > 0 && (
-                  <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-[#40e0d0] ring-4 ring-[#060b16] animate-pulse" />
+                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#40e0d0] ring-2 ring-[#060b16] animate-pulse" />
                 )}
               </button>
 
               {notificationsOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setNotificationsOpen(false)} />
-                  <div className="absolute right-0 mt-3 w-80 rounded-2xl border border-white/10 bg-[#080f1d]/95 backdrop-blur-xl p-4 shadow-2xl z-50 animate-fadeIn">
+                  <div className="fixed top-20 right-4 left-4 sm:absolute sm:top-auto sm:right-0 sm:left-auto mt-3 w-auto sm:w-80 rounded-2xl border border-white/10 bg-[#080f1d]/95 backdrop-blur-xl p-4 shadow-2xl z-50 animate-fadeIn">
                     <div className="flex items-center justify-between border-b border-white/5 pb-2 mb-3">
                       <span className="text-xs font-extrabold uppercase tracking-widest text-[#40e0d0]">Notifications ({notifications.filter(n => !n.read).length})</span>
                       {notifications.length > 0 && (

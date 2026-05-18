@@ -180,16 +180,16 @@ const AdminRegistrationsPage = () => {
             ) : (
               filteredRegistrations.map((reg) => (
                 <div key={reg._id} className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 space-y-4">
-                  <div className="flex justify-between items-start border-b border-white/5 pb-3">
-                    <div>
-                      <p className="font-bold text-white text-base">{reg.fullName}</p>
-                      <p className="text-xs text-slate-500">Age: {reg.age} | {reg.gender}</p>
+                  <div className="flex flex-col gap-3 xs:flex-row xs:justify-between xs:items-start border-b border-white/5 pb-3.5">
+                    <div className="min-w-0">
+                      <p className="font-bold text-white text-base truncate" title={reg.fullName}>{reg.fullName}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">Age: {reg.age} | {reg.gender}</p>
                     </div>
-                    <div className="flex flex-col gap-1.5 items-end">
+                    <div className="flex flex-row xs:flex-col gap-2 items-center xs:items-end justify-start shrink-0">
                       <select 
                         value={reg.registrationStatus}
                         onChange={(e) => handleStatusUpdate(reg._id, e.target.value)}
-                        className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase bg-transparent border border-white/10 focus:outline-none ${
+                        className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase bg-[#081429] border border-white/10 focus:outline-none min-h-[28px] ${
                           reg.registrationStatus === "approved" ? "text-green-400" : reg.registrationStatus === "cancelled" ? "text-red-400" : "text-yellow-400"
                         }`}
                       >
@@ -200,7 +200,7 @@ const AdminRegistrationsPage = () => {
                       <select 
                         value={reg.paymentStatus}
                         onChange={(e) => handlePaymentUpdate(reg._id, e.target.value)}
-                        className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase bg-transparent border border-white/10 focus:outline-none ${
+                        className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase bg-[#081429] border border-white/10 focus:outline-none min-h-[28px] ${
                           reg.paymentStatus === "paid" ? "text-green-400" : reg.paymentStatus === "failed" ? "text-red-400" : "text-slate-400"
                         }`}
                       >
@@ -210,26 +210,26 @@ const AdminRegistrationsPage = () => {
                       </select>
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                      <p className="text-[10px] text-slate-500 uppercase font-black">Contact Info</p>
-                      <p className="mt-1 font-semibold text-slate-300 truncate">{reg.email}</p>
+ 
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs">
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Contact Info</p>
+                      <p className="mt-1 font-semibold text-slate-300 break-all">{reg.email}</p>
                       <p className="text-[10px] text-slate-500 mt-0.5">{reg.phone}</p>
                     </div>
-                    <div>
-                      <p className="text-[10px] text-slate-500 uppercase font-black">Registered Event</p>
-                      <p className="mt-1 font-medium text-[#40e0d0] truncate">{reg.event?.title}</p>
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Registered Event</p>
+                      <p className="mt-1 font-medium text-[#40e0d0] break-words">{reg.event?.title}</p>
                       <p className="text-[10px] text-slate-500 mt-0.5">
                         {reg.event?.eventDate && format(new Date(reg.event.eventDate), "MMM dd, yyyy")}
                       </p>
                     </div>
                   </div>
-
-                  <div className="border-t border-white/5 pt-3 flex justify-end">
+ 
+                  <div className="border-t border-white/5 pt-3.5 flex justify-end">
                     <button
                       onClick={() => handleDelete(reg._id)}
-                      className="rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-1.5 text-xs font-bold text-red-400 hover:bg-red-500/20 transition"
+                      className="w-full sm:w-auto rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-2 text-xs font-bold text-red-400 hover:bg-red-500/20 transition min-h-[40px] flex items-center justify-center active:scale-98 transition-transform duration-150"
                     >
                       Delete Registration
                     </button>

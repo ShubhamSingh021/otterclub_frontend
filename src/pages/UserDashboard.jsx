@@ -612,24 +612,33 @@ const UserDashboard = () => {
         
         {/* TOP UTILITY HEADER BAR */}
         <header className="sticky top-0 z-30 w-full border-b border-white/5 bg-[#060b16]/80 backdrop-blur-md h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 select-none shrink-0">
-          {/* Left Corner: Hamburger */}
-          <div className="flex items-center gap-3.5">
+          {/* Left Corner: Hamburger & Home Quick Link */}
+          <div className="flex items-center gap-2.5">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all duration-300"
+              className="lg:hidden p-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all duration-300 min-h-[40px] min-w-[40px] flex items-center justify-center"
               title="Open Navigation"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16m-7 6h7" />
               </svg>
             </button>
+            <Link
+              to="/"
+              className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all duration-300 min-h-[40px] min-w-[40px] flex items-center justify-center"
+              title="Return to Home"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+            </Link>
           </div>
 
           {/* Center Space: Empty */}
           <div className="flex-1" />
 
           {/* Right Corner: Quick Action Bell & Dropdown */}
-          <div className="flex items-center gap-3.5">
+          <div className="flex items-center gap-3 sm:gap-4">
             
             {/* Live Notification Indicator */}
             <div className="relative">
@@ -638,16 +647,16 @@ const UserDashboard = () => {
                   setIsNotifDropdownOpen(!isNotifDropdownOpen);
                   setIsDropdownOpen(false);
                 }}
-                className={`relative p-2 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-all duration-300 group shrink-0 ${
+                className={`relative p-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-all duration-300 group shrink-0 min-h-[40px] min-w-[40px] flex items-center justify-center ${
                   isNotifDropdownOpen ? "border-[#8ce5db]/30 text-white bg-white/10" : ""
                 }`}
                 title="Alert Notifications"
               >
-                <svg className="h-4 w-4 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-4.5 w-4.5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
                 {notifications.filter(n => !n.isRead).length > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-black text-white border-2 border-[#060b16] shadow-glow-accent animate-pulse">
+                  <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-black text-white border-2 border-[#060b16] shadow-glow-accent animate-pulse">
                     {notifications.filter(n => !n.isRead).length}
                   </span>
                 )}
@@ -657,7 +666,7 @@ const UserDashboard = () => {
               {isNotifDropdownOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setIsNotifDropdownOpen(false)} />
-                  <div className="absolute right-0 mt-2.5 w-72 sm:w-80 rounded-2xl border border-white/10 bg-[#0a0f1d]/95 p-3 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in slide-in-from-top-3 duration-200">
+                  <div className="fixed top-20 right-4 left-4 sm:absolute sm:top-auto sm:right-0 sm:left-auto mt-2.5 w-auto sm:w-80 rounded-2xl border border-white/10 bg-[#0a0f1d]/95 p-3 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in slide-in-from-top-3 duration-200">
                     <div className="px-2 py-1.5 border-b border-white/5 mb-2 flex items-center justify-between">
                       <span className="text-xs font-black text-white uppercase tracking-wider">Recent Alerts</span>
                       {notifications.filter(n => !n.isRead).length > 0 && (
