@@ -385,8 +385,8 @@ const Navbar = ({ settings: cmsSettings }) => {
                                 </div>
                                 <p className="text-slate-300 text-[11px] mt-1.5 leading-relaxed">{notif.message}</p>
                                 {notif.link && (
-                                  <SmartLink
-                                    href={notif.link}
+                                  <Link
+                                    to={notif.link}
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setIsNotifOpen(false);
@@ -397,7 +397,7 @@ const Navbar = ({ settings: cmsSettings }) => {
                                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                     </svg>
-                                  </SmartLink>
+                                  </Link>
                                 )}
                                 <span className="text-[9px] text-slate-500 block mt-1 text-right">
                                   {notif.createdAt ? (() => {
