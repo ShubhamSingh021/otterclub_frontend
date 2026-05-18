@@ -43,10 +43,10 @@ const HeroSection = ({ content: cmsContent, stats: liveStats }) => {
           <div className="absolute -right-16 -top-16 h-60 w-60 rounded-full bg-[#40e0d0]/15 blur-3xl" />
           <div className="absolute -bottom-20 -left-10 h-72 w-72 rounded-full bg-[#2a5aff]/25 blur-3xl" />
 
-          <div className="relative px-4 py-10 sm:px-10 sm:py-20 lg:px-14 lg:py-24">
+          <div className="relative px-4 py-10 sm:px-10 sm:py-20 lg:px-14 lg:py-24 flex flex-col items-center justify-center">
             <motion.div
               animate={{ opacity: 1, y: 0 }}
-              className="max-w-4xl"
+              className="max-w-4xl mx-auto text-center flex flex-col items-center justify-center"
               initial={{ opacity: 0, y: 16 }}
               transition={{ duration: 0.5 }}
             >
@@ -60,21 +60,21 @@ const HeroSection = ({ content: cmsContent, stats: liveStats }) => {
                 {content.title}
               </h1>
               {content.subtitle ? (
-                <p className="mt-4 sm:mt-6 max-w-2xl break-words text-sm xs:text-base sm:text-lg lg:text-xl leading-relaxed text-slate-200">{content.subtitle}</p>
+                <p className="mt-4 sm:mt-6 max-w-2xl break-words text-sm xs:text-base sm:text-lg lg:text-xl leading-relaxed text-slate-200 text-center mx-auto">{content.subtitle}</p>
               ) : null}
 
-              <div className="mt-8 sm:mt-10 flex flex-col items-stretch gap-3.5 xs:flex-row xs:items-center xs:gap-3">
+              <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-4 sm:gap-5 w-full max-w-md sm:max-w-none mx-auto">
                 {content.primaryCta?.label && content.primaryCta?.href ? (
                   content.primaryCta.href.startsWith("/") ? (
                     <Link
-                      className="rounded-full bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] px-8 py-3.5 text-center text-sm font-bold text-[#041224] shadow-[0_14px_30px_-14px_rgba(64,224,208,0.6)] transition hover:scale-[1.02] sm:px-7 sm:py-3"
+                      className="h-14 px-10 rounded-full bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] flex items-center justify-center text-sm font-bold text-[#041224] tracking-wide uppercase shadow-[0_0_20px_rgba(64,224,208,0.25)] hover:shadow-[0_0_30px_rgba(64,224,208,0.45)] hover:scale-105 active:scale-95 transition-all duration-300 w-full sm:w-auto shrink-0"
                       to={content.primaryCta.href}
                     >
                       {content.primaryCta.label}
                     </Link>
                   ) : (
                     <a
-                      className="rounded-full bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] px-8 py-3.5 text-center text-sm font-bold text-[#041224] shadow-[0_14px_30px_-14px_rgba(64,224,208,0.6)] transition hover:scale-[1.02] sm:px-7 sm:py-3"
+                      className="h-14 px-10 rounded-full bg-gradient-to-r from-[#40e0d0] to-[#2d61ff] flex items-center justify-center text-sm font-bold text-[#041224] tracking-wide uppercase shadow-[0_0_20px_rgba(64,224,208,0.25)] hover:shadow-[0_0_30px_rgba(64,224,208,0.45)] hover:scale-105 active:scale-95 transition-all duration-300 w-full sm:w-auto shrink-0"
                       href={content.primaryCta.href}
                     >
                       {content.primaryCta.label}
@@ -84,14 +84,14 @@ const HeroSection = ({ content: cmsContent, stats: liveStats }) => {
                 {content.secondaryCta?.label && content.secondaryCta?.href ? (
                   content.secondaryCta.href.startsWith("/") ? (
                     <Link
-                      className="rounded-full border border-white/30 bg-white/5 px-8 py-3.5 text-center text-sm font-semibold text-white transition hover:bg-white/10 sm:px-7 sm:py-3"
+                      className="h-14 px-10 rounded-full border border-white/15 bg-white/[0.03] backdrop-blur-md flex items-center justify-center text-sm font-bold text-white tracking-wide uppercase hover:bg-white/[0.08] hover:border-white/30 hover:scale-105 active:scale-95 transition-all duration-300 w-full sm:w-auto shrink-0"
                       to={content.secondaryCta.href}
                     >
                       {content.secondaryCta.label}
                     </Link>
                   ) : (
                     <a
-                      className="rounded-full border border-white/30 bg-white/5 px-8 py-3.5 text-center text-sm font-semibold text-white transition hover:bg-white/10 sm:px-7 sm:py-3"
+                      className="h-14 px-10 rounded-full border border-white/15 bg-white/[0.03] backdrop-blur-md flex items-center justify-center text-sm font-bold text-white tracking-wide uppercase hover:bg-white/[0.08] hover:border-white/30 hover:scale-105 active:scale-95 transition-all duration-300 w-full sm:w-auto shrink-0"
                       href={content.secondaryCta.href}
                     >
                       {content.secondaryCta.label}
@@ -102,7 +102,7 @@ const HeroSection = ({ content: cmsContent, stats: liveStats }) => {
             </motion.div>
 
             {stats.length > 0 ? (
-              <div className="mt-10 grid gap-2.5 xs:gap-3 grid-cols-2 lg:mt-16 lg:grid-cols-4">
+              <div className="mt-10 grid gap-2.5 xs:gap-3 grid-cols-2 lg:mt-16 lg:grid-cols-4 w-full">
                 {stats.map((stat, index) => (
                   <motion.article
                     key={`${stat.label}-${index}`}
