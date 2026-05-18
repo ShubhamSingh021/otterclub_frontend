@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { adminGetPosts, adminCreatePost, adminUpdatePost } from "../api/communityApi.js";
-import Container from "../components/layout/Container.jsx";
-import AdminNavbar from "../components/layout/AdminNavbar.jsx";
 import toast from "react-hot-toast";
 
 const AdminPostFormPage = () => {
@@ -204,19 +202,17 @@ const AdminPostFormPage = () => {
 
   if (initialLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#050b16] text-white">
-        Loading community editor assets...
+      <div className="flex min-h-[50vh] items-center justify-center text-slate-400">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-t-transparent border-[#40e0d0]" />
+          <span className="text-xs font-semibold uppercase tracking-widest text-slate-500">Loading community editor assets...</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#050b16] text-white">
-
-      <AdminNavbar />
-
-      <main className="py-20">
-        <Container className="max-w-4xl">
+    <div className="space-y-8 max-w-4xl mx-auto">
           
           {/* Form Header */}
           <div className="mb-10 flex items-center justify-between">
@@ -481,11 +477,8 @@ const AdminPostFormPage = () => {
               </button>
 
             </div>
-
           </form>
-        </Container>
-      </main>
-    </div>
+      </div>
   );
 };
 

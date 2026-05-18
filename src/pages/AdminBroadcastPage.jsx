@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Container from "../components/layout/Container.jsx";
-import AdminNavbar from "../components/layout/AdminNavbar.jsx";
 import toast from "react-hot-toast";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -129,11 +127,7 @@ const AdminBroadcastPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#060b16] text-white">
-      <AdminNavbar />
-
-      <main className="py-10">
-        <Container>
+    <div className="space-y-8">
           {/* Header */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8">
             <div>
@@ -464,9 +458,7 @@ const AdminBroadcastPage = () => {
               </div>
             </div>
           </div>
-        </Container>
-      </main>
-    </div>
+      </div>
   );
 };
 

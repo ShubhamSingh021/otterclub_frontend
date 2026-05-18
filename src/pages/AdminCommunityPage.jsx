@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { adminGetPosts, adminDeletePost, adminUpdatePost } from "../api/communityApi.js";
-import Container from "../components/layout/Container.jsx";
-import AdminNavbar from "../components/layout/AdminNavbar.jsx";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
 
@@ -65,12 +63,7 @@ const AdminCommunityPage = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#050b16] text-white">
-
-      <AdminNavbar />
-
-      <main className="py-12">
-        <Container>
+    <div className="space-y-8">
           
           {/* Headline details */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
@@ -387,10 +380,7 @@ const AdminCommunityPage = () => {
               </div>
             </>
           )}
-
-        </Container>
-      </main>
-    </div>
+      </div>
   );
 };
 

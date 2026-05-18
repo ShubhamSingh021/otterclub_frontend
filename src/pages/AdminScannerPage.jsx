@@ -139,7 +139,7 @@ const AdminScannerPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#060b16] text-white flex flex-col items-center justify-center p-4">
+    <div className="space-y-8 flex flex-col items-center justify-center py-12">
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-black mb-2 tracking-tight">ATTENDANCE SCANNER</h1>

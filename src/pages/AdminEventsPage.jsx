@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getEvents, deleteEvent, toggleEventVisibility, toggleEventFeatured } from "../api/eventApi.js";
-import Container from "../components/layout/Container.jsx";
-import AdminNavbar from "../components/layout/AdminNavbar.jsx";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
 
@@ -59,24 +57,18 @@ const AdminEventsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#060b16] text-white">
-
-      <AdminNavbar />
-
-      <main className="py-10">
-        <Container>
-          <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-3xl font-bold">Manage Events</h2>
-              <p className="mt-1 text-slate-400">Create, edit and manage your club events</p>
-            </div>
-            <button
-              onClick={() => navigate("/admin/events/new")}
-              className="rounded-xl bg-[#40e0d0] px-6 py-3 text-sm font-bold text-[#061323] transition hover:scale-[1.02]"
-            >
-              + Create New Event
-            </button>
-          </div>
+    <div className="space-y-8">
+      <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Create, edit and manage your club events</p>
+        </div>
+        <button
+          onClick={() => navigate("/admin/events/new")}
+          className="rounded-xl bg-[#40e0d0] px-6 py-3 text-sm font-bold text-[#061323] transition hover:scale-[1.02]"
+        >
+          + Create New Event
+        </button>
+      </div>
 
           <div className="mt-10 hidden md:block overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]">
             <div className="overflow-x-auto">
@@ -206,9 +198,7 @@ const AdminEventsPage = () => {
               ))
             )}
           </div>
-        </Container>
-      </main>
-    </div>
+      </div>
   );
 };
 

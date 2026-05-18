@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { createEvent, updateEvent, getEventBySlug, getEvents, getEventById } from "../api/eventApi.js";
-import Container from "../components/layout/Container.jsx";
-import AdminNavbar from "../components/layout/AdminNavbar.jsx";
 import toast from "react-hot-toast";
 
 const AdminEventFormPage = () => {
@@ -158,18 +156,31 @@ const AdminEventFormPage = () => {
     }
   };
 
-  if (initialLoading) return <div className="flex min-h-screen items-center justify-center bg-[#060b16] text-white">Loading...</div>;
+  if (initialLoading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center text-slate-400">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-t-transparent border-[#40e0d0]" />
+          <span className="text-xs font-semibold uppercase tracking-widest text-slate-500">Loading details...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#060b16] text-white">
-      <AdminNavbar />
-
-      <main className="py-20">
-      <Container className="max-w-4xl">
-        <div className="mb-10">
-          <h1 className="text-3xl font-bold">{id ? "Edit Event" : "Create Event"}</h1>
-          <p className="mt-1 text-slate-400">Fill in the details below to {id ? "update" : "list"} the event.</p>
+    <div className="space-y-8 max-w-5xl">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Fill in the details below to {id ? "update" : "list"} the event.</p>
         </div>
+        <button
+          type="button"
+          onClick={() => navigate("/admin/events")}
+          className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold text-slate-300 transition hover:bg-white/10"
+        >
+          ← Back to Events
+        </button>
+      </div>
 
         <form onSubmit={handleSubmit} className="grid gap-8 lg:grid-cols-2">
           {/* Main Info */}
@@ -339,9 +350,7 @@ const AdminEventFormPage = () => {
             </button>
           </div>
         </form>
-      </Container>
-      </main>
-    </div>
+      </div>
   );
 };
 

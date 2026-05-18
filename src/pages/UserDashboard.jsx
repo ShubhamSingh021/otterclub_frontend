@@ -18,8 +18,13 @@ import {
   markAllNotificationsAsRead,
   deleteNotification
 } from "../api/notificationApi";
-import Navbar from "../components/home/Navbar";
-import Footer from "../components/home/Footer";
+
+const getAvatarUrl = (url, timestamp) => {
+  if (!url) return null;
+  if (url.startsWith("data:") || url.startsWith("blob:")) return url;
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}t=${timestamp}`;
+};
 
 const UserDashboard = () => {
   const [user, setUser] = useState(null);
@@ -27,6 +32,7 @@ const UserDashboard = () => {
   const [registrations, setRegistrations] = useState([]);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [avatarTimestamp, setAvatarTimestamp] = useState(Date.now());
   
   // Profile editing state
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -50,11 +56,14 @@ const UserDashboard = () => {
   const [editingReviewId, setEditingReviewId] = useState(null);
   const [submittingReview, setSubmittingReview] = useState(false);
 
-  // Tabs and Notifications state
-  const [activeTab, setActiveTab] = useState("membership");
+  // Tabs, Dropdown & Sidebar States
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [notifLoading, setNotifLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isNotifDropdownOpen, setIsNotifDropdownOpen] = useState(false);
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
@@ -84,6 +93,7 @@ const UserDashboard = () => {
         getMembershipHistory()
       ]);
       setUser(profileRes.data);
+      setAvatarTimestamp(Date.now());
       setMembership(membershipRes.data);
       setRegistrations(registrationsRes.data || []);
       setHistory(historyRes.data || []);
@@ -177,6 +187,7 @@ const UserDashboard = () => {
         const newToken = res.token;
         
         setUser(updatedUser);
+        setAvatarTimestamp(Date.now());
         localStorage.setItem("user", JSON.stringify(updatedUser));
         
         if (updatedUser.role === "admin" || updatedUser.role === "superadmin") {
@@ -332,13 +343,36 @@ const UserDashboard = () => {
     }
   };
 
+  const totalDays = useMemo(() => {
+    if (!membership || !membership.expiryDate || !membership.startDate) return 365;
+    const diff = differenceInDays(new Date(membership.expiryDate), new Date(membership.startDate));
+    return diff > 0 ? diff : 365;
+  }, [membership]);
+
   const daysRemaining = useMemo(() => {
     return (membership && membership.expiryDate) ? differenceInDays(new Date(membership.expiryDate), new Date()) : 0;
   }, [membership]);
 
   const progressPercent = useMemo(() => {
-    return Math.min(100, Math.max(0, (daysRemaining / 365) * 100));
-  }, [daysRemaining]);
+    return Math.min(100, Math.max(0, (daysRemaining / totalDays) * 100));
+  }, [daysRemaining, totalDays]);
+
+  const totalPaid = useMemo(() => {
+    return history.reduce((sum, item) => sum + (item.price || 0), 0);
+  }, [history]);
+
+  const activeBreadcrumb = useMemo(() => {
+    switch (activeTab) {
+      case "dashboard": return "Dashboard / Overview";
+      case "membership": return "Dashboard / Membership & Bookings";
+      case "events": return "Dashboard / Registered Events";
+      case "reviews": return "Dashboard / Reviews & Testimonials";
+      case "notifications": return "Dashboard / Notifications Inbox";
+      case "payments": return "Dashboard / Payment History";
+      case "profile": return "Dashboard / Profile Settings";
+      default: return "Dashboard";
+    }
+  }, [activeTab]);
 
   if (loading) {
     return (
@@ -354,319 +388,960 @@ const UserDashboard = () => {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[#060b16] text-white font-sans selection:bg-[#8ce5db]/30">
-      <Navbar />
-      
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16 max-w-7xl">
-        {/* Full-Width Premium Profile Header Card - Compact & Elegant */}
-        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-white/[0.03] to-white/[0.01] p-4 sm:p-5 backdrop-blur-xl mb-8 shadow-soft">
-          <div className="absolute -left-20 -top-20 h-48 w-48 rounded-full bg-[#2d61ff]/10 blur-[80px] pointer-events-none" />
-          <div className="absolute -right-20 -bottom-20 h-48 w-48 rounded-full bg-[#8ce5db]/10 blur-[80px] pointer-events-none" />
+  // Sidebar Menu Items Definition
+  const menuItems = [
+    {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: (
+        <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
+        </svg>
+      )
+    },
+    {
+      id: "membership",
+      label: "Membership",
+      icon: (
+        <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.475 3.475 0 012.441 2.44 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.475 3.475 0 01-2.44 2.441 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.475 3.475 0 01-2.441-2.44 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.475 3.475 0 012.44-2.441z" />
+        </svg>
+      )
+    },
+    {
+      id: "events",
+      label: "Events",
+      icon: (
+        <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      ),
+      badge: registrations.length
+    },
+    {
+      id: "reviews",
+      label: "Reviews",
+      icon: (
+        <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.907c.961 0 1.367 1.242.583 1.83l-3.978 2.89a1 1 0 00-.364 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.978-2.89a1 1 0 00-1.176 0l-3.978 2.89c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h4.906a1 1 0 00.951-.69l1.519-4.674z" />
+        </svg>
+      )
+    },
+    {
+      id: "notifications",
+      label: "Notifications",
+      icon: (
+        <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+      ),
+      badge: notifications.filter(n => !n.isRead).length
+    },
+    {
+      id: "payments",
+      label: "Payments",
+      icon: (
+        <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+        </svg>
+      )
+    }
+  ];
 
-          <div className="relative z-10 flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left w-full">
-            <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-              {/* Glow Avatar */}
-              <div className="relative h-12 w-12 rounded-full p-[2px] bg-gradient-to-tr from-[#2d61ff] via-[#8ce5db]/50 to-[#8ce5db] shadow-glow-accent shrink-0 mx-auto sm:mx-0">
-                <div className="h-full w-full rounded-full bg-[#060b16] overflow-hidden flex items-center justify-center text-lg font-black text-white">
+  return (
+    <div className="min-h-screen bg-[#060b16] text-white font-sans selection:bg-[#8ce5db]/30 flex overflow-hidden">
+      
+      {/* ==================================================
+          1. FIXED LEFT SIDEBAR (DESKTOP)
+          ================================================== */}
+      <aside className="hidden lg:flex flex-col w-64 bg-[#0a0f1d]/95 border-r border-white/5 h-screen sticky top-0 shrink-0 z-30 justify-between select-none">
+        <div>
+          {/* Sidebar Brand Header */}
+          <div className="h-16 px-6 border-b border-white/5 flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-2.5 group">
+              <div className="relative h-8 w-8 rounded-lg overflow-hidden border border-[#8ce5db]/20 bg-gradient-to-tr from-[#2d61ff]/20 to-[#8ce5db]/20 flex items-center justify-center">
+                <img src="/logo.jpg" alt="Otter Logo" className="h-6 w-6 rounded-full object-cover transition-transform duration-500 group-hover:scale-110" />
+              </div>
+              <span className="font-display font-black text-sm tracking-tight text-white transition-colors group-hover:text-[#8ce5db]">
+                Otter Society
+              </span>
+            </Link>
+          </div>
+
+          {/* Navigation Links List */}
+          <nav className="p-4 space-y-1.5">
+            {menuItems.map((item) => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    setIsSidebarOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-left text-xs font-bold transition-all duration-300 group ${
+                    isActive
+                      ? "bg-gradient-to-r from-[#2d61ff]/10 to-[#8ce5db]/10 border border-[#8ce5db]/20 text-[#8ce5db] shadow-glow-accent"
+                      : "border border-transparent text-slate-400 hover:text-white hover:bg-white/[0.03]"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={`transition-transform duration-300 group-hover:scale-110 ${isActive ? "text-[#8ce5db]" : "text-slate-500 group-hover:text-slate-300"}`}>
+                      {item.icon}
+                    </span>
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black shrink-0 ${
+                      isActive ? "bg-[#8ce5db] text-[#061323]" : "bg-white/10 text-slate-300"
+                    }`}>
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+
+            {/* Quick Admin Navigation Badge if User is Admin */}
+            {(user?.role === "admin" || user?.role === "superadmin") && (
+              <div className="pt-4 mt-4 border-t border-white/5">
+                <Link
+                  to="/admin"
+                  className="w-full flex items-center justify-between px-3.5 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all duration-300 text-xs font-black uppercase tracking-wider"
+                >
+                  <div className="flex items-center gap-3">
+                    <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    <span>Admin Panel</span>
+                  </div>
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+                </Link>
+              </div>
+            )}
+          </nav>
+        </div>
+      </aside>
+
+      {/* ==================================================
+          2. COLLAPSIBLE MOBILE SIDEDRAWER (TABLET/MOBILE)
+          ================================================== */}
+      {isSidebarOpen && (
+        <div className="fixed inset-0 z-50 flex lg:hidden">
+          {/* Clickable Backdrop */}
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity duration-300" onClick={() => setIsSidebarOpen(false)} />
+          
+          {/* Drawer Panel Container */}
+          <aside className="relative flex flex-col w-64 bg-[#0a0f1d]/98 border-r border-white/5 h-full p-5 justify-between animate-in slide-in-from-left duration-300">
+            <div>
+              {/* Brand Header */}
+              <div className="flex items-center justify-between pb-5 border-b border-white/5 mb-5">
+                <Link to="/" className="flex items-center gap-2" onClick={() => setIsSidebarOpen(false)}>
+                  <img src="/logo.jpg" alt="Logo" className="h-7 w-7 rounded-lg object-cover" />
+                  <span className="font-display font-black text-sm tracking-tight text-white">Otter Club</span>
+                </Link>
+                <button
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 hover:text-white"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l18 18" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Navigation List */}
+              <nav className="space-y-1.5">
+                {menuItems.map((item) => {
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setActiveTab(item.id);
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-left text-xs font-bold transition-all duration-300 group ${
+                        isActive
+                          ? "bg-[#2d61ff]/10 border border-[#8ce5db]/20 text-[#8ce5db] shadow-glow-accent"
+                          : "border border-transparent text-slate-400 hover:text-white hover:bg-white/[0.03]"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className={isActive ? "text-[#8ce5db]" : "text-slate-500"}>{item.icon}</span>
+                        <span>{item.label}</span>
+                      </div>
+                      {item.badge !== undefined && item.badge > 0 && (
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black shrink-0 ${
+                          isActive ? "bg-[#8ce5db] text-[#061323]" : "bg-white/10 text-slate-300"
+                        }`}>
+                          {item.badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+
+                {(user?.role === "admin" || user?.role === "superadmin") && (
+                  <div className="pt-4 mt-4 border-t border-white/5">
+                    <Link
+                      to="/admin"
+                      className="w-full flex items-center justify-between px-3.5 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-black uppercase tracking-wider"
+                      onClick={() => setIsSidebarOpen(false)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        <span>Admin Panel</span>
+                      </div>
+                    </Link>
+                  </div>
+                )}
+              </nav>
+            </div>
+
+          </aside>
+        </div>
+      )}
+
+      {/* ==================================================
+          3. MAIN CONTENT WRAPPER & WORKSPACE
+          ================================================== */}
+      <div className="flex-1 flex flex-col min-w-0 max-w-full overflow-y-auto">
+        
+        {/* TOP UTILITY HEADER BAR */}
+        <header className="sticky top-0 z-30 w-full border-b border-white/5 bg-[#060b16]/80 backdrop-blur-md h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 select-none shrink-0">
+          {/* Left Corner: Hamburger */}
+          <div className="flex items-center gap-3.5">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="lg:hidden p-2 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all duration-300"
+              title="Open Navigation"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16m-7 6h7" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Center Space: Empty */}
+          <div className="flex-1" />
+
+          {/* Right Corner: Quick Action Bell & Dropdown */}
+          <div className="flex items-center gap-3.5">
+            
+            {/* Live Notification Indicator */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setIsNotifDropdownOpen(!isNotifDropdownOpen);
+                  setIsDropdownOpen(false);
+                }}
+                className={`relative p-2 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-all duration-300 group shrink-0 ${
+                  isNotifDropdownOpen ? "border-[#8ce5db]/30 text-white bg-white/10" : ""
+                }`}
+                title="Alert Notifications"
+              >
+                <svg className="h-4 w-4 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {notifications.filter(n => !n.isRead).length > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-black text-white border-2 border-[#060b16] shadow-glow-accent animate-pulse">
+                    {notifications.filter(n => !n.isRead).length}
+                  </span>
+                )}
+              </button>
+
+              {/* Notification Quick Preview Dropdown */}
+              {isNotifDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setIsNotifDropdownOpen(false)} />
+                  <div className="absolute right-0 mt-2.5 w-72 sm:w-80 rounded-2xl border border-white/10 bg-[#0a0f1d]/95 p-3 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in slide-in-from-top-3 duration-200">
+                    <div className="px-2 py-1.5 border-b border-white/5 mb-2 flex items-center justify-between">
+                      <span className="text-xs font-black text-white uppercase tracking-wider">Recent Alerts</span>
+                      {notifications.filter(n => !n.isRead).length > 0 && (
+                        <span className="px-2 py-0.5 rounded-full bg-[#8ce5db]/10 border border-[#8ce5db]/20 text-[9px] font-black text-[#8ce5db]">
+                          {notifications.filter(n => !n.isRead).length} New
+                        </span>
+                      )}
+                    </div>
+                    {notifications.filter(n => !n.isRead).length > 0 ? (
+                      <div className="space-y-1.5 max-h-64 overflow-y-auto pr-0.5">
+                        {notifications.filter(n => !n.isRead).slice(0, 4).map((notif) => (
+                          <div 
+                            key={notif._id} 
+                            onClick={() => {
+                              handleMarkOneRead(notif._id);
+                              setIsNotifDropdownOpen(false);
+                            }}
+                            className="p-2.5 rounded-xl bg-white/[0.01] hover:bg-white/[0.03] border border-white/5 hover:border-[#8ce5db]/20 transition-all duration-200 text-left cursor-pointer group"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs font-bold text-slate-200 group-hover:text-[#8ce5db] transition-colors truncate">{notif.title}</span>
+                              <span className="text-[8px] text-slate-500 shrink-0 font-medium">
+                                {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                              {notif.message}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-6 text-center text-slate-500 text-xs">
+                        <span className="text-xl block mb-1">✨</span>
+                        All caught up! No unread notifications.
+                      </div>
+                    )}
+                    <div className="pt-2 border-t border-white/5 mt-2">
+                      <button
+                        onClick={() => {
+                          setActiveTab("notifications");
+                          setIsNotifDropdownOpen(false);
+                        }}
+                        className="w-full text-center py-2 text-[#8ce5db] hover:text-[#8ce5db]/80 text-[10px] font-black uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-1 hover:underline"
+                      >
+                        <span>View all notifications</span>
+                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Profile Avatar Click Dropdown Trigger */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setIsDropdownOpen(!isDropdownOpen);
+                  setIsNotifDropdownOpen(false);
+                }}
+                className="relative flex items-center gap-2 p-1.5 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all duration-300 shrink-0"
+              >
+                <div className="h-7 w-7 rounded-lg bg-[#060b16] overflow-hidden flex items-center justify-center text-xs font-black text-white shrink-0 border border-white/10">
                   {user?.avatar ? (
-                    <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
+                    <img src={getAvatarUrl(user.avatar, avatarTimestamp)} alt={user.name} className="h-full w-full object-cover" />
                   ) : (
                     user?.name?.[0]?.toUpperCase()
                   )}
                 </div>
-              </div>
-              
-              {/* Vertically Centered Name and Email details */}
-              <div className="space-y-1 flex flex-col items-center sm:items-start w-full sm:w-auto">
-                <div className="flex flex-col sm:flex-row items-center gap-2">
-                  <h1 className="text-xl font-display font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent text-center sm:text-left">
-                    {user?.name}
-                  </h1>
-                  {membership && (
-                    <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#8ce5db]/10 border border-[#8ce5db]/25 text-[#8ce5db] text-[8px] font-black uppercase tracking-widest mx-auto sm:mx-0">
-                      <span className="relative flex h-1.5 w-1.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#8ce5db] opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#8ce5db]"></span>
-                      </span>
-                      {membership.membershipType} MEMBER
-                    </div>
-                  )}
-                </div>
-                <p className="text-xs text-slate-400 font-medium font-body select-all text-center sm:text-left">{user?.email}</p>
-              </div>
-            </div>
-
-            {/* Header Action Buttons */}
-            <div className="flex gap-2.5 w-full sm:w-auto shrink-0 justify-center sm:justify-end">
-              <button 
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-                className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-[10px] font-black uppercase tracking-wider group"
-                title="Refresh Data"
-              >
-                <svg className={`h-3.5 w-3.5 shrink-0 transition-transform duration-700 ${isRefreshing ? 'animate-spin text-[#8ce5db]' : 'group-hover:rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                <span className="hidden sm:inline-block text-xs font-bold text-slate-300 max-w-[80px] truncate">
+                  {user?.name?.split(" ")[0]}
+                </span>
+                <svg className={`h-3 w-3 text-slate-500 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                 </svg>
-                <span>{isRefreshing ? "Refreshing..." : "Refresh"}</span>
               </button>
-              
-              <button 
-                onClick={handleLogout}
-                className="px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 hover:border-red-500/30 active:scale-95 transition-all duration-300 text-[10px] font-black uppercase tracking-wider"
-              >
-                Logout
-              </button>
+
+              {/* Float Dialog */}
+              {isDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)} />
+                  <div className="absolute right-0 mt-2.5 w-56 rounded-2xl border border-white/10 bg-[#0a0f1d]/95 p-2 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in slide-in-from-top-3 duration-200">
+                    <div className="px-3 py-2 border-b border-white/5 mb-1.5">
+                      <p className="text-xs font-black text-white truncate">{user?.name}</p>
+                      <p className="text-[10px] text-slate-500 font-bold truncate mt-0.5" title={user?.email}>{user?.email}</p>
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        setActiveTab("membership");
+                        setIsDropdownOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-bold text-slate-300 hover:text-white hover:bg-white/5 transition-all duration-200 group"
+                    >
+                      <svg className="h-4 w-4 text-[#8ce5db]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                      <span>Membership Plan</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setActiveTab("profile");
+                        setIsDropdownOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-bold text-slate-300 hover:text-white hover:bg-white/5 transition-all duration-200 group"
+                    >
+                      <svg className="h-4 w-4 text-slate-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      <span>Profile Settings</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setActiveTab("payments");
+                        setIsDropdownOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-bold text-slate-300 hover:text-white hover:bg-white/5 transition-all duration-200 group"
+                    >
+                      <svg className="h-4 w-4 text-slate-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                      <span>Payment Logs</span>
+                    </button>
+
+                    <button
+                      onClick={async () => {
+                        await handleRefresh();
+                        setIsDropdownOpen(false);
+                      }}
+                      disabled={isRefreshing}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-bold transition-all duration-200 group ${
+                        isRefreshing 
+                          ? "bg-[#8ce5db]/5 text-white shadow-glow-accent animate-pulse" 
+                          : "text-slate-300 hover:text-white hover:bg-white/5"
+                      }`}
+                    >
+                      <svg 
+                        className={`h-4 w-4 text-[#8ce5db] ${
+                          isRefreshing 
+                            ? "animate-spin" 
+                            : "group-hover:rotate-180 transition-transform duration-700 ease-in-out"
+                        }`} 
+                        fill="none" 
+                        viewBox="0 0 24 24" 
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                        <path d="M3 3v5h5" />
+                        <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+                        <path d="M16 16h5v5" />
+                      </svg>
+                      <span>Refresh Dashboard</span>
+                    </button>
+
+                    <div className="h-px bg-white/5 my-1.5" />
+                    
+                    <button
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        handleLogout();
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-black uppercase text-red-400 hover:bg-red-500/10 transition-all duration-200 group"
+                    >
+                      <svg className="h-4 w-4 text-red-400 group-hover:text-red-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
-        </div>
+        </header>
 
-        {/* Premium Dashboard Tabs Navigation - Segmented Grid & Scrollable Mobile */}
-        <div className="w-full flex md:grid md:grid-cols-5 gap-2 p-1.5 rounded-2xl bg-white/[0.02] border border-white/5 mb-8 overflow-x-auto md:overflow-visible max-w-full scrollbar-none flex-nowrap shadow-soft">
-          {[
-            { id: "membership", label: "Membership & Bookings", icon: "💎" },
-            { id: "reviews", label: "Reviews", icon: "★" },
-            { id: "notifications", label: "Notifications", icon: "🔔", badge: notifications.filter(n => !n.isRead).length },
-            { id: "profile", label: "Profile Settings", icon: "👤" },
-            { id: "payments", label: "Payment History", icon: "💳" },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-display font-black text-xs transition-all duration-300 whitespace-nowrap shrink-0 md:shrink w-auto md:w-full select-none ${
-                activeTab === tab.id
-                  ? "bg-gradient-to-r from-[#2d61ff]/15 to-[#8ce5db]/10 border border-[#8ce5db]/30 text-[#8ce5db] shadow-glow-accent text-shadow-glow"
-                  : "border border-transparent text-slate-400 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              <span>{tab.icon}</span>
-              <span>{tab.label}</span>
-              {tab.badge > 0 && (
-                <span className="ml-1.5 px-2 py-0.5 rounded-full bg-red-500 text-[9px] text-white font-black animate-pulse">
-                  {tab.badge}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-
-        {/* Dashboard Content Split Layout */}
-        <div className="grid gap-8 lg:grid-cols-12 items-start">
+        {/* WORKSPACE AREA SCENE CONTAINER */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8 overflow-y-auto">
           
-          {/* Left Main Content Column - 70% Width */}
-          <div className="lg:col-span-8 space-y-8">
-            
-            {/* Membership Tab */}
-            {activeTab === "membership" && (
-              <div className="space-y-8">
+          {/* ==================================================
+              TAB VIEW 1: DASHBOARD OVERVIEW HOME
+              ================================================== */}
+          {activeTab === "dashboard" && (
+            <div className="space-y-8 animate-in fade-in duration-300">
+              
+              {/* Dynamic Welcome Premium Welcome Hero Card */}
+              <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-white/[0.03] to-white/[0.01] p-6 backdrop-blur-xl shadow-soft">
+                {/* Glow Spotlights */}
+                <div className="absolute -left-20 -top-20 h-48 w-48 rounded-full bg-[#2d61ff]/10 blur-[80px] pointer-events-none" />
+                <div className="absolute -right-20 -bottom-20 h-48 w-48 rounded-full bg-[#8ce5db]/10 blur-[80px] pointer-events-none" />
                 
-                {/* Premium Membership details card */}
-                <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.03] to-white/[0.01] p-6 sm:p-8 backdrop-blur-xl shadow-soft">
-                  <div className="absolute top-0 right-0 p-8 opacity-[0.02] pointer-events-none select-none">
-                    <svg className="h-48 w-48 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                    </svg>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                  {/* Left Section: User info and Tier Badge */}
+                  <div className="flex items-center gap-4">
+                    <div className="h-16 w-16 rounded-2xl p-[1px] bg-gradient-to-tr from-[#2d61ff] via-[#8ce5db]/50 to-[#8ce5db] flex items-center justify-center shadow-glow-accent">
+                      <div className="h-full w-full rounded-2xl bg-[#060b16] overflow-hidden flex items-center justify-center text-xl font-black text-white">
+                        {user?.avatar ? (
+                          <img src={getAvatarUrl(user.avatar, avatarTimestamp)} alt={user.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="text-xl font-black">{user?.name?.[0]?.toUpperCase()}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        <h1 className="text-xl sm:text-2xl font-display font-black text-white leading-tight">
+                          Welcome back, {user?.name?.split(" ")[0]}!
+                        </h1>
+                        <span className="px-2.5 py-0.5 rounded-full bg-[#8ce5db]/10 border border-[#8ce5db]/20 text-[9px] font-black uppercase tracking-widest text-[#8ce5db] shadow-glow-accent">
+                          {membership?.membershipType ? `${membership.membershipType} Tier` : "GUEST"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-1.5 leading-relaxed font-medium">
+                        {membership?.membershipStatus === 'active' 
+                          ? `Your membership is active and secures you maximum discounts. Next renewal on ${format(new Date(membership.expiryDate), 'MMM dd, yyyy')}.`
+                          : "Unlock premium features, exclusive events passes, and discount benefits by upgrading to premium membership today."}
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="relative z-10">
-                    <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-                      <div>
-                        <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#8ce5db] mb-1">Current Subscription</h2>
-                        <p className="text-3xl font-display font-black tracking-tight">
-                          {membership ? `${membership.membershipType} Tier` : "Guest Access"}
-                        </p>
-                      </div>
-                      {membership && (
-                        <div className="text-left sm:text-right">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Status</p>
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 ${
-                            membership.membershipStatus === 'active' 
-                              ? 'bg-green-500/10 text-green-400 border border-green-500/20' 
-                              : 'bg-red-500/10 text-red-400 border border-red-500/20'
-                          }`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${membership.membershipStatus === 'active' ? 'bg-green-400' : 'bg-red-400'} animate-pulse`} />
-                            {membership.membershipStatus}
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                  {/* Right Section: Core upgrade / actions */}
+                  <div className="flex items-center gap-3 shrink-0">
+                    <Link 
+                      to="/member/upgrade" 
+                      className="px-5 py-3 rounded-xl bg-gradient-to-r from-[#2d61ff] to-[#8ce5db] text-[#061323] font-black text-xs uppercase tracking-wider hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-glow-accent"
+                    >
+                      Upgrade Plan
+                    </Link>
+                    <Link 
+                      to="/member/upgrade?type=renewal" 
+                      className="px-5 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-black text-xs uppercase tracking-wider hover:bg-white/10 hover:border-white/20 active:scale-95 transition-all duration-300"
+                    >
+                      Renew
+                    </Link>
+                  </div>
+                </div>
+              </div>
 
-                    {membership ? (
-                      <>
-                        {/* Days Remaining Visual Progress Bar */}
-                        <div className="mb-8 p-5 rounded-2xl bg-white/[0.01] border border-white/5 shadow-soft">
-                          <div className="flex justify-between items-center mb-2.5">
-                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Membership Validity</span>
-                            <span className="text-xs font-black text-[#8ce5db]">{daysRemaining > 0 ? daysRemaining : 0} Days Left</span>
-                          </div>
-                          <div className="relative h-3 w-full bg-white/5 rounded-full overflow-hidden">
-                            <div 
-                              className="absolute top-0 left-0 h-full rounded-full bg-gradient-to-r from-[#2d61ff] to-[#8ce5db] shadow-glow-accent transition-all duration-1000 ease-out"
-                              style={{ width: `${progressPercent}%` }}
-                            />
-                          </div>
-                          <div className="flex justify-between items-center mt-2 text-[9px] text-slate-500 font-bold uppercase tracking-wide">
-                            <span>Expired</span>
-                            <span>365 Days</span>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 py-6 border-y border-white/5">
-                          <div>
-                            <p className="text-[9px] text-slate-500 uppercase tracking-widest font-black mb-1">Active Since</p>
-                            <p className="text-base sm:text-lg font-bold font-display">{membership.startDate ? format(new Date(membership.startDate), 'MMM dd, yyyy') : 'N/A'}</p>
-                          </div>
-                          <div>
-                            <p className="text-[9px] text-slate-500 uppercase tracking-widest font-black mb-1">Expiry Date</p>
-                            <p className="text-base sm:text-lg font-bold font-display">{membership.expiryDate ? format(new Date(membership.expiryDate), 'MMM dd, yyyy') : 'N/A'}</p>
-                          </div>
-                          <div>
-                            <p className="text-[9px] text-slate-500 uppercase tracking-widest font-black mb-1">Plan Cost</p>
-                            <p className="text-base sm:text-lg font-bold text-[#8ce5db] font-display">₹{membership.price}</p>
-                          </div>
-                        </div>
-
-                        <div className="mb-8">
-                          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4">Your Exclusive Benefits</h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                            {membership.benefits?.map((benefit, i) => (
-                              <div key={i} className="flex items-center gap-3.5 p-4 rounded-2xl bg-white/[0.01] border border-white/5 group hover:bg-white/[0.03] hover:border-white/10 transition-all duration-300">
-                                <div className="h-7 w-7 rounded-xl bg-[#8ce5db]/10 flex items-center justify-center text-[#8ce5db] shrink-0 transition-all duration-300 group-hover:bg-[#8ce5db]/20 group-hover:scale-110">
-                                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" />
-                                  </svg>
-                                </div>
-                                <span className="text-xs sm:text-sm font-medium text-slate-300 group-hover:text-white transition-colors duration-300">{benefit}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row gap-4">
-                          <Link to="/member/upgrade" className="flex-1 text-center px-6 py-4 rounded-xl bg-gradient-to-r from-[#2d61ff] to-[#8ce5db] text-[#061323] font-black text-xs uppercase tracking-wider hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-glow-accent">
-                            Upgrade Membership
-                          </Link>
-                          <Link to="/member/upgrade?type=renewal" className="flex-1 text-center px-6 py-4 rounded-xl bg-white/5 text-white border border-white/10 font-black text-xs uppercase tracking-wider hover:bg-white/10 hover:border-white/20 active:scale-95 transition-all duration-300">
-                            Renew Membership
-                          </Link>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="py-6 text-center sm:text-left">
-                        <p className="text-slate-400 mb-8 max-w-lg text-sm sm:text-base leading-relaxed">Join the society to unlock up to 20% discounts on all events, priority registrations, and exclusive member-only networking sessions.</p>
-                        <Link to="/membership" className="px-8 py-4 rounded-xl bg-gradient-to-r from-[#2d61ff] to-[#8ce5db] text-[#061323] font-black text-xs uppercase tracking-wider hover:scale-[1.03] transition-all duration-300 inline-block shadow-glow-accent">
-                          View Membership Plans
-                        </Link>
-                      </div>
-                    )}
+              {/* SaaS Metrics 4-Stats Grid Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                
+                {/* Stat 1: Status */}
+                <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-5 shadow-soft hover:border-[#8ce5db]/20 transition-all duration-300">
+                  <div className="flex items-center justify-between mb-3 text-slate-500 uppercase tracking-widest text-[9px] font-black">
+                    <span>Membership Status</span>
+                    <span className="h-5 w-5 rounded-lg bg-[#2d61ff]/10 text-[#2d61ff] flex items-center justify-center">👑</span>
+                  </div>
+                  <div className="text-xl font-black font-display text-white">
+                    {membership?.membershipStatus === 'active' ? "Active Member" : "Guest Access"}
+                  </div>
+                  <div className="text-[9px] text-[#8ce5db] font-black mt-1 uppercase tracking-wider">
+                    {membership?.membershipType ? `${membership.membershipType} Tier Level` : "No active package"}
                   </div>
                 </div>
 
-                {/* Registered Events */}
-                <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-6 sm:p-8 backdrop-blur-xl shadow-soft">
-                  <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-xl sm:text-2xl font-display font-bold">Registered Events</h2>
-                    <span className="px-3.5 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] text-slate-400 font-bold">{registrations.length} Total</span>
+                {/* Stat 2: Validity */}
+                <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-5 shadow-soft hover:border-[#8ce5db]/20 transition-all duration-300">
+                  <div className="flex items-center justify-between mb-3 text-slate-500 uppercase tracking-widest text-[9px] font-black">
+                    <span>Validity Remaining</span>
+                    <span className="h-5 w-5 rounded-lg bg-green-500/10 text-green-400 flex items-center justify-center">🕒</span>
+                  </div>
+                  <div className="text-xl font-black font-display text-white">
+                    {daysRemaining > 0 ? `${daysRemaining} Days` : "Expired / N/A"}
+                  </div>
+                  <div className="text-[9px] text-slate-400 font-bold mt-1 uppercase tracking-wider">
+                    Out of {totalDays} total days
+                  </div>
+                </div>
+
+                {/* Stat 3: Total registrations */}
+                <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-5 shadow-soft hover:border-[#8ce5db]/20 transition-all duration-300">
+                  <div className="flex items-center justify-between mb-3 text-slate-500 uppercase tracking-widest text-[9px] font-black">
+                    <span>Events Registered</span>
+                    <span className="h-5 w-5 rounded-lg bg-[#8ce5db]/10 text-[#8ce5db] flex items-center justify-center">🎫</span>
+                  </div>
+                  <div className="text-xl font-black font-display text-white">
+                    {registrations.length} Passes
+                  </div>
+                  <div className="text-[9px] text-[#8ce5db] font-black mt-1 uppercase tracking-wider hover:underline cursor-pointer" onClick={() => setActiveTab("events")}>
+                    View registered list →
+                  </div>
+                </div>
+
+                {/* Stat 4: Total sum paid */}
+                <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-5 shadow-soft hover:border-[#8ce5db]/20 transition-all duration-300">
+                  <div className="flex items-center justify-between mb-3 text-slate-500 uppercase tracking-widest text-[9px] font-black">
+                    <span>Capital Invested</span>
+                    <span className="h-5 w-5 rounded-lg bg-yellow-500/10 text-yellow-400 flex items-center justify-center">💳</span>
+                  </div>
+                  <div className="text-xl font-black font-display text-white">
+                    ₹{totalPaid}
+                  </div>
+                  <div className="text-[9px] text-slate-400 font-bold mt-1 uppercase tracking-wider">
+                    {history.length} active transactions
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Mini Row Summary Panels */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                {/* Left Side: Recent Active Bookings */}
+                <div className="lg:col-span-8 rounded-2xl border border-white/10 bg-white/[0.01] p-6 shadow-soft space-y-5">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-display font-black text-sm uppercase tracking-wider text-slate-200">
+                      Recent Passes Overview
+                    </h3>
+                    <button onClick={() => setActiveTab("events")} className="text-[10px] font-black text-[#8ce5db] uppercase hover:underline">
+                      See All
+                    </button>
                   </div>
 
                   {registrations.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      {registrations.map((reg) => (
-                        <div key={reg._id} className="group overflow-hidden rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] hover:border-[#8ce5db]/30 transition-all duration-300 shadow-soft">
-                          <div className="relative aspect-video overflow-hidden">
-                            <img 
-                              src={reg.event?.eventImage} 
-                              alt={reg.event?.title}
-                              className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#060b16] via-transparent to-transparent opacity-60" />
-                            <div className="absolute top-3 left-3">
-                              <span className={`px-2.5 py-1 rounded-md text-[8px] font-black uppercase tracking-wider border shadow-sm ${
-                                reg.paymentStatus === 'completed' 
-                                  ? 'bg-green-500/10 text-green-400 border-green-500/20' 
-                                  : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
-                              }`}>
-                                {reg.paymentStatus}
-                              </span>
+                    <div className="space-y-4">
+                      {registrations.slice(0, 3).map((reg) => (
+                        <div key={reg._id} className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.005] hover:bg-white/[0.02] transition">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-lg overflow-hidden shrink-0">
+                              <img src={reg.event?.eventImage} alt="" className="h-full w-full object-cover" />
+                            </div>
+                            <div>
+                              <h4 className="text-xs font-black truncate max-w-[150px] sm:max-w-[250px]">{reg.event?.title}</h4>
+                              <p className="text-[9px] text-slate-500 font-semibold mt-0.5">
+                                {format(new Date(reg.event?.eventDate || Date.now()), 'MMMM dd, yyyy')}
+                              </p>
                             </div>
                           </div>
-                          <div className="p-5">
-                            <h3 className="font-display font-bold text-base mb-1.5 line-clamp-1 group-hover:text-[#8ce5db] transition-colors">{reg.event?.title}</h3>
-                            <div className="flex items-center gap-1.5 text-slate-400 text-xs font-medium mb-4">
-                              <svg className="h-3.5 w-3.5 text-[#8ce5db]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                              {format(new Date(reg.event?.eventDate || Date.now()), 'MMMM dd, yyyy')}
-                            </div>
-                            <div className="pt-3.5 border-t border-white/5 flex items-center justify-between gap-4">
-                              <div className="flex flex-col">
-                                <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black">Amount Paid</span>
-                                <span className="font-display font-black text-[#8ce5db] text-sm">₹{reg.discountedPrice}</span>
-                              </div>
-                              <div className="flex gap-2">
-                                {reg.attendanceStatus === 'attended' ? (
-                                  <a 
-                                    href={`${API_URL}/registrations/certificate/${reg._id}?token=${localStorage.getItem("token")}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="px-3.5 py-1.5 rounded-xl bg-[#8ce5db]/10 border border-[#8ce5db]/20 text-[#8ce5db] text-[9px] font-black uppercase tracking-wider hover:bg-[#8ce5db]/20 hover:border-[#8ce5db]/30 transition-all duration-300"
-                                  >
-                                    Certificate
-                                  </a>
-                                ) : (
-                                  <button 
-                                    onClick={() => navigate(`/ticket/${reg._id}`)}
-                                    className="px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-white text-[9px] font-black uppercase tracking-wider hover:bg-white/10 hover:border-white/20 hover:text-[#8ce5db] transition-all duration-300"
-                                  >
-                                    View Ticket
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          </div>
+                          <span className={`px-2.5 py-0.5 rounded text-[8px] font-black uppercase border ${
+                            reg.paymentStatus === 'completed' 
+                              ? 'bg-green-500/10 text-green-400 border-green-500/20' 
+                              : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                          }`}>
+                            {reg.paymentStatus}
+                          </span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="py-16 text-center rounded-2xl border border-dashed border-white/10 bg-white/[0.005]">
-                      <p className="text-slate-500 text-xs sm:text-sm font-medium">You haven't registered for any events yet.</p>
-                      <Link to="/" className="mt-3 text-[#8ce5db] text-xs font-bold hover:underline inline-block">Explore Events</Link>
-                    </div>
+                    <p className="text-slate-500 text-xs text-center py-6">You have no registered upcoming sessions.</p>
                   )}
                 </div>
-              </div>
-            )}
 
-            {/* Testimonials & Reviews Tab */}
-            {activeTab === "reviews" && (
-              <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-6 sm:p-8 backdrop-blur-xl shadow-soft">
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-xl sm:text-2xl font-display font-bold">Reviews & Testimonials</h2>
-                  <span className="px-3.5 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] text-slate-400 font-bold">
+                {/* Right Side: Society Shortcuts */}
+                <div className="lg:col-span-4 rounded-2xl border border-white/10 bg-white/[0.01] p-6 shadow-soft space-y-4">
+                  <h3 className="font-display font-black text-sm uppercase tracking-wider text-slate-200">
+                    SaaS Quick Jumps
+                  </h3>
+                  <div className="grid gap-3.5">
+                    <button 
+                      onClick={() => setActiveTab("membership")}
+                      className="w-full flex items-center justify-between p-3.5 rounded-xl border border-white/5 bg-white/[0.005] hover:bg-white/[0.03] text-left text-xs font-bold transition"
+                    >
+                      <span>💎 View My Plan Details</span>
+                      <span className="text-slate-500">→</span>
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab("profile")}
+                      className="w-full flex items-center justify-between p-3.5 rounded-xl border border-white/5 bg-white/[0.005] hover:bg-white/[0.03] text-left text-xs font-bold transition"
+                    >
+                      <span>👤 Manage Profile Settings</span>
+                      <span className="text-slate-500">→</span>
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab("notifications")}
+                      className="w-full flex items-center justify-between p-3.5 rounded-xl border border-white/5 bg-white/[0.005] hover:bg-white/[0.03] text-left text-xs font-bold transition"
+                    >
+                      <span>🔔 View Alerts Inbox</span>
+                      <span className="text-slate-500">→</span>
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* ==================================================
+              TAB VIEW 2: MEMBERSHIP PANEL
+              ================================================== */}
+          {activeTab === "membership" && (
+            <div className="space-y-8 animate-in fade-in duration-300">
+              
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                {/* Main Membership Panel details */}
+                <div className="lg:col-span-8 rounded-2xl border border-white/10 bg-white/[0.01] p-6 sm:p-8 backdrop-blur-xl shadow-soft relative overflow-hidden">
+                  
+                  {/* Decorative card background overlay */}
+                  <div className="absolute right-0 top-0 h-48 w-48 rounded-full bg-[#8ce5db]/5 blur-[80px] pointer-events-none" />
+                  
+                  <div className="flex flex-wrap items-center justify-between gap-4 mb-8 pb-5 border-b border-white/5">
+                    <div>
+                      <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#8ce5db] mb-1">Current Plan</h2>
+                      <p className="text-3xl font-display font-black tracking-tight">
+                        {membership ? `${membership.membershipType} Tier` : "Guest Member"}
+                      </p>
+                    </div>
+                    {membership && (
+                      <div className="text-left sm:text-right">
+                        <span className={`px-3.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
+                          membership.membershipStatus === 'active' 
+                            ? 'bg-green-500/10 text-green-400 border-green-500/20' 
+                            : 'bg-red-500/10 text-red-400 border-red-500/20'
+                        }`}>
+                          {membership.membershipStatus}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {membership ? (
+                    <>
+                      {/* Validity scale widget */}
+                      <div className="mb-8 p-5 rounded-2xl bg-white/[0.01] border border-white/5 shadow-soft">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Days Validity Remaining</span>
+                          <span className="text-xs font-black text-[#8ce5db]">{daysRemaining > 0 ? daysRemaining : 0} Days</span>
+                        </div>
+                        <div className="relative h-2.5 w-full bg-white/5 rounded-full overflow-hidden">
+                          <div 
+                            className="absolute top-0 left-0 h-full rounded-full bg-gradient-to-r from-[#2d61ff] to-[#8ce5db] shadow-glow-accent transition-all duration-1000 ease-out"
+                            style={{ width: `${progressPercent}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between items-center mt-2.5 text-[9px] text-slate-500 font-black uppercase tracking-wider">
+                          <span>Expired</span>
+                          <span>{totalDays} Days</span>
+                        </div>
+                      </div>
+
+                      {/* Info Table row */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 py-5 border-y border-white/5">
+                        <div>
+                          <p className="text-[9px] text-slate-500 uppercase tracking-widest font-black mb-1">Active Since</p>
+                          <p className="text-sm font-bold">{membership.startDate ? format(new Date(membership.startDate), 'MMM dd, yyyy') : 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] text-slate-500 uppercase tracking-widest font-black mb-1">Expiry Date</p>
+                          <p className="text-sm font-bold">{membership.expiryDate ? format(new Date(membership.expiryDate), 'MMM dd, yyyy') : 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] text-slate-500 uppercase tracking-widest font-black mb-1">Plan Price</p>
+                          <p className="text-sm font-black text-[#8ce5db]">₹{membership.price}</p>
+                        </div>
+                      </div>
+
+                      {/* Plan Benefits */}
+                      <div className="mb-8">
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4">Plan Benefits</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {membership.benefits?.map((benefit, i) => (
+                            <div key={i} className="flex items-center gap-3 p-3.5 rounded-xl bg-white/[0.005] border border-white/5 hover:border-white/10 transition group">
+                              <div className="h-6 w-6 rounded-lg bg-[#8ce5db]/10 flex items-center justify-center text-[#8ce5db] shrink-0 transition-transform group-hover:scale-105">
+                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                              <span className="text-xs font-semibold text-slate-300 group-hover:text-white transition-colors">{benefit}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <Link to="/member/upgrade" className="flex-1 text-center px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#2d61ff] to-[#8ce5db] text-[#061323] font-black text-xs uppercase tracking-wider hover:scale-[1.02] transition shadow-glow-accent">
+                          Upgrade Plan
+                        </Link>
+                        <Link to="/member/upgrade?type=renewal" className="flex-1 text-center px-6 py-3.5 rounded-xl bg-white/5 text-white border border-white/10 font-black text-xs uppercase tracking-wider hover:bg-white/10 transition">
+                          Renew Plan
+                        </Link>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="py-8 text-center sm:text-left">
+                      <p className="text-slate-400 mb-8 max-w-lg text-sm sm:text-base leading-relaxed">
+                        Join the society to unlock up to 20% discounts on all events, priority registrations, and exclusive member-only networking sessions.
+                      </p>
+                      <Link to="/membership" className="px-8 py-4 rounded-xl bg-gradient-to-r from-[#2d61ff] to-[#8ce5db] text-[#061323] font-black text-xs uppercase tracking-wider hover:scale-[1.03] transition shadow-glow-accent inline-block">
+                        View Membership Plans
+                      </Link>
+                    </div>
+                  )}
+
+                </div>
+
+                {/* Sidebar Widget widgets strictly inside membership tab */}
+                <div className="lg:col-span-4 space-y-6">
+                  
+                  {/* Mini profile metadata sidebar */}
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.01] p-5 shadow-soft space-y-4">
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#8ce5db]" />
+                      Society Metadata
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="p-3.5 rounded-xl bg-white/[0.005] border border-white/5">
+                        <p className="text-[8px] text-slate-500 uppercase tracking-widest font-black mb-0.5">Phone Number</p>
+                        <p className="text-xs font-bold text-slate-200">{user?.phone || 'Not provided'}</p>
+                      </div>
+                      <div className="p-3.5 rounded-xl bg-white/[0.005] border border-white/5">
+                        <p className="text-[8px] text-slate-500 uppercase tracking-widest font-black mb-0.5">Member ID</p>
+                        <p className="text-xs font-bold text-slate-200 select-all">#{user?._id?.slice(-8).toUpperCase()}</p>
+                      </div>
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-[#8ce5db]/10 to-[#2d61ff]/5 border border-[#8ce5db]/20">
+                        <p className="text-[8px] text-[#8ce5db] uppercase tracking-widest font-black mb-0.5">Active Discount Percentage</p>
+                        <p className="text-xl font-black font-display text-[#8ce5db]">
+                          {membership?.membershipType === 'PRO' ? '20% OFF' : 
+                           membership?.membershipType === 'ELITE' ? '10% OFF' : 
+                           '0% OFF'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick recent payments widget */}
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.01] p-5 shadow-soft space-y-4">
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#2d61ff]" />
+                      Recent Payments
+                    </h3>
+                    <div className="space-y-3">
+                      {history.slice(0, 3).map((log, i) => (
+                        <div key={i} className="flex justify-between items-center p-3.5 rounded-xl bg-white/[0.005] border border-white/5">
+                          <div>
+                            <p className="text-xs font-bold font-display uppercase tracking-wider">{log.membershipType}</p>
+                            <p className="text-[8px] text-slate-500 font-bold uppercase mt-0.5">
+                              {log.createdAt ? format(new Date(log.createdAt), 'MMM dd, yyyy') : 'N/A'}
+                            </p>
+                          </div>
+                          <span className="text-xs font-black text-[#8ce5db]">₹{log.price}</span>
+                        </div>
+                      ))}
+                      {history.length === 0 && (
+                        <p className="text-slate-500 text-xs text-center py-4">No payments recorded.</p>
+                      )}
+                      {history.length > 3 && (
+                        <button 
+                          onClick={() => setActiveTab("payments")}
+                          className="w-full text-center py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-[10px] font-black uppercase tracking-wider transition-all duration-300"
+                        >
+                          View All Payments ({history.length})
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* ==================================================
+              TAB VIEW 3: EVENTS PANEL
+              ================================================== */}
+          {activeTab === "events" && (
+            <div className="space-y-8 animate-in fade-in duration-300">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.01] p-6 sm:p-8 backdrop-blur-xl shadow-soft">
+                <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-display font-black text-white">Registered Events</h2>
+                    <p className="text-xs text-slate-400 mt-1">Manage and access tickets for your registered sports sessions.</p>
+                  </div>
+                  <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] text-slate-400 font-black uppercase tracking-wider shrink-0">
+                    {registrations.length} Total Passes
+                  </span>
+                </div>
+
+                {registrations.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {registrations.map((reg) => (
+                      <div key={reg._id} className="group overflow-hidden rounded-2xl border border-white/5 bg-white/[0.005] hover:bg-white/[0.02] hover:border-[#8ce5db]/30 transition-all duration-300 shadow-soft">
+                        <div className="relative aspect-video overflow-hidden">
+                          <img 
+                            src={reg.event?.eventImage} 
+                            alt={reg.event?.title}
+                            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#060b16] via-transparent to-transparent opacity-60" />
+                          <div className="absolute top-3 left-3">
+                            <span className={`px-2.5 py-1 rounded-md text-[8px] font-black uppercase tracking-wider border shadow-sm ${
+                              reg.paymentStatus === 'completed' 
+                                ? 'bg-green-500/10 text-green-400 border-green-500/20' 
+                                : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                            }`}>
+                              {reg.paymentStatus}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="p-5">
+                          <h3 className="font-display font-bold text-base mb-1.5 line-clamp-1 group-hover:text-[#8ce5db] transition-colors">
+                            {reg.event?.title}
+                          </h3>
+                          <div className="flex items-center gap-1.5 text-slate-400 text-xs font-semibold mb-4">
+                            <svg className="h-3.5 w-3.5 text-[#8ce5db]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            {format(new Date(reg.event?.eventDate || Date.now()), 'MMMM dd, yyyy')}
+                          </div>
+                          <div className="pt-3.5 border-t border-white/5 flex items-center justify-between gap-4">
+                            <div className="flex flex-col">
+                              <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black">Amount Paid</span>
+                              <span className="font-display font-black text-[#8ce5db] text-sm">₹{reg.discountedPrice}</span>
+                            </div>
+                            <div className="flex gap-2">
+                              {reg.attendanceStatus === 'attended' ? (
+                                <a 
+                                  href={`${API_URL}/registrations/certificate/${reg._id}?token=${localStorage.getItem("token")}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="px-3.5 py-1.5 rounded-xl bg-[#8ce5db]/10 border border-[#8ce5db]/20 text-[#8ce5db] text-[9px] font-black uppercase tracking-wider hover:bg-[#8ce5db]/20 hover:border-[#8ce5db]/30 transition-all duration-300 shadow-glow-accent"
+                                >
+                                  Certificate
+                                </a>
+                              ) : (
+                                <button 
+                                  onClick={() => navigate(`/ticket/${reg._id}`)}
+                                  className="px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-white text-[9px] font-black uppercase tracking-wider hover:bg-white/10 hover:border-white/20 hover:text-[#8ce5db] transition-all duration-300"
+                                >
+                                  View Ticket
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-16 text-center rounded-2xl border border-dashed border-white/10 bg-white/[0.005]">
+                    <p className="text-slate-500 text-xs sm:text-sm font-medium">You haven't registered for any events yet.</p>
+                    <Link to="/" className="mt-3 text-[#8ce5db] text-xs font-bold hover:underline inline-block">Explore society events →</Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ==================================================
+              TAB VIEW 4: REVIEWS PANEL
+              ================================================== */}
+          {activeTab === "reviews" && (
+            <div className="space-y-8 animate-in fade-in duration-300">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.01] p-6 sm:p-8 backdrop-blur-xl shadow-soft">
+                <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-display font-black text-white">Reviews & Testimonials</h2>
+                    <p className="text-xs text-slate-400 mt-1">Review your society experiences and past event participations.</p>
+                  </div>
+                  <span className="px-3.5 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] text-slate-400 font-bold shrink-0">
                     {myReviews.length} Submitted
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
                   
-                  {/* Left Column: Form */}
+                  {/* Write review Form */}
                   <div className="md:col-span-5 space-y-4">
-                    <h3 className="text-base font-bold text-[#8ce5db]">
+                    <h3 className="text-sm font-black uppercase tracking-wider text-[#8ce5db]">
                       {editingReviewId ? "Edit Your Review" : "Write a Testimonial"}
                     </h3>
                     
                     {!eligibility.isEligible ? (
                       <div className="p-5 rounded-2xl bg-yellow-500/5 border border-yellow-500/20 text-yellow-500/90 text-xs sm:text-sm shadow-soft">
-                        <p className="font-bold mb-1">Review Access Restricted</p>
+                        <p className="font-bold mb-1">Review Submission Restrained</p>
                         <p className="leading-relaxed text-xs">
-                          To prevent spam and keep our community reviews authentic, only members with active subscriptions or attendees of past events can submit reviews. 
+                          To maintain community authenticity, only premium active members or verified event attendees are permitted to post reviews.
                         </p>
-                        <div className="mt-3 flex flex-col gap-1.5">
-                          <Link to="/membership" className="text-[11px] font-bold text-[#8ce5db] hover:underline">
-                            → Get a Membership Plan
+                        <div className="mt-4 flex flex-col gap-2">
+                          <Link to="/membership" className="text-[11px] font-black uppercase tracking-wider text-[#8ce5db] hover:underline">
+                            → Obtain Membership Plan
                           </Link>
-                          <Link to="/" className="text-[11px] font-bold text-[#8ce5db] hover:underline">
-                            → Explore Upcoming Events
+                          <Link to="/" className="text-[11px] font-black uppercase tracking-wider text-[#8ce5db] hover:underline">
+                            → Browse society events
                           </Link>
                         </div>
                       </div>
@@ -760,9 +1435,9 @@ const UserDashboard = () => {
                     )}
                   </div>
 
-                  {/* Right Column: Past Submissions */}
+                  {/* Past submissions list */}
                   <div className="md:col-span-7 border-t border-white/5 pt-6 md:border-t-0 md:border-l md:border-white/5 md:pt-0 md:pl-6">
-                    <h3 className="text-base font-bold mb-4">Your Past Reviews</h3>
+                    <h3 className="text-sm font-black uppercase tracking-wider text-slate-200 mb-4">Your Past Reviews</h3>
                     {reviewLoading ? (
                       <div className="flex justify-center py-8">
                         <div className="h-6 w-6 animate-spin rounded-full border-t-2 border-[#8ce5db]"></div>
@@ -770,7 +1445,7 @@ const UserDashboard = () => {
                     ) : myReviews.length > 0 ? (
                       <div className="space-y-4 max-h-[420px] overflow-y-auto pr-1">
                         {myReviews.map((rev) => (
-                          <div key={rev._id} className="p-4 rounded-xl bg-white/[0.01] border border-white/5 hover:border-white/10 transition group shadow-soft">
+                          <div key={rev._id} className="p-4 rounded-xl bg-white/[0.005] border border-white/5 hover:border-white/10 transition group shadow-soft">
                             <div className="flex justify-between items-start mb-2 gap-2">
                               <div>
                                 <h4 className="font-bold text-sm text-slate-100 line-clamp-1">{rev.title || "Untitled Review"}</h4>
@@ -824,15 +1499,19 @@ const UserDashboard = () => {
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Notification Inbox Tab Panel */}
-            {activeTab === "notifications" && (
-              <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-6 sm:p-8 backdrop-blur-xl shadow-soft">
-                <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+          {/* ==================================================
+              TAB VIEW 5: NOTIFICATIONS PANEL
+              ================================================== */}
+          {activeTab === "notifications" && (
+            <div className="space-y-8 animate-in fade-in duration-300">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.01] p-6 sm:p-8 backdrop-blur-xl shadow-soft">
+                <div className="flex flex-wrap items-center justify-between gap-4 mb-8 pb-4 border-b border-white/5">
                   <div>
-                    <h2 className="text-xl sm:text-2xl font-display font-bold">Your Notifications</h2>
-                    <p className="text-slate-400 text-xs mt-1">Stay updated with broadcast announcements and membership alerts.</p>
+                    <h2 className="text-xl sm:text-2xl font-display font-black text-white">Alert Notifications Inbox</h2>
+                    <p className="text-xs text-slate-400 mt-1">Unified channel for system broadcasts, invoice events and membership alerts.</p>
                   </div>
                   <div className="flex items-center gap-3">
                     {notifications.some(n => !n.isRead) && (
@@ -902,16 +1581,95 @@ const UserDashboard = () => {
                   </div>
                 )}
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Profile Settings Tab Panel */}
-            {activeTab === "profile" && (
-              <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-6 sm:p-8 backdrop-blur-xl shadow-soft">
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-xl sm:text-2xl font-display font-bold">Profile Info</h2>
+          {/* ==================================================
+              TAB VIEW 6: PAYMENTS PANEL
+              ================================================== */}
+          {activeTab === "payments" && (
+            <div className="space-y-8 animate-in fade-in duration-300">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.01] p-6 sm:p-8 backdrop-blur-xl shadow-soft">
+                <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-display font-black text-white">Payment & Bills</h2>
+                    <p className="text-xs text-slate-400 mt-1">Review active membership transaction records and Razorpay receipts.</p>
+                  </div>
+                  <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] text-slate-400 font-bold shrink-0">
+                    {history.length} Transactions
+                  </span>
+                </div>
+
+                <div className="space-y-3.5 max-h-[600px] overflow-y-auto pr-1">
+                  {history.length > 0 ? (
+                    history.map((log, i) => (
+                      <div 
+                        key={i} 
+                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-white/5 bg-white/[0.005] hover:bg-white/[0.02] transition-all duration-300 shadow-soft"
+                      >
+                        {/* Left Info: Plan Name & Razorpay ID */}
+                        <div className="flex items-center gap-3.5">
+                          <div className="h-10 w-10 rounded-xl bg-[#8ce5db]/10 flex items-center justify-center text-[#8ce5db] shrink-0">
+                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-sm font-black font-display uppercase tracking-wider text-slate-200">
+                              {log.membershipType} Plan
+                            </p>
+                            <p className="text-[10px] text-slate-500 font-medium select-all mt-0.5">
+                              ID: {log.razorpayPaymentId || "N/A"}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Right Info: Amount & Metadata */}
+                        <div className="flex sm:flex-row items-start sm:items-center justify-between sm:justify-end gap-4 border-t border-white/5 pt-3.5 sm:border-t-0 sm:pt-0">
+                          <div className="flex flex-col sm:items-end text-left sm:text-right">
+                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Date</span>
+                            <span className="text-xs text-slate-300 font-bold mt-0.5">
+                              {log.createdAt ? format(new Date(log.createdAt), "MMM dd, yyyy") : "N/A"}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-4 shrink-0">
+                            <span className="text-lg font-black font-display text-[#8ce5db]">
+                              ₹{log.price}
+                            </span>
+                            <span className="px-2.5 py-0.5 rounded-full bg-green-500/10 text-green-400 text-[8px] font-black uppercase tracking-widest border border-green-500/20">
+                              SUCCESS
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-16 text-center rounded-2xl border border-dashed border-white/10 bg-white/[0.005]">
+                      <span className="text-3xl">💳</span>
+                      <h3 className="font-bold text-base text-white mt-3">No payments recorded</h3>
+                      <p className="text-slate-500 text-xs mt-1 max-w-xs mx-auto">All your membership transaction logs will be listed here.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ==================================================
+              TAB VIEW 7: PROFILE SETTINGS PANEL
+              ================================================== */}
+          {activeTab === "profile" && (
+            <div className="space-y-8 animate-in fade-in duration-300">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.01] p-6 sm:p-8 backdrop-blur-xl shadow-soft">
+                <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-display font-black text-white">Profile Settings</h2>
+                    <p className="text-xs text-slate-400 mt-1">Manage private avatar profiles, phone bindings and public credentials.</p>
+                  </div>
                   <button 
                     onClick={() => setIsEditingProfile(!isEditingProfile)}
-                    className="px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-white/20 active:scale-95 transition-all duration-300 text-xs font-black uppercase tracking-wider"
+                    className="px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 active:scale-95 transition-all duration-300 text-xs font-black uppercase tracking-wider"
                   >
                     {isEditingProfile ? "Cancel" : "Edit Profile"}
                   </button>
@@ -925,7 +1683,7 @@ const UserDashboard = () => {
                         <div className="h-24 w-24 rounded-full overflow-hidden border-2 border-dashed border-white/20 flex items-center justify-center bg-white/5 p-1">
                           {avatarPreview || user?.avatar ? (
                             <img 
-                              src={avatarPreview || user?.avatar} 
+                              src={avatarPreview || getAvatarUrl(user.avatar, avatarTimestamp)} 
                               alt="Avatar Preview" 
                               className="h-full w-full rounded-full object-cover"
                             />
@@ -979,7 +1737,7 @@ const UserDashboard = () => {
                       <div className="h-24 w-24 rounded-full p-[2px] bg-gradient-to-tr from-[#2d61ff] via-[#8ce5db]/50 to-[#8ce5db] flex items-center justify-center shadow-glow-accent">
                         <div className="h-full w-full rounded-full bg-[#060b16] overflow-hidden flex items-center justify-center text-3xl font-black text-white">
                           {user?.avatar ? (
-                            <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
+                            <img src={getAvatarUrl(user.avatar, avatarTimestamp)} alt={user.name} className="h-full w-full object-cover" />
                           ) : (
                             <span className="text-3xl font-black">
                               {user?.name?.[0]?.toUpperCase()}
@@ -990,11 +1748,11 @@ const UserDashboard = () => {
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="p-4 rounded-2xl bg-white/[0.01] border border-white/5 shadow-soft">
+                      <div className="p-4 rounded-2xl bg-white/[0.005] border border-white/5 shadow-soft">
                         <p className="text-[8px] text-slate-500 uppercase tracking-widest font-black mb-0.5">Phone Number</p>
                         <p className="text-sm font-bold text-slate-200">{user?.phone || 'Not provided'}</p>
                       </div>
-                      <div className="p-4 rounded-2xl bg-white/[0.01] border border-white/5 shadow-soft">
+                      <div className="p-4 rounded-2xl bg-white/[0.005] border border-white/5 shadow-soft">
                         <p className="text-[8px] text-slate-500 uppercase tracking-widest font-black mb-0.5">Member ID</p>
                         <p className="text-sm font-bold text-slate-200 select-all">#{user?._id?.slice(-8).toUpperCase()}</p>
                       </div>
@@ -1012,142 +1770,12 @@ const UserDashboard = () => {
                   </div>
                 )}
               </div>
-            )}
-
-            {/* Payment Logs Tab Panel - Elegant Row List */}
-            {activeTab === "payments" && (
-              <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-6 sm:p-8 backdrop-blur-xl shadow-soft">
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-xl sm:text-2xl font-display font-bold flex items-center gap-2">
-                    <div className="h-1.5 w-1.5 rounded-full bg-[#8ce5db]" />
-                    Payment History
-                  </h2>
-                  <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] text-slate-400 font-bold">
-                    {history.length} Transactions
-                  </span>
-                </div>
-                
-                <div className="space-y-3.5 max-h-[600px] overflow-y-auto pr-1">
-                  {history.length > 0 ? (
-                    history.map((log, i) => (
-                      <div 
-                        key={i} 
-                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-white/[0.01] border border-white/5 hover:bg-white/[0.03] hover:border-white/10 transition-all duration-300 shadow-soft"
-                      >
-                        {/* Left Info: Plan Name & Razorpay ID */}
-                        <div className="flex items-center gap-3.5">
-                          <div className="h-10 w-10 rounded-xl bg-[#8ce5db]/10 flex items-center justify-center text-[#8ce5db] shrink-0">
-                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </div>
-                          <div>
-                            <p className="text-sm font-black font-display uppercase tracking-wider text-slate-200">
-                              {log.membershipType} Plan
-                            </p>
-                            <p className="text-[10px] text-slate-500 font-medium select-all mt-0.5">
-                              ID: {log.razorpayPaymentId || "N/A"}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Right Info: Amount & Metadata */}
-                        <div className="flex sm:flex-row items-start sm:items-center justify-between sm:justify-end gap-4 border-t border-white/5 pt-3.5 sm:border-t-0 sm:pt-0">
-                          <div className="flex flex-col sm:items-end text-left sm:text-right">
-                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Date</span>
-                            <span className="text-xs text-slate-300 font-bold mt-0.5">
-                              {log.createdAt ? format(new Date(log.createdAt), "MMM dd, yyyy") : "N/A"}
-                            </span>
-                          </div>
-                          
-                          <div className="flex items-center gap-4 shrink-0">
-                            <span className="text-lg font-black font-display text-[#8ce5db]">
-                              ₹{log.price}
-                            </span>
-                            <span className="px-2.5 py-0.5 rounded-full bg-green-500/10 text-green-400 text-[8px] font-black uppercase tracking-widest border border-green-500/20">
-                              SUCCESS
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="py-16 text-center rounded-2xl border border-dashed border-white/10 bg-white/[0.005]">
-                      <span className="text-3xl">💳</span>
-                      <h3 className="font-bold text-base text-white mt-3">No payments recorded</h3>
-                      <p className="text-slate-500 text-xs mt-1 max-w-xs mx-auto">All your membership transaction logs will be listed here.</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Right Sidebar Widgets - Visible on Desktop Only */}
-          <div className="hidden lg:block lg:col-span-4 space-y-8">
-            
-            {/* Quick Profile Details */}
-            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 backdrop-blur-xl shadow-soft">
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#8ce5db] animate-pulse" />
-                Profile Details
-              </h3>
-              <div className="space-y-3.5">
-                <div className="p-3.5 rounded-xl bg-white/[0.01] border border-white/5 hover:border-white/10 transition-all duration-300 shadow-soft">
-                  <p className="text-[8px] text-slate-500 uppercase tracking-widest font-black mb-0.5">Phone Number</p>
-                  <p className="text-xs font-bold text-slate-200">{user?.phone || 'Not provided'}</p>
-                </div>
-                <div className="p-3.5 rounded-xl bg-white/[0.01] border border-white/5 hover:border-white/10 transition-all duration-300 shadow-soft">
-                  <p className="text-[8px] text-slate-500 uppercase tracking-widest font-black mb-0.5">Member ID</p>
-                  <p className="text-xs font-bold text-slate-200 select-all">#{user?._id?.slice(-8).toUpperCase()}</p>
-                </div>
-                <div className="p-4 rounded-xl bg-gradient-to-br from-[#8ce5db]/10 to-[#2d61ff]/5 border border-[#8ce5db]/20 shadow-glow-accent">
-                  <p className="text-[8px] text-[#8ce5db] uppercase tracking-widest font-black mb-0.5">Active Discount</p>
-                  <p className="text-xl font-black font-display text-[#8ce5db]">
-                    {membership?.membershipType === 'PRO' ? '20% OFF' : 
-                     membership?.membershipType === 'ELITE' ? '10% OFF' : 
-                     '0% OFF'}
-                  </p>
-                  <p className="text-[8px] text-[#8ce5db]/70 mt-1.5 uppercase font-bold tracking-wider">Auto-applied at checkout</p>
-                </div>
-              </div>
             </div>
+          )}
 
-            {/* Quick Payments Summary */}
-            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 backdrop-blur-xl shadow-soft">
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#2d61ff]" />
-                Recent Payments
-              </h3>
-              <div className="space-y-3">
-                {history.slice(0, 3).map((log, i) => (
-                  <div key={i} className="flex justify-between items-center p-3.5 rounded-xl bg-white/[0.01] border border-white/5 hover:border-white/10 transition-all duration-300 shadow-soft">
-                    <div>
-                      <p className="text-xs font-bold font-display uppercase tracking-wider">{log.membershipType}</p>
-                      <p className="text-[8px] text-slate-500 font-bold uppercase mt-0.5">{log.createdAt ? format(new Date(log.createdAt), 'MMM dd, yyyy') : 'N/A'}</p>
-                    </div>
-                    <span className="text-xs font-black text-[#8ce5db]">₹{log.price}</span>
-                  </div>
-                ))}
-                {history.length === 0 && (
-                  <p className="text-slate-500 text-xs text-center py-4">No payment logs found.</p>
-                )}
-                {history.length > 3 && (
-                  <button 
-                    onClick={() => setActiveTab("payments")}
-                    className="w-full text-center py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-[10px] font-black uppercase tracking-wider transition-all duration-300 shadow-soft"
-                  >
-                    View All Payments ({history.length})
-                  </button>
-                )}
-              </div>
-            </div>
+        </main>
+      </div>
 
-          </div>
-        </div>
-      </main>
-
-      <Footer />
     </div>
   );
 };

@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
-import AdminNavbar from "../components/layout/AdminNavbar";
-import Container from "../components/layout/Container";
 import { 
   getAllMemberships, 
   updateMembershipStatus, 
@@ -96,12 +94,7 @@ const AdminMembershipsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#060b16] text-white">
-
-      <AdminNavbar />
-
-      <main className="py-10">
-        <Container>
+    <div className="space-y-8">
           <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div>
               <h1 className="text-3xl font-bold text-white">Membership Management</h1>
@@ -292,9 +285,7 @@ const AdminMembershipsPage = () => {
               ))
             )}
           </div>
-        </Container>
-      </main>
-    </div>
+      </div>
   );
 };
 

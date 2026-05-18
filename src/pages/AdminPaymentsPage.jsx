@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import { getAllPayments } from "../api/paymentApi";
-import AdminNavbar from "../components/layout/AdminNavbar";
-import Container from "../components/layout/Container";
 
 const AdminPaymentsPage = () => {
   const [payments, setPayments] = useState([]);
@@ -47,13 +45,8 @@ const AdminPaymentsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#060b16] text-white pb-20">
-
-      <AdminNavbar />
-
-      <main className="py-10">
-        <Container>
-          <div className="mb-8 flex flex-col sm:flex-row gap-4 items-center justify-between">
+    <div className="space-y-8">
+      <div className="mb-8 flex flex-col sm:flex-row gap-4 items-center justify-between">
             <div className="flex flex-wrap gap-2">
               {["all", "paid", "pending", "failed"].map((f) => (
                 <button
@@ -173,9 +166,7 @@ const AdminPaymentsPage = () => {
               ))
             )}
           </div>
-        </Container>
-      </main>
-    </div>
+      </div>
   );
 };
 

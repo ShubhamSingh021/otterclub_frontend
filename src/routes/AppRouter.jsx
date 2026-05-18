@@ -33,6 +33,10 @@ const AdminPostFormPage = lazy(() => import("../pages/AdminPostFormPage.jsx"));
 const AdminCouponsPage = lazy(() => import("../pages/AdminCouponsPage.jsx"));
 const AdminBroadcastPage = lazy(() => import("../pages/AdminBroadcastPage.jsx"));
 
+// Shell layout and Landing overview dashboard page
+const AdminLayout = lazy(() => import("../components/layout/AdminLayout.jsx"));
+const AdminOverviewPage = lazy(() => import("../pages/AdminOverviewPage.jsx"));
+
 const RouteLoader = () => (
   <div className="flex h-screen items-center justify-center bg-[#060b16]">
     <div className="text-center">
@@ -65,24 +69,29 @@ const AppRouter = () => {
         <Route path="/member/upgrade" element={<UpgradeMembership />} />
         <Route path="/ticket/:id" element={<TicketPage />} />
 
-        {/* Admin Routes */}
-        <Route path="/admin" element={<Navigate to="/admin/analytics" replace />} />
+        {/* Admin Login Route */}
         <Route path="/admin/login" element={<AdminLoginPage />} />
-        <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
-        <Route path="/admin/events" element={<AdminEventsPage />} />
-        <Route path="/admin/events/new" element={<AdminEventFormPage />} />
-        <Route path="/admin/events/edit/:id" element={<AdminEventFormPage />} />
-        <Route path="/admin/community" element={<AdminCommunityPage />} />
-        <Route path="/admin/community/new" element={<AdminPostFormPage />} />
-        <Route path="/admin/community/edit/:id" element={<AdminPostFormPage />} />
-        <Route path="/admin/registrations" element={<AdminRegistrationsPage />} />
-        <Route path="/admin/payments" element={<AdminPaymentsPage />} />
-        <Route path="/admin/memberships" element={<AdminMembershipsPage />} />
-        <Route path="/admin/cms" element={<AdminCMSPage />} />
-        <Route path="/admin/reviews" element={<AdminReviewsPage />} />
-        <Route path="/admin/scanner" element={<AdminScannerPage />} />
-        <Route path="/admin/coupons" element={<AdminCouponsPage />} />
-        <Route path="/admin/broadcast" element={<AdminBroadcastPage />} />
+
+        {/* Admin Shared Shell Layout Route */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<Navigate to="overview" replace />} />
+          <Route path="overview" element={<AdminOverviewPage />} />
+          <Route path="analytics" element={<AdminAnalyticsPage />} />
+          <Route path="events" element={<AdminEventsPage />} />
+          <Route path="events/new" element={<AdminEventFormPage />} />
+          <Route path="events/edit/:id" element={<AdminEventFormPage />} />
+          <Route path="community" element={<AdminCommunityPage />} />
+          <Route path="community/new" element={<AdminPostFormPage />} />
+          <Route path="community/edit/:id" element={<AdminPostFormPage />} />
+          <Route path="registrations" element={<AdminRegistrationsPage />} />
+          <Route path="payments" element={<AdminPaymentsPage />} />
+          <Route path="memberships" element={<AdminMembershipsPage />} />
+          <Route path="cms" element={<AdminCMSPage />} />
+          <Route path="reviews" element={<AdminReviewsPage />} />
+          <Route path="scanner" element={<AdminScannerPage />} />
+          <Route path="coupons" element={<AdminCouponsPage />} />
+          <Route path="broadcast" element={<AdminBroadcastPage />} />
+        </Route>
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
@@ -91,3 +100,4 @@ const AppRouter = () => {
 };
 
 export default AppRouter;
+

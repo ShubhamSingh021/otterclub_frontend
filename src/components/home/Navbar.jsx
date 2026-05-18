@@ -29,6 +29,13 @@ const defaultSettings = {
   globalCta: { label: "Get Started", href: "/register" },
 };
 
+const getAvatarUrl = (url, timestamp) => {
+  if (!url) return null;
+  if (url.startsWith("data:") || url.startsWith("blob:")) return url;
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}t=${timestamp}`;
+};
+
 const Navbar = ({ settings: cmsSettings }) => {
   const settings = cmsSettings || defaultSettings;
   const location = useLocation();
@@ -36,6 +43,7 @@ const Navbar = ({ settings: cmsSettings }) => {
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
+  const [avatarTimestamp, setAvatarTimestamp] = useState(Date.now());
 
   // Live Notifications Center States
   const [notifications, setNotifications] = useState([]);
@@ -72,6 +80,7 @@ const Navbar = ({ settings: cmsSettings }) => {
 
     setIsUserLoggedIn(isTokenValid);
     setUser(currentUser);
+    setAvatarTimestamp(Date.now());
 
     const hasAdminRole = (currentUser?.role === "admin" || currentUser?.role === "superadmin") || 
                         (currentAdmin?.role === "admin" || currentAdmin?.role === "superadmin");
@@ -304,7 +313,7 @@ const Navbar = ({ settings: cmsSettings }) => {
                 >
                   <div className="h-8 w-8 overflow-hidden rounded-full border border-white/10 bg-gradient-to-br from-[#8ce5db] to-[#2d61ff]">
                     {user?.avatar ? (
-                      <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
+                      <img src={getAvatarUrl(user.avatar, avatarTimestamp)} alt={user.name} className="h-full w-full object-cover" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-xs font-bold text-[#060b16]">
                         {user?.name?.charAt(0) || "U"}

@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Container from "../components/layout/Container.jsx";
-import AdminNavbar from "../components/layout/AdminNavbar.jsx";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
 import { 
@@ -101,24 +99,19 @@ const AdminReviewsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#060b16] text-white">
-      <AdminNavbar />
-
-      <main className="py-10">
-        <Container>
-          {/* Header */}
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between mb-10">
-            <div>
-              <h2 className="text-3xl font-bold tracking-tight">Review Moderation</h2>
-              <p className="mt-1 text-slate-400">Moderate and feature authentic community reviews submitted by Otter Society members</p>
-            </div>
-            <div className="flex bg-white/5 border border-white/10 rounded-2xl p-4 shrink-0 gap-6">
-              <div>
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1">Total Reviews</p>
-                <p className="text-2xl font-black text-[#40e0d0]">{totalCount}</p>
-              </div>
-            </div>
+    <div className="space-y-8">
+      {/* Header Info */}
+      <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Moderate and feature authentic community reviews submitted by Otter Society members</p>
+        </div>
+        <div className="flex bg-white/5 border border-white/10 rounded-2xl p-4 shrink-0 gap-6">
+          <div>
+            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1">Total Reviews</p>
+            <p className="text-2xl font-black text-[#40e0d0]">{totalCount}</p>
           </div>
+        </div>
+      </div>
 
           {/* Filters Bar */}
           <div className="flex flex-wrap gap-4 items-center justify-between p-6 rounded-2xl border border-white/10 bg-white/[0.02] mb-8">
@@ -414,9 +407,7 @@ const AdminReviewsPage = () => {
               </button>
             </div>
           )}
-        </Container>
-      </main>
-    </div>
+      </div>
   );
 };
 

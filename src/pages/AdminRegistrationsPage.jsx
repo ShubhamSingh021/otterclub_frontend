@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getRegistrations, updateRegistrationStatus, deleteRegistration } from "../api/registrationApi.js";
 import { getEvents } from "../api/eventApi.js";
-import Container from "../components/layout/Container.jsx";
-import AdminNavbar from "../components/layout/AdminNavbar.jsx";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
 
@@ -73,12 +71,7 @@ const AdminRegistrationsPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#060b16] text-white">
-
-      <AdminNavbar />
-
-      <main className="py-10">
-        <Container>
+    <div className="space-y-8">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-3xl font-bold">Event Registrations</h2>
@@ -245,9 +238,7 @@ const AdminRegistrationsPage = () => {
               ))
             )}
           </div>
-        </Container>
-      </main>
-    </div>
+      </div>
   );
 };
 
